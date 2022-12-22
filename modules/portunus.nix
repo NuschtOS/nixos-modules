@@ -1,6 +1,6 @@
 { config, lib, ... }:
 
-let 
+let
   cfg = config.services.portunus;
 in
 {
@@ -24,9 +24,10 @@ in
     };
   };
 
-  config = lib.mkIf config.services.portunus.addToHosts {
-    networking.hosts =  {
+  config = lib.mkIf cfg.enable {
+    networking.hosts = lib.mkIf cfg.addToHosts {
       ${cfg.externalIp4} = [ cfg.domain ];
       ${cfg.externalIp6} = [ cfg.domain ];
+    };
   };
 }
