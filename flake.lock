@@ -1,6 +1,6 @@
 {
   "nodes": {
-    "lib": {
+    "nixpkgs-lib": {
       "locked": {
         "lastModified": 1671324337,
         "narHash": "sha256-OZVfw69LQi2RckjPdooYrhw1I2vd28QdzEGJwI3w+jk=",
@@ -17,7 +17,7 @@
     },
     "root": {
       "inputs": {
-        "lib": "lib"
+        "nixpkgs-lib": "nixpkgs-lib"
       }
     }
   },
