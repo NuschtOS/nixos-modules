@@ -24,10 +24,8 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    networking.hosts = lib.mkIf cfg.addToHosts {
-      ${cfg.externalIp4} = [ cfg.domain ];
-      ${cfg.externalIp6} = [ cfg.domain ];
-    };
+  config.networking.hosts = lib.mkIf cfg.addToHosts {
+    ${cfg.externalIp4} = [ cfg.domain ];
+    ${cfg.externalIp6} = [ cfg.domain ];
   };
 }
