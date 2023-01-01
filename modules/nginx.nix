@@ -32,7 +32,14 @@ in
         recommendedOptimisation = true;
         recommendedProxySettings = true;
         recommendedTlsSettings = true;
-        resolver.addresses = lib.optionals (config.networking.nameservers != [ ]) config.networking.nameservers;
+        resolver.addresses = let
+          isIPv6 = addr: builtins.match ".*:.*:.*" addr != null;
+          escapeIPv6 = addr: if isIPv6 addr then
+            "[${addr}]"
+          else
+            addr;
+        in
+          lib.optionals (config.networking.nameservers != [ ]) (map escapeIPv6 config.networking.nameservers);
       }))
     ];
 
