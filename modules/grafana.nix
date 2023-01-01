@@ -1,4 +1,4 @@
-{ config, lib, ...}:
+{ config, lib, libS, ... }:
 
 let
   cfg = config.services.grafana;
@@ -11,7 +11,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    services.grafana.settings = lib.mkIf cfg.opinionatedDefaults (lib.mapAttrsRecursive (path: value: lib.mkDefault value) {
+    services.grafana.settings = lib.mkIf cfg.opinionatedDefaults (libS.modules.mkRecursiveDefault {
       analytics = {
         check_for_updates = false;
         reporting_enabled = false;
