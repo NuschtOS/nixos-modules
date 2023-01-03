@@ -1,19 +1,40 @@
 {
+  description = "Opinionated shared nixos configurations";
+
   inputs = {
     nixpkgs-lib.url = "github:nix-community/nixpkgs.lib";
   };
 
-  outputs = { nixpkgs-lib, ... }:
+  outputs = { self, nixpkgs-lib, ... }:
     let
       inherit (nixpkgs-lib) lib;
       ls = dir: lib.attrNames (builtins.readDir (./. + "/${dir}"));
-      importToAttr = dir: inputAttr: lib.listToAttrs (map (file: { name = lib.removeSuffix ".nix" file; value = import (./. + "/${dir}/${file}") inputAttr; }) (ls dir));
+      fileList = dir: map (file: ./. + "/${dir}/${file}") (ls dir);
+      importDirToKey = dir: args: lib.listToAttrs (map
+        (file: {
+          name = lib.removeSuffix ".nix" file;
+          value = import (./. + "/${dir}/${file}") args;
+        })
+        (ls dir)
+      );
     in
     {
-      lib = inputAttr: importToAttr "lib" inputAttr;
-      nixosModules = inputAttr: importToAttr "modules" inputAttr;
-      nixosModule = _: {
-        imports = (dir: map (file: ./. + "/${dir}/${file}") (ls dir)) "modules";
+      lib = args:
+        let
+          lib' = importDirToKey "lib" args;
+        in
+        (lib' // {
+          inherit (lib'.modules) mkOpinionatedOption mkRecursiveDefault;
+          inherit (lib'.ssh) mkPubKey;
+        });
+
+      nixosModules = args: importDirToKey "modules" args;
+      nixosModule = { config, ... }: {
+        _module.args = {
+          libS = self.lib { inherit lib config; };
+        };
+
+        imports = fileList "modules";
       };
     };
 }
