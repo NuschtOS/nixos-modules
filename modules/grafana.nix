@@ -4,10 +4,8 @@ let
   cfg = config.services.grafana;
 in
 {
-  options.services.grafana.opinionatedDefaults = lib.mkOption {
-    type = lib.types.bool;
-    default = config.opinionatedDefaults;
-    description = lib.mdDoc "Wether to enable set opinionated default settings.";
+  options = {
+    services.grafana.recommendedDefaults = libS.mkOpinionatedOption "set recommended, secure default settings";
   };
 
   config = lib.mkIf cfg.enable {

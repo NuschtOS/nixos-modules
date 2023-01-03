@@ -1,11 +1,18 @@
-{ config, lib, ... }:
+{ config, lib, libS, ... }:
 
 let
   cfg = config.boot.zfs;
 in
 {
-  config = lib.mkIf cfg.enabled {
-    boot.kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
+  options = {
+    boot.zfs.recommendedDefaults = libS.mkOpinionatedOption "enable recommended ZFS settings";
+  };
+
+  config = lib.mkIf (cfg.recommendedDefaults && cfg.enabled) {
+    boot = {
+      kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
+      zfs.forceImportRoot = false;
+    };
 
     services.zfs.autoScrub.enable = true;
   };
