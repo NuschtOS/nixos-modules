@@ -29,8 +29,8 @@
         });
 
       nixosModules = args: importDirToKey "modules" args;
-      nixosModule = { config, ... }: {
-        _module.args = {
+      nixosModule = { config, ... }@args: {
+        _module.args = lib.optionalAttrs (args ? libS) {
           libS = self.lib { inherit lib config; };
         };
 
