@@ -20,7 +20,7 @@ in
     nix.settings.system-features = lib.mkIf (cfg.arch != null) (libS.nix.gcc-system-features config.simd.arch);
 
     nixpkgs.hostPlatform = lib.mkIf cfg.enable {
-      gcc.arch = config.sandro.simd.arch;
+      gcc.arch = config.simd.arch;
       inherit (config.nixpkgs) system;
     };
   };
