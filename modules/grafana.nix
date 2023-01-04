@@ -9,7 +9,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    services.grafana.settings = lib.mkIf cfg.opinionatedDefaults (libS.modules.mkRecursiveDefault {
+    services.grafana.settings = lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
       analytics = {
         check_for_updates = false;
         reporting_enabled = false;
