@@ -32,7 +32,7 @@ in
   };
 
   config = {
-    environment.systemPackages = lib.optional (cfg.newPackage != config.services.postgresql.package) [(
+    environment.systemPackages = lib.optional (cfg.newPackage != config.services.postgresql.package) (
       let
         newData = "/var/lib/postgresql/${cfg.newPackage.psqlSchema}";
         newBin = "${cfg.newPackage}/bin";
@@ -61,6 +61,6 @@ in
           ${lib.concatStringsSep " " cfg.extraArgs} \
           "$@"
       ''
-    )];
+    );
   };
 }
