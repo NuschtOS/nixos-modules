@@ -1,10 +1,12 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, libS, pkgs, ... }:
 
 let
   cfg = config.services.postgresql.upgrade;
 in
 {
   options.services.postgresql.upgrade = {
+    enable = libS.mkOpinionatedOption "install the upgrade-pg-cluster script to update postgres.";
+
     extraArgs = lib.mkOption {
       type = with lib.types; listOf str;
       default = [ "--link" ];
@@ -12,10 +14,12 @@ in
       description = lib.mdDoc "Extra arguments to pass to pg_upgrade. See https://www.postgresql.org/docs/current/pgupgrade.html for doc.";
     };
 
-    newPackage = (lib.mkPackageOptionMD pkgs "postgresql") // {
+    newPackage = (lib.mkPackageOptionMD pkgs "postgresql" {
+      default = [ "postgresql_15" ];
+    }) // {
       description = lib.mdDoc ''
-        The package to which should be updated.
-        After running upgrade-pg-cluster this must be set in services.postgresql.package.
+        The postgres package to which should be updated.
+        After running upgrade-pg-cluster this must be set to services.postgresql.package to complete the update.
       '';
     };
 
