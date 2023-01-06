@@ -1,4 +1,4 @@
-{ ... }:
+_:
 
 {
   mkPubKey = name: type: publicKey: {

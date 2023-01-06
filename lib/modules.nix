@@ -7,5 +7,5 @@
     description = lib.mdDoc "Wether to ${text}.";
   };
 
-  mkRecursiveDefault = lib.mapAttrsRecursive (_path: value: lib.mkDefault value);
+  mkRecursiveDefault = lib.mapAttrsRecursive (_path: lib.mkDefault);
 }

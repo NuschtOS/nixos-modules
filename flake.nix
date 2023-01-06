@@ -23,12 +23,12 @@
         let
           lib' = importDirToKey "lib" args;
         in
-        (lib' // {
+        lib' // {
           inherit (lib'.modules) mkOpinionatedOption mkRecursiveDefault;
           inherit (lib'.ssh) mkPubKey;
-        });
+        };
 
-      nixosModules = args: importDirToKey "modules" args;
+      nixosModules = importDirToKey "modules";
       nixosModule = { config, ... }: {
         _module.args.libS = lib.mkOverride 1000 (self.lib { inherit lib config; });
 
