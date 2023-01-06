@@ -63,6 +63,11 @@ in
           --old-bindir ${oldBin} --new-bindir ${newBin} \
           ${lib.concatStringsSep " " cfgu.extraArgs} \
           "$@"
+
+        echo "Run the following commands after setting:"
+        echo 'services.postgresql.package = pkgs.postgresql_${cfgu.newPackage}'
+        echo "    sudo -u postgres vacuumdb --all --analyze-in-stages"
+        echo "    ${newData}/delete_old_cluster.sh"
       ''
     );
   };
