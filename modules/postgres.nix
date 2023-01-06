@@ -12,9 +12,7 @@ in
       description = lib.mdDoc "Extra arguments to pass to pg_upgrade. See https://www.postgresql.org/docs/current/pgupgrade.html for doc.";
     };
 
-    newPackage = (lib.mkPackageOptionMD pkgs "postgresql" {
-      default = [ "postgresql_15" ];
-    }) // {
+    newPackage = (lib.mkPackageOptionMD pkgs "postgresql") // {
       description = lib.mdDoc ''
         The package to which should be updated.
         After running upgrade-pg-cluster this must be set in services.postgresql.package.
