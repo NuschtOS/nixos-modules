@@ -50,7 +50,7 @@ in
           exit 2
         fi
 
-        systemctl stop --wait postgresql ${lib.concatStringsSep " " cfgu.stopServices}
+        systemctl stop postgresql ${lib.concatStringsSep " " cfgu.stopServices}
 
         install -d -m 0700 -o postgres -g postgres "${newData}"
         cd "${newData}"
