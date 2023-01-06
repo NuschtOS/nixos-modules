@@ -1,7 +1,8 @@
 { config, lib, libS, pkgs, ... }:
 
 let
-  cfg = config.services.postgresql.upgrade;
+  cfg = config.services.postgresql;
+  cfgu = config.services.postgresql.upgrade;
 in
 {
   options.services.postgresql.upgrade = {
@@ -31,25 +32,25 @@ in
     };
   };
 
-  config = {
-    environment.systemPackages = lib.optional (cfg.newPackage != config.services.postgresql.package) (
+  config = lib.mkIf cfg.enable {
+    environment.systemPackages = lib.optional cfgu.enable (
       let
-        newData = "/var/lib/postgresql/${cfg.newPackage.psqlSchema}";
-        newBin = "${cfg.newPackage}/bin";
+        newData = "/var/lib/postgresql/${cfgu.newPackage.psqlSchema}";
+        newBin = "${cfgu.newPackage}/bin";
         oldData = config.services.postgresql.dataDir;
         oldBin = "${config.services.postgresql.package}/bin";
-        currPkg = config.services.postgresql.package;
+        currPkg = cfg.package;
       in
       pkgs.writeScriptBin "upgrade-pg-cluster" /* bash */ ''
         set -eux
 
-        if [[ ${cfg.newPackage} == ${currPkg} ]]; then
+        if [[ ${cfgu.newPackage} == ${currPkg} ]]; then
           echo "There is no major postgres update available."
           echo "Current version: ${currPkg.version}"
           exit 2
         fi
 
-        systemctl stop --wait postgresql ${lib.concatStringsSep " " cfg.stopServices}
+        systemctl stop --wait postgresql ${lib.concatStringsSep " " cfgu.stopServices}
 
         install -d -m 0700 -o postgres -g postgres "${newData}"
         cd "${newData}"
@@ -58,7 +59,7 @@ in
         sudo -u postgres "${newBin}/pg_upgrade" \
           --old-datadir "${oldData}" --new-datadir "${newData}" \
           --old-bindir ${oldBin} --new-bindir ${newBin} \
-          ${lib.concatStringsSep " " cfg.extraArgs} \
+          ${lib.concatStringsSep " " cfgu.extraArgs} \
           "$@"
       ''
     );
