@@ -42,11 +42,13 @@ in
         currPkg = cfg.package;
       in
       pkgs.writeScriptBin "upgrade-pg-cluster" /* bash */ ''
-        set -eux
+        set -eu
 
-        if [[ ${cfgu.newPackage} == ${currPkg} ]]; then
+        echo "Current version: ${currPkg.version}"
+        echo "Update version:  ${cfgu.newPackage.version}"
+
+        if [[ ${cfgu.newPackage.version} == ${currPkg.version} ]]; then
           echo "There is no major postgres update available."
-          echo "Current version: ${currPkg.version}"
           exit 2
         fi
 
