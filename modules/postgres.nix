@@ -38,9 +38,16 @@ in
         newBin = "${cfg.newPackage}/bin";
         oldData = config.services.postgresql.dataDir;
         oldBin = "${config.services.postgresql.package}/bin";
+        currPkg = config.services.postgresql.package;
       in
       pkgs.writeScriptBin "upgrade-pg-cluster" /* bash */ ''
         set -eux
+
+        if [[ ${cfg.newPackage} == ${currPkg} ]]; then
+          echo "There is no major postgres update available."
+          echo "Current version: ${currPkg.version}"
+          exit 2
+        fi
 
         systemctl stop --wait postgresql ${lib.concatStringsSep " " cfg.stopServices}
 
