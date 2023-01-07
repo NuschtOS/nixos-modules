@@ -64,10 +64,12 @@ in
           ${lib.concatStringsSep " " cfgu.extraArgs} \
           "$@"
 
-        echo "Run the following commands after setting:"
-        echo 'services.postgresql.package = pkgs.postgresql_${cfgu.newPackage}'
-        echo "    sudo -u postgres vacuumdb --all --analyze-in-stages"
-        echo "    ${newData}/delete_old_cluster.sh"
+        echo "
+          Run the following commands after setting:
+          services.postgresql.package = pkgs.postgresql_${cfgu.newPackage}
+              sudo -u postgres vacuumdb --all --analyze-in-stages
+              ${newData}/delete_old_cluster.sh
+        "
       ''
     );
   };
