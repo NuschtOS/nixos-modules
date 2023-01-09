@@ -28,7 +28,16 @@
           inherit (lib'.ssh) mkPubKey;
         };
 
-      nixosModules = importDirToKey "modules";
+      nixosModules = lib.foldr (a: b: a // b) { } (map
+        (
+          name: {
+            "${lib.removeSuffix ".nix" name}" = {
+              imports = [ ./modules/${name} ];
+            };
+          }
+        )
+        (ls "modules"));
+
       nixosModule = { config, ... }: {
         _module.args.libS = lib.mkOverride 1000 (self.lib { inherit lib config; });
 
