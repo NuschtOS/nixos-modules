@@ -27,13 +27,15 @@ in
 
       nginx = lib.mkMerge [
         {
-          resolver.addresses = let
-            isIPv6 = addr: builtins.match ".*:.*:.*" addr != null;
-            escapeIPv6 = addr: if isIPv6 addr then
-              "[${addr}]"
-            else
-              addr;
-          in
+          resolver.addresses =
+            let
+              isIPv6 = addr: builtins.match ".*:.*:.*" addr != null;
+              escapeIPv6 = addr:
+                if isIPv6 addr then
+                  "[${addr}]"
+                else
+                  addr;
+            in
             lib.optionals (cfg.resolverAddrFromNameserver && config.networking.nameservers != [ ]) (map escapeIPv6 config.networking.nameservers);
           sslDhparam = lib.mkIf cfg.generateDhparams config.security.dhparams.params.nginx.path;
         }
