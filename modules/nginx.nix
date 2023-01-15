@@ -1,4 +1,4 @@
-{ config, lib, libS, pkgs, ... }:
+{ config, lib, libS, ... }:
 
 let
   cfg = config.services.nginx;
