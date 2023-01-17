@@ -8,7 +8,7 @@
   };
 
   config = {
-    system.userActivationScripts = {
+    system.activationScripts = {
       deleteChannels = lib.mkIf config.nix.deleteChannels ''
         echo "Deleting all channels..."
         rm -rf /root/.nix-channels /home/*/.nix-channels /nix/var/nix/profiles/per-user/*/channels*
