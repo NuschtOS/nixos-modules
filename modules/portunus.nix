@@ -8,7 +8,7 @@ in
     addToHosts = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = lib.mdDoc "Wether to add a hosts entry for the portunus domain pointing to externalIp";
+      description = lib.mdDoc "Whether to add a hosts entry for the portunus domain pointing to externalIp";
     };
 
     externalIp4 = lib.mkOption {
@@ -26,9 +26,7 @@ in
     ldapPreset = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = lib.mdDoc ''
-        Wether to set config.security.ldap to portunus specific settings.
-      '';
+      description = lib.mdDoc "Whether to set config.security.ldap to portunus specific settings.";
     };
   };
 

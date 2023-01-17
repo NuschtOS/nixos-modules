@@ -4,7 +4,7 @@
   mkOpinionatedOption = text: lib.mkOption {
     type = lib.types.bool;
     default = config.opinionatedDefaults;
-    description = lib.mdDoc "Wether to ${text}.";
+    description = lib.mdDoc "Whether to ${text}.";
   };
 
   mkRecursiveDefault = lib.mapAttrsRecursive (_path: lib.mkDefault);
