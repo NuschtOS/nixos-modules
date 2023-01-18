@@ -7,7 +7,11 @@ in
 {
   options = {
     services.hydra.ldap = {
-      enable = lib.mkEnableOption (lib.mdDoc "LDAP login");
+      enable = lib.mkEnableOption (lib.mdDoc ''
+        login only via LDAP.
+        The bind user password must be placed at `/var/lib/hydra/ldap-password.conf` in the format `bindpw = "PASSWORD"
+        It is recommended to use a password without special characters because the perl config parser has weird escaping rule like that comment characters `#` must be escape with backslash
+      '');
 
       roleMappings = lib.mkOption {
         type = with lib.types; listOf (attrsOf str);
