@@ -5,7 +5,7 @@ let
 in
 {
   options = {
-    services.grafana.recommendedDefaults = libS.mkOpinionatedOption "set recommended, secure default settings";
+    services.grafana.recommendedDefaults = libS.mkOpinionatedOption "set recommended and secure default settings";
   };
 
   config = lib.mkIf cfg.enable {
