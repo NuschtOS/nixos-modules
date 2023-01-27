@@ -10,10 +10,7 @@ in
 
   config = lib.mkIf (cfg.recommendedDefaults && cfg.enabled) {
     boot = {
-      # TODO: reactivate when this no longer points to 6.0 which has the following bug:
-      # https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/7VPNMC77YC3SI5LFYKUA4B5MTFPLTLVB/
-      # https://lore.kernel.org/stable/CAFsF8vL4CGFzWMb38_XviiEgxoKX0GYup=JiUFXUOmagdk9CRg@mail.gmail.com/
-      # kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
+      kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
       zfs.forceImportRoot = false;
     };
 
