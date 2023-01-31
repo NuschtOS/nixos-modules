@@ -1,7 +1,8 @@
 { config, lib, libS, ... }:
 
 let
-  cfg = config.programs.ssh;
+  cfgP = config.programs.ssh;
+  cfgS = config.services.ssh;
 in
 {
   options = {
@@ -9,11 +10,15 @@ in
       addPopularKnownHosts = libS.mkOpinionatedOption "add ssh public keys of popular websites to known_hosts";
       recommendedDefaults = libS.mkOpinionatedOption "set recommend and secure default settings";
     };
+
+    services.openssh = {
+      fixPermissions = libS.mkOpinionatedOption "fix host key permissions to prevent lock outs";
+    };
   };
 
-  config = lib.mkIf cfg.addPopularKnownHosts {
+  config = lib.mkIf cfgP.addPopularKnownHosts {
     programs.ssh = {
-      extraConfig = ''
+      extraConfig = lib.mkIf cfgP.recommendedDefaults ''
         # hard complain about wrong knownHosts
         StrictHostKeyChecking accept-new
         # make automated host key rotation possible
@@ -36,5 +41,14 @@ in
         (libS.mkPubKey "git.sr.ht" "ssh-ed25519" "AAAAC3NzaC1lZDI1NTE5AAAAIMZvRd4EtM7R+IHVMWmDkVU3VLQTSwQDSAvW0t2Tkj60")
       ];
     };
+
+    systemd.tmpfiles.rules = lib.mkf cfgS.fixPermissions [
+      "d /etc 0755 root root -"
+      "d /etc/ssh 0755 root root -"
+      "f /etc/ssh/ssh_host_ed25519_key 0700 root root -"
+      "f /etc/ssh/ssh_host_ed25519_key.pub 0744 root root -"
+      "f /etc/ssh/ssh_host_rsa_key 0700 root root -"
+      "f /etc/ssh/ssh_host_rsa_key.pub 0744 root root -"
+    ];
   };
 }
