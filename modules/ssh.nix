@@ -2,7 +2,7 @@
 
 let
   cfgP = config.programs.ssh;
-  cfgS = config.services.ssh;
+  cfgS = config.services.openssh;
 in
 {
   options = {
