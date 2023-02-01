@@ -42,7 +42,7 @@ in
       ];
     };
 
-    systemd.tmpfiles.rules = lib.mkf cfgS.fixPermissions [
+    systemd.tmpfiles.rules = lib.mkIf cfgS.fixPermissions [
       "d /etc 0755 root root -"
       "d /etc/ssh 0755 root root -"
       "f /etc/ssh/ssh_host_ed25519_key 0700 root root -"
