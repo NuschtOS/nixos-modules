@@ -7,5 +7,5 @@
     description = lib.mdDoc "Whether to ${text}.";
   };
 
-  mkRecursiveDefault = lib.mapAttrsRecursive (_path: lib.mkDefault);
+  mkRecursiveDefault = lib.mapAttrsRecursive (_: lib.mkDefault);
 }
