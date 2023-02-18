@@ -21,7 +21,10 @@ in
       zfs.forceImportRoot = false;
     };
 
-    services.zfs.autoScrub.enable = true;
+    services.zfs = {
+      autoScrub.enable = true;
+      trim.enable = true;
+    };
 
     virtualisation.containers.storage.settings = lib.recursiveUpdate options.virtualisation.containers.storage.settings.default {
       # fixes: Error: 'overlay' is not supported over zfs, a mount_program is required: backing file system is unsupported for this graph driver
