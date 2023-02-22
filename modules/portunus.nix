@@ -11,13 +11,13 @@ in
       description = lib.mdDoc "Whether to add a hosts entry for the portunus domain pointing to externalIp";
     };
 
-    externalIp4 = lib.mkOption {
+    internalIp4 = lib.mkOption {
       type = with lib.types; nullOr str;
       default = null;
       description = lib.mdDoc "Internal IPv4 of portunus instance. This is used in the addToHosts option.";
     };
 
-    externalIp6 = lib.mkOption {
+    internalIp6 = lib.mkOption {
       type = with lib.types; nullOr str;
       default = null;
       description = lib.mdDoc "Internal IPv6 of portunus instance. This is used in the addToHosts option.";
@@ -32,8 +32,8 @@ in
 
   config = {
     networking.hosts = lib.mkIf cfg.addToHosts {
-      ${cfg.externalIp4} = [ cfg.domain ];
-      ${cfg.externalIp6} = [ cfg.domain ];
+      ${cfg.internalIp4} = [ cfg.domain ];
+      ${cfg.internalIp6} = [ cfg.domain ];
     };
 
     security.ldap = lib.mkIf cfg.ldapPreset {
