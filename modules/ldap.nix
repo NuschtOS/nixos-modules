@@ -44,7 +44,7 @@ in
         roleField = lib.mkOption {
           type = lib.types.str;
           example = "cn";
-          description = lib.mdDoc "The attribute the user account is listed in a group.";
+          description = lib.mdDoc "The attribute where the user account is listed in a group.";
         };
 
         roleFilter = lib.mkOption {
@@ -56,7 +56,7 @@ in
         roleValue = lib.mkOption {
           type = lib.types.str;
           example = "dn";
-          description = lib.mdDoc "The attribute of the user account to use in filter.";
+          description = lib.mdDoc "The attribute of the user object where to find its distinguished name.";
         };
 
         searchUID = lib.mkOption {
@@ -84,7 +84,7 @@ in
         userField = lib.mkOption {
           type = lib.types.str;
           example = "uid";
-          description = lib.mdDoc "The attribute of the user object to use as the username.";
+          description = lib.mdDoc "The attribute of the user object where to find its username.";
         };
 
         # TODO: allow email and user login for double bind?
