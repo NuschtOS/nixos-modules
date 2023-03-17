@@ -34,7 +34,7 @@ in
           </credential>
           <store>
             class = LDAP
-            ldap_server = "${ldap.server}"
+            ldap_server = "${ldap.domainName}"
             <ldap_server_options>
               scheme = ldaps
               timeout = 10

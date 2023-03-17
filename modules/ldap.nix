@@ -31,6 +31,12 @@ in
           '';
         };
 
+        domainName = lib.mkOption {
+          type = lib.types.str;
+          example = "auth.example.com";
+          description = lib.mdDoc "The domain name to connect to the ldap server.";
+        };
+
         roleBaseDN = lib.mkOption {
           type = lib.types.str;
           example = "ou=groups";
@@ -63,12 +69,6 @@ in
           type = lib.types.str;
           example = "search";
           description = lib.mdDoc "The uid of the service user used by services, often referred as search user.";
-        };
-
-        server = lib.mkOption {
-          type = lib.types.str;
-          example = "auth.example.com";
-          description = lib.mdDoc "The DNS name to connect to the ldap server.";
         };
 
         userBaseDN = lib.mkOption {
