@@ -37,6 +37,24 @@ in
           description = lib.mdDoc "The domain name to connect to the ldap server.";
         };
 
+        givenNameField = lib.mkOption {
+          type = lib.types.str;
+          example = "givenName";
+          description = lib.mdDoc "The attribute of the user object where to find its given name.";
+        };
+
+        mailField = lib.mkOption {
+          type = lib.types.str;
+          example = "mail";
+          description = lib.mdDoc "The attribute of the user object where to find its email.";
+        };
+
+        port = lib.mkOption {
+          type = lib.types.port;
+          example = "636";
+          description = lib.mdDoc "The port the ldap server listens on. Usually this is 389 for ldap and 636 for ldaps.";
+        };
+
         roleBaseDN = lib.mkOption {
           type = lib.types.str;
           example = "ou=groups";
@@ -71,6 +89,12 @@ in
           description = lib.mdDoc "The uid of the service user used by services, often referred as search user.";
         };
 
+        surnameField = lib.mkOption {
+          type = lib.types.str;
+          example = "sn";
+          description = lib.mdDoc "The attribute of the user object where to find its surname.";
+        };
+
         userBaseDN = lib.mkOption {
           type = lib.types.str;
           example = "ou=users";
@@ -94,6 +118,9 @@ in
           example = "(&(objectclass=person)(uid=%s))";
           description = lib.mdDoc "Filter User search filter";
         };
+
+        # TODO: add attribute which returns a function to generate a user filter that filters on a specific user group
+        # (&(uid=%s)(isMemberOf=cn=gitea-users,ou=groups,${ldap.suffix}))
       };
     };
     default = { };
