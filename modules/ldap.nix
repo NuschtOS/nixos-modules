@@ -2,7 +2,6 @@
 
 let
   cfg = config.security.ldap;
-  inherit (config.services) portunus;
 in
 {
   options.security.ldap = lib.mkOption {
@@ -41,6 +40,12 @@ in
           type = lib.types.str;
           example = "givenName";
           description = lib.mdDoc "The attribute of the user object where to find its given name.";
+        };
+
+        groupFilter = lib.mkOption {
+          type = with lib.types; functionTo str;
+          example = lib.literalExpression ''group: "(&(objectclass=person)(isMemberOf=cn=''${group},''${config.security.ldap.roleBaseDN}"'';
+          description = lib.mdDoc "A function that returns a group filter that matches the first argument against the names of the groups the user is part of.";
         };
 
         mailField = lib.mkOption {
@@ -117,16 +122,11 @@ in
           description = lib.mdDoc "The attribute of the user object where to find its username.";
         };
 
-        # TODO: allow email and user login for double bind?
-        # (|(uid=%s)(mail=%s))
         userFilter = lib.mkOption {
-          type = lib.types.str;
-          example = "(&(objectclass=person)(uid=%s))";
-          description = lib.mdDoc "Filter User search filter";
+          type = with lib.types; functionTo str;
+          example = ''param: "(&(objectclass=person)(|(uid=''${param})(mail=''${param})))"'';
+          description = lib.mdDoc "A function that returns a user search filter that uses the first argument as the placeholder.";
         };
-
-        # TODO: add attribute which returns a function to generate a user filter that filters on a specific user group
-        # (&(uid=%s)(isMemberOf=cn=gitea-users,ou=groups,${ldap.suffix}))
       };
     };
     default = { };

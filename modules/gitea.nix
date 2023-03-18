@@ -44,8 +44,8 @@ in
           bind-dn = mkOptStr ldap.bindDN;
           bind-password = mkOptStr "$(cat ${cfg.ldap.bindPasswordFile})";
           user-search-base = mkOptStr ldap.userBaseDN;
-          user-filter = mkOptStr ldap.userFilter;
-          admin-filter = mkOptStr cfg.ldap.adminGroup;
+          user-filter = mkOptStr (ldap.userFilter "%[1]s");
+          admin-filter = mkOptStr (ldap.groupFilter cfg.ldap.adminGroup);
           username-attribute = mkOptStr ldap.userField;
           firstname-attribute = mkOptStr ldap.givenNameField;
           surname-attribute = mkOptStr ldap.surnameField;

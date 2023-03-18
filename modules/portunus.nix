@@ -39,6 +39,7 @@ in
     security.ldap = lib.mkIf cfg.ldapPreset {
       domainName = cfg.domain;
       givenNameField = "givenName";
+      groupFilter = group: "(&(objectclass=person)(isMemberOf=cn=${group},${config.security.ldap.roleBaseDN}";
       mailField = "mail";
       port = 636;
       roleBaseDN = "ou=groups";
@@ -49,9 +50,7 @@ in
       searchUID = "search";
       surnameField = "sn";
       userField = "uid";
-      # TODO: add enum setting for login with username, email or both
-      # userFilter = "(&(objectclass=person)(|(uid=%s)(mail=%s)))";
-      userFilter = "(&(objectclass=person)(uid=%s))";
+      userFilter = param: "(&(objectclass=person)(|(uid=${param})(mail=${param})))";
       userBaseDN = "ou=users";
     };
   };
