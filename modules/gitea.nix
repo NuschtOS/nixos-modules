@@ -50,6 +50,7 @@ in
           firstname-attribute = mkOptStr ldap.givenNameField;
           surname-attribute = mkOptStr ldap.surnameField;
           email-attribute = mkOptStr ldap.mailField;
+          public-ssh-key-attribute = mkOptStr ldap.sshPublicKeyField;
         };
       };
       recommendedDefaults = libS.mkOpinionatedOption "set recommended, secure default settings";

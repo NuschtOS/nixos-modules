@@ -45,6 +45,7 @@ in
       roleField = "cn";
       roleFilter = "(&(objectclass=groupOfNames)(member=%s))";
       roleValue = "dn";
+      sshPublicKeyField = "sshPublicKey";
       searchUID = "search";
       surnameField = "sn";
       userField = "uid";

@@ -89,6 +89,12 @@ in
           description = lib.mdDoc "The uid of the service user used by services, often referred as search user.";
         };
 
+        sshPublicKeyField = lib.mkOption {
+          type = lib.types.str;
+          example = "sshPublicKey";
+          description = lib.mdDoc "The attribute of the user object where to find its ssh public key.";
+        };
+
         surnameField = lib.mkOption {
           type = lib.types.str;
           example = "sn";
