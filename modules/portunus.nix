@@ -39,7 +39,7 @@ in
     security.ldap = lib.mkIf cfg.ldapPreset {
       domainName = cfg.domain;
       givenNameField = "givenName";
-      groupFilter = group: "(&(objectclass=person)(isMemberOf=cn=${group},${config.security.ldap.roleBaseDN}";
+      groupFilter = group: "(&(objectclass=person)(isMemberOf=cn=${group},${config.security.ldap.roleBaseDN}))";
       mailField = "mail";
       port = 636;
       roleBaseDN = "ou=groups";
