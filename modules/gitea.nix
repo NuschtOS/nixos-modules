@@ -66,8 +66,12 @@ in
           ENABLED = true;
           SCHEME = "https";
         };
+        cron.ENABLED = true;
+        "cron.resync_all_sshkeys".ENABLED = true;
+        "cron.resync_all_hooks".ENABLED = true;
         other.SHOW_FOOTER_VERSION = false;
         repository.ACCESS_CONTROL_ALLOW_ORIGIN = config.services.gitea.domain;
+        security.DISABLE_GIT_HOOKS = true;
         server = {
           ENABLE_GZIP = true;
           SSH_SERVER_CIPHERS = "chacha20-poly1305@openssh.com, aes256-gcm@openssh.com, aes128-gcm@openssh.com";
