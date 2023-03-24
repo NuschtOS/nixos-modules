@@ -38,7 +38,7 @@ in
         ];
 
         settings.modules = [{
-          module = "ldap_auth_provider.LdapAuthProviderModule";
+          module = "ldap_auth_provider.LdapAuthProvider";
           config = {
             enabled = true;
             mode = "search";
