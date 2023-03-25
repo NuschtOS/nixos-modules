@@ -1,10 +1,10 @@
-{ config, lib, libS, ... }:
+{ config, lib, ... }:
 
 {
   options.nix = {
     deleteChannels = lib.mkEnableOption "" // { description = "Whether to delete all channels on a system switch."; };
 
-    deleteUserProfiles = lib.mkEnableOption "" // { description = "Whether to delete all channels on a system switch."; };
+    deleteUserProfiles = lib.mkEnableOption "" // { description = "Whether to delete all user profiles on a system switch."; };
   };
 
   config = {
