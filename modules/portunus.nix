@@ -5,6 +5,8 @@ let
 in
 {
   options.services.portunus = {
+    # TODO: how to automatically set this?
+    # maybe based on $service.ldap.enable && services.portunus.enable?
     addToHosts = lib.mkOption {
       type = lib.types.bool;
       default = false;
