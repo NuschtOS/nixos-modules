@@ -61,7 +61,7 @@ in
 
         nginx = {
           enable = true;
-          virtualHosts."element.c3d2.de" = {
+          virtualHosts."${cfge.domain}" = {
             forceSSL = true;
             enableACME = true;
             root = (cfge.package.override {
