@@ -48,10 +48,6 @@ in
               sha256 = "sha256-fZzOuJ6K1NXJHWvOfSIU5FAfL0dVK7b7dhhtb6yuCGE=";
             })
             # fix creating new groups with members
-            (fetchpatch {
-              url = "https://github.com/majewsky/portunus/commit/d4f0ca61fde0c9524a4230cfc3be2e8f51cb2a89.patch";
-              sha256 = "sha256-9VPIn5JeWqrO4dITt9nHUf5sUfLb9w3DNZBArybjuLs=";
-            })
           ];
         });
       })
