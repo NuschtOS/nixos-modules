@@ -8,7 +8,8 @@
   outputs = { self, nixpkgs-lib, ... }:
     let
       inherit (nixpkgs-lib) lib;
-      ls = dir: lib.attrNames (builtins.readDir (./. + "/${dir}"));
+      src = builtins.filterSource (path: type: type == "directory" || lib.hasSuffix ".nix" (baseNameOf path)) ./.;
+      ls = dir: lib.attrNames (builtins.readDir (src + "/${dir}"));
       fileList = dir: map (file: ./. + "/${dir}/${file}") (ls dir);
       importDirToKey = dir: args: lib.listToAttrs (map
         (file: {
