@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, ... }:
 
 let
   cfg = config.services.portunus;
@@ -38,8 +38,8 @@ in
       ${cfg.internalIp6} = [ cfg.domain ];
     };
 
-    nixpkgs.overlays = with pkgs; [
-      (final: prev: {
+    nixpkgs.overlays = [
+      (final: prev: with final; {
         portunus = prev.portunus.overrideAttrs ({ patches ? [ ], ... }: {
           patches = patches ++ [
             # allow editing members of groups
