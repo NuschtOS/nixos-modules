@@ -13,7 +13,7 @@ in
       aggressiveResize = true;
       baseIndex = 1;
       clock24 = true;
-      escape-time = 100;
+      escapeTime = 100;
       terminal = "xterm-256color";
       extraConfig = ''
         # focus events enabled for terminals that support them
