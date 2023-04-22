@@ -39,7 +39,7 @@ in
                   exec env NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt ${pkgs.nix}/bin/nix-store --serve --write
                   ;;
                 *)
-                  echo "Access only allowed for using the nix remote builder" 1>&2
+                  echo "Access is only allowed for the nix remote builder" 1>&2
                   exit 1
               esac
             '';
