@@ -1,20 +1,62 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 
+let
+  cfg = config.nix;
+in
 {
   options.nix = {
     deleteChannels = lib.mkEnableOption "" // { description = "Whether to delete all channels on a system switch."; };
 
     deleteUserProfiles = lib.mkEnableOption "" // { description = "Whether to delete all user profiles on a system switch."; };
+
+    remoteBuilder = {
+      enable = lib.mkEnableOption "restricted nix remote builder";
+
+      sshPublicKeys = lib.mkOption {
+        description = "SSH public keys set for the \"nix-remote-builder\" user";
+        type = lib.types.listOf lib.types.str;
+      };
+    };
   };
 
   config = {
+    # based on https://github.com/numtide/srvos/blob/main/nixos/roles/nix-remote-builder.nix
+    # and https://discourse.nixos.org/t/wrapper-to-restrict-builder-access-through-ssh-worth-upstreaming/25834
+    nix.settings.trusted-users = lib.mkIf cfg.remoteBuilder.enable [ config.users.users.nix-remote-builder.name ];
+
+    users.users.nix-remote-builder = lib.mkIf cfg.remoteBuilder.enable {
+      group = "nogroup";
+      isNormalUser = true;
+      openssh.authorizedKeys.keys = map
+        (key:
+          let
+            wrapper-dispatch-ssh-nix = pkgs.writeShellScriptBin "wrapper-dispatch-ssh-nix" /* bash */ ''
+              case $SSH_ORIGINAL_COMMAND in
+                "nix-daemon --stdio")
+                  exec env NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt ${pkgs.nix}/bin/nix-daemon --stdio
+                  ;;
+                "nix-store --serve --write")
+                  exec env NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt ${pkgs.nix}/bin/nix-store --serve --write
+                  ;;
+                *)
+                  echo "Access only allowed for using the nix remote builder" 1>&2
+                  exit 1
+              esac
+            '';
+
+          in
+          "restrict,pty,command=\"${wrapper-dispatch-ssh-nix}/bin/wrapper-dispatch-ssh-nix\" ${key}"
+        )
+        config.nix.remoteBuilder.sshPublicKeys;
+    };
+
     system.activationScripts = {
-      deleteChannels = lib.mkIf config.nix.deleteChannels ''
+      deleteChannels = lib.mkIf cfg.deleteChannels ''
         echo "Deleting all channels..."
         rm -rf /root/.nix-channels /home/*/.nix-channels /nix/var/nix/profiles/per-user/*/channels*
       '';
 
-      deleteUserProfiles = lib.mkIf config.nix.deleteUserProfiles ''
+      deleteUserProfiles = lib.mkIf cfg.deleteUserProfiles ''
         echo "Deleting all user profiles..."
         rm -rf /root/.nix-profile /home/*/.nix-profile /nix/var/nix/profiles/per-user/*/profile*
       '';
