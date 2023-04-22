@@ -9,10 +9,14 @@
     hardware.opengl = {
      extraPackages = with pkgs; lib.mkIf config.hardware.intelGPU [
         intel-compute-runtime # OpenCL library
-        intel-media-driver # video encoding/decoding hardware accerlation
+        # video encoding/decoding hardware acceleration
+        intel-media-driver # broadwell or newer
+        vaapiIntel # older harder
       ];
       extraPackages32 = with pkgs.pkgsi686Linux; lib.mkIf config.hardware.intelGPU [
-        intel-media-driver # video encoding/decoding hardware accerlation
+        # video encoding/decoding hardware acceleration
+        intel-media-driver # broadwell or newer
+        vaapiIntel # older harder
       ];
     };
   };
