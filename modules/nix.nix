@@ -13,8 +13,15 @@ in
       enable = lib.mkEnableOption "restricted nix remote builder";
 
       sshPublicKeys = lib.mkOption {
-        description = "SSH public keys set for the \"nix-remote-builder\" user";
+        description = "SSH public keys accepted by the remote build user.";
         type = lib.types.listOf lib.types.str;
+      };
+
+      name = lib.mkOption {
+        description = "Name of the user used for remote building.";
+        type = lib.types.str;
+        readOnly = true;
+        default = "nix-remote-builder";
       };
     };
   };
@@ -22,9 +29,9 @@ in
   config = {
     # based on https://github.com/numtide/srvos/blob/main/nixos/roles/nix-remote-builder.nix
     # and https://discourse.nixos.org/t/wrapper-to-restrict-builder-access-through-ssh-worth-upstreaming/25834
-    nix.settings.trusted-users = lib.mkIf cfg.remoteBuilder.enable [ config.users.users.nix-remote-builder.name ];
+    nix.settings.trusted-users = lib.mkIf cfg.remoteBuilder.enable [ cfg.remoteBuilder.name ];
 
-    users.users.nix-remote-builder = lib.mkIf cfg.remoteBuilder.enable {
+    users.users.${cfg.remoteBuilder.name} = lib.mkIf cfg.remoteBuilder.enable {
       group = "nogroup";
       isNormalUser = true;
       openssh.authorizedKeys.keys = map
