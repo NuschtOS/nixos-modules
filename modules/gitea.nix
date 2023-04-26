@@ -59,10 +59,9 @@ in
 
   config = lib.mkIf cfg.enable {
     services.gitea = lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
-      rootUrl = "https://${config.services.gitea.domain}/";
       settings = {
         cors = {
-          ALLOW_DOMAIN = config.services.gitea.domain;
+          ALLOW_DOMAIN = cfg.settings.server.DOMAIN;
           ENABLED = true;
           SCHEME = "https";
         };
@@ -70,10 +69,11 @@ in
         "cron.resync_all_sshkeys".ENABLED = true;
         "cron.resync_all_hooks".ENABLED = true;
         other.SHOW_FOOTER_VERSION = false;
-        repository.ACCESS_CONTROL_ALLOW_ORIGIN = config.services.gitea.domain;
+        repository.ACCESS_CONTROL_ALLOW_ORIGIN = cfg.settings.server.DOMAIN;
         security.DISABLE_GIT_HOOKS = true;
         server = {
           ENABLE_GZIP = true;
+          ROOT_URL = "https://${cfg.settings.server.DOMAIN}/";
           SSH_SERVER_CIPHERS = "chacha20-poly1305@openssh.com, aes256-gcm@openssh.com, aes128-gcm@openssh.com";
           SSH_SERVER_KEY_EXCHANGES = "curve25519-sha256@libssh.org, ecdh-sha2-nistp521, ecdh-sha2-nistp384, ecdh-sha2-nistp256, diffie-hellman-group14-sha1";
           SSH_SERVER_MACS = "hmac-sha2-256-etm@openssh.com, hmac-sha2-256, hmac-sha1";
