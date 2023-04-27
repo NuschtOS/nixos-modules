@@ -58,40 +58,38 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    services.gitea = lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
-      settings = {
-        cors = {
-          ALLOW_DOMAIN = cfg.settings.server.DOMAIN;
-          ENABLED = true;
-          SCHEME = "https";
-        };
-        cron.ENABLED = true;
-        "cron.resync_all_sshkeys".ENABLED = true;
-        "cron.resync_all_hooks".ENABLED = true;
-        other.SHOW_FOOTER_VERSION = false;
-        repository.ACCESS_CONTROL_ALLOW_ORIGIN = cfg.settings.server.DOMAIN;
-        "repository.signing".DEFAULT_TRUST_MODEL = "committer";
-        security.DISABLE_GIT_HOOKS = true;
-        server = {
-          ENABLE_GZIP = true;
-          ROOT_URL = "https://${cfg.settings.server.DOMAIN}/";
-          SSH_SERVER_CIPHERS = "chacha20-poly1305@openssh.com, aes256-gcm@openssh.com, aes128-gcm@openssh.com";
-          SSH_SERVER_KEY_EXCHANGES = "curve25519-sha256@libssh.org, ecdh-sha2-nistp521, ecdh-sha2-nistp384, ecdh-sha2-nistp256, diffie-hellman-group14-sha1";
-          SSH_SERVER_MACS = "hmac-sha2-256-etm@openssh.com, hmac-sha2-256, hmac-sha1";
-        };
-        session = {
-          COOKIE_SECURE = true;
-          PROVIDER = "db";
-          SAME_SITE = "strict";
-          SESSION_LIFE_TIME = 604800; # 7 days
-        };
-        "ssh.minimum_key_sizes" = {
-          ECDSA = -1;
-          RSA = 4095;
-        };
-        time.DEFAULT_UI_LOCATION = config.time.timeZone;
-        update_checker.ENABLED = false;
+    services.gitea.settings = lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
+      cors = {
+        ALLOW_DOMAIN = cfg.settings.server.DOMAIN;
+        ENABLED = true;
+        SCHEME = "https";
       };
+      cron.ENABLED = true;
+      "cron.resync_all_sshkeys".ENABLED = true;
+      "cron.resync_all_hooks".ENABLED = true;
+      other.SHOW_FOOTER_VERSION = false;
+      repository.ACCESS_CONTROL_ALLOW_ORIGIN = cfg.settings.server.DOMAIN;
+      "repository.signing".DEFAULT_TRUST_MODEL = "committer";
+      security.DISABLE_GIT_HOOKS = true;
+      server = {
+        ENABLE_GZIP = true;
+        ROOT_URL = "https://${cfg.settings.server.DOMAIN}/";
+        SSH_SERVER_CIPHERS = "chacha20-poly1305@openssh.com, aes256-gcm@openssh.com, aes128-gcm@openssh.com";
+        SSH_SERVER_KEY_EXCHANGES = "curve25519-sha256@libssh.org, ecdh-sha2-nistp521, ecdh-sha2-nistp384, ecdh-sha2-nistp256, diffie-hellman-group14-sha1";
+        SSH_SERVER_MACS = "hmac-sha2-256-etm@openssh.com, hmac-sha2-256, hmac-sha1";
+      };
+      session = {
+        COOKIE_SECURE = true;
+        PROVIDER = "db";
+        SAME_SITE = "strict";
+        SESSION_LIFE_TIME = 604800; # 7 days
+      };
+      "ssh.minimum_key_sizes" = {
+        ECDSA = -1;
+        RSA = 4095;
+      };
+      time.DEFAULT_UI_LOCATION = config.time.timeZone;
+      update_checker.ENABLED = false;
     });
 
     systemd.services.gitea.preStart = let
