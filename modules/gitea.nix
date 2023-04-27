@@ -70,6 +70,7 @@ in
         "cron.resync_all_hooks".ENABLED = true;
         other.SHOW_FOOTER_VERSION = false;
         repository.ACCESS_CONTROL_ALLOW_ORIGIN = cfg.settings.server.DOMAIN;
+        "repository.signing".DEFAULT_TRUST_MODEL = "committer";
         security.DISABLE_GIT_HOOKS = true;
         server = {
           ENABLE_GZIP = true;
