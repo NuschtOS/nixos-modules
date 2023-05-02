@@ -60,12 +60,12 @@ in
     system.activationScripts = {
       deleteChannels = lib.mkIf cfg.deleteChannels ''
         echo "Deleting all channels..."
-        rm -rf /root/.nix-channels /home/*/.nix-channels /nix/var/nix/profiles/per-user/*/channels*
+        rm -rf /root/.nix-channels /home/*/.nix-channels /nix/var/nix/profiles/per-user/*/channels* || true
       '';
 
       deleteUserProfiles = lib.mkIf cfg.deleteUserProfiles ''
         echo "Deleting all user profiles..."
-        rm -rf /root/.nix-profile /home/*/.nix-profile /nix/var/nix/profiles/per-user/*/profile*
+        rm -rf /root/.nix-profile /home/*/.nix-profile /nix/var/nix/profiles/per-user/*/profile* || true
       '';
     };
   };
