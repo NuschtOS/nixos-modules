@@ -8,7 +8,8 @@
   config = {
     hardware.opengl = {
      extraPackages = with pkgs; lib.mkIf config.hardware.intelGPU [
-        intel-compute-runtime # OpenCL library
+        intel-compute-runtime # OpenCL library for iGPU
+        intel-ocl # OpenCL library for CPU
         # video encoding/decoding hardware acceleration
         intel-media-driver # broadwell or newer
         vaapiIntel # older harder
