@@ -9,17 +9,14 @@ in
   };
 
   config = lib.mkIf (cfg.recommendedDefaults && cfg.enabled) {
-    boot = {
-      kernelPackages =
-        let
-          ver = config.boot.zfs.package.latestCompatibleLinuxPackages.kernel.version;
-        in
-        # 6.0 has a bug in the bind syscall and does not error correct when the port is already in use
-          # https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/7VPNMC77YC3SI5LFYKUA4B5MTFPLTLVB/
-          # https://lore.kernel.org/stable/CAFsF8vL4CGFzWMb38_XviiEgxoKX0GYup=JiUFXUOmagdk9CRg@mail.gmail.com/
-        lib.mkIf (lib.versions.majorMinor ver != "6.0") (lib.mkDefault config.boot.zfs.package.latestCompatibleLinuxPackages);
-      zfs.forceImportRoot = false;
-    };
+    boot.kernelPackages =
+      let
+        ver = config.boot.zfs.package.latestCompatibleLinuxPackages.kernel.version;
+      in
+      # 6.0 has a bug in the bind syscall and does not error correct when the port is already in use
+        # https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/7VPNMC77YC3SI5LFYKUA4B5MTFPLTLVB/
+        # https://lore.kernel.org/stable/CAFsF8vL4CGFzWMb38_XviiEgxoKX0GYup=JiUFXUOmagdk9CRg@mail.gmail.com/
+      lib.mkIf (lib.versions.majorMinor ver != "6.0") (lib.mkDefault config.boot.zfs.package.latestCompatibleLinuxPackages);
 
     services.zfs = {
       autoScrub.enable = true;
