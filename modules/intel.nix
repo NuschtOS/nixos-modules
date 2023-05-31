@@ -12,12 +12,12 @@
         intel-ocl # OpenCL library for CPU
         # video encoding/decoding hardware acceleration
         intel-media-driver # broadwell or newer
-        vaapiIntel # older harder
+        vaapiIntel # older hardware like haswell
       ];
       extraPackages32 = with pkgs.pkgsi686Linux; lib.mkIf config.hardware.intelGPU [
         # video encoding/decoding hardware acceleration
         intel-media-driver # broadwell or newer
-        vaapiIntel # older harder
+        vaapiIntel # older hardware like haswell
       ];
     };
   };
