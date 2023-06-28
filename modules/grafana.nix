@@ -18,8 +18,11 @@ in
     ];
 
     services.grafana.settings = lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
+      # no analytics, sorry, not sorry
       analytics = {
+        # TODO: drop after https://github.com/NixOS/nixpkgs/pull/240323 is merged
         check_for_updates = false;
+        feedback_links_enabled = false;
         reporting_enabled = false;
       };
       security = {
