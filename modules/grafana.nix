@@ -1,8 +1,7 @@
-{ config, lib, libS, options, ... }:
+{ config, lib, libS, ... }:
 
 let
   cfg = config.services.grafana;
-  opt = options.services.grafana;
 in
 {
   options = {
@@ -12,7 +11,9 @@ in
   config = lib.mkIf cfg.enable {
     assertions = [
       {
-        assertion = cfg.settings.security.secret_key == opt.settings.security.secret_key.default;
+        # the default value of services.grafana.settings.security.secret_key is hardcoded instead of using options.
+        # because I couldn't figure out how to extract it from the freeform type
+        assertion = cfg.settings.security.secret_key == "SW2YcwTIb9zpOOhoPsMm";
         message = "services.grafana.settings.security.secret_key must be changed from it's default value!";
       }
     ];
