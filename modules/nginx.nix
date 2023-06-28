@@ -71,7 +71,7 @@ in
         }
 
         (lib.mkIf cfg.recommendedZstdSettings {
-          commonHttpConfig = ''
+          commonHttpConfig = /* nginx */ ''
             # TODO: upstream this?
             zstd_types application/x-nix-archive;
           '';
