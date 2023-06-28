@@ -1,4 +1,4 @@
-{ config, lib, libS, ... }:
+{ config, lib, libS, options, ... }:
 
 let
   cfg = config.services.grafana;
