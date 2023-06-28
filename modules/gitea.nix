@@ -89,7 +89,6 @@ in
         RSA = 4095;
       };
       time.DEFAULT_UI_LOCATION = config.time.timeZone;
-      update_checker.ENABLED = false;
     });
 
     systemd.services.gitea.preStart = let

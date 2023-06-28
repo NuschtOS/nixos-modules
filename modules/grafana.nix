@@ -20,7 +20,6 @@ in
       };
       server = {
         enable_gzip = true;
-        http_addr = "127.0.0.1";
         root_url = "https://${cfg.settings.server.domain}";
       };
     });
