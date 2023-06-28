@@ -33,6 +33,8 @@ in
     resolverAddrFromNameserver = libS.mkOpinionatedOption "set resolver address to environment.nameservers";
 
     rotateLogsFaster = libS.mkOpinionatedOption "keep logs only for 7 days and rotate them daily";
+
+    setHSTSHeader = libS.mkOpinionatedOption "to add the HSTS header to all virtual hosts";
   };
 
   config = lib.mkIf cfg.enable {
@@ -74,6 +76,12 @@ in
           commonHttpConfig = /* nginx */ ''
             # TODO: upstream this?
             zstd_types application/x-nix-archive;
+          '';
+        })
+
+        (lib.mkIf cfg.setHSTSHeader {
+          commonServerConfig = /* nginx */ ''
+            more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
           '';
         })
 
