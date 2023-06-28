@@ -9,12 +9,15 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # the default values are hardcoded instead of using options. because I couldn't figure out how to extract them from the freeform type
     assertions = [
       {
-        # the default value of services.grafana.settings.security.secret_key is hardcoded instead of using options.
-        # because I couldn't figure out how to extract it from the freeform type
         assertion = cfg.settings.security.secret_key != "SW2YcwTIb9zpOOhoPsMm";
-        message = "services.grafana.settings.security.secret_key must be changed from it's default value!";
+        message = "services.grafana.settings.security.secret_key must be changed from it's insecure, default value!";
+      }
+      {
+        assertion = cfg.settings.security.admin_password != "admin";
+        message = "services.grafana.settings.security.admin_password must be changed from it's insecure, default value!";
       }
     ];
 
