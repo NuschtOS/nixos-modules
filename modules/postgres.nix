@@ -36,7 +36,7 @@ in
     environment.systemPackages = lib.optional cfgu.enable (
       let
         newData = "/var/lib/postgresql/${cfgu.newPackage.psqlSchema}";
-        newBin = "${if cfg.extraPlugins == [] then cfgu.newPackage else cfgu.newPackage.withPackages (_: with cfgu.newPackage.pkgs; cfg.extraPlugins)}/bin";
+        newBin = "${if cfg.extraPlugins == [] then cfgu.newPackage else cfgu.newPackage.withPackages (_: cfg.extraPlugins)}/bin";
         oldData = config.services.postgresql.dataDir;
         oldBin = "${config.services.postgresql.package}/bin";
         currPkg = cfg.package;
