@@ -2,6 +2,7 @@
 
 let
   cfg = config.services.grafana;
+  opt = options.services.grafana;
 in
 {
   options = {
@@ -9,6 +10,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.settings.security.secret_key == opt.settings.security.secret_key.default;
+        message = "services.grafana.settings.security.secret_key must be changed from it's default value!";
+      }
+    ];
+
     services.grafana.settings = lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
       analytics = {
         check_for_updates = false;
