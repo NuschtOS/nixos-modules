@@ -1,7 +1,8 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   cfg = config.services.portunus;
+  inherit (config.security) ldap;
 in
 {
   options.services.portunus = {
@@ -30,6 +31,28 @@ in
       default = false;
       description = lib.mdDoc "Whether to set config.security.ldap to portunus specific settings.";
     };
+
+    removeAddGroup = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = lib.mdDoc "When enabled, remove the function to add new Groups via the web ui, to enforce seeding usage.";
+    };
+
+    seedGroups = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = lib.mdDoc "Wether to seed groups configured in services as not member managed groups.";
+    };
+
+    # TODO: upstream to nixos
+    seedSettings = lib.mkOption {
+      type = with lib.types; nullOr (attrsOf (listOf (attrsOf anything)));
+      default = null;
+      description = lib.mdDoc ''
+        Seed settings for users and grousp.
+        See upstream for format <https://github.com/majewsky/portunus#seeding-users-and-groups-from-static-configuration>
+      '';
+    };
   };
 
   config = {
@@ -41,37 +64,49 @@ in
     nixpkgs.overlays = [
       (final: prev: with final; {
         portunus = prev.portunus.overrideAttrs ({ patches ? [ ], ... }: {
-          patches = patches ++ [
-            # allow editing members of groups
+          src = fetchFromGitHub {
+            owner = "majewsky";
+            repo = "portunus";
+            rev = "8bad0661ecca9276991447f8e585c20c450ad57a";
+            hash = "sha256-59AvNWhnsvtrVmAJRcHeNOYOlHCx1ZZSqwFvyAM+Ye8=";
+          };
+
+          patches = patches
+          ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff
+          ++ [
+            # display errors when editing seeded groups/users
             (fetchpatch {
-              url = "https://github.com/majewsky/portunus/commit/70ebf6abf944f3b5064169a2ac9d5f2ddcc7b58c.patch";
-              sha256 = "sha256-fZzOuJ6K1NXJHWvOfSIU5FAfL0dVK7b7dhhtb6yuCGE=";
+              url = "https://github.com/majewsky/portunus/commit/9999994e6b90e20405944767fb7d225914c2303b.patch";
+              sha256 = "sha256-IEQpWnG3ZekZ+QCEzSZcbMQe6iEalOhDz3qNbjDgg/A=";
             })
-            # fill group members on group creation
+            # add option to not seed group members
             (fetchpatch {
-              url = "https://github.com/majewsky/portunus/commit/6016723ef7176f9a6e3174d9614ec749310d5772.patch";
-              sha256 = "sha256-sDzx+ccj4vJCmZul1wxIRs1F4MfqLhB0Na22yLUIITE=";
+              url = "https://github.com/majewsky/portunus/commit/0000053dc6cabbdd6ea9b47ca1af7451449d95d1.patch";
+              sha256 = "sha256-szAjybLkzk14LNAMU/LH0Bwm+MpsEvLQmEPMtEgI0po=";
             })
           ];
         });
       })
     ];
 
+    services.portunus.seedPath = pkgs.writeText "seed.json" (builtins.toJSON cfg.seedSettings);
+
     security.ldap = lib.mkIf cfg.ldapPreset {
       domainName = cfg.domain;
       givenNameField = "givenName";
-      groupFilter = group: "(&(objectclass=person)(isMemberOf=cn=${group},${config.security.ldap.roleBaseDN}))";
+      groupFilter = group: "(&(objectclass=person)(isMemberOf=cn=${group},${ldap.roleBaseDN}))";
       mailField = "mail";
       port = 636;
       roleBaseDN = "ou=groups";
       roleField = "cn";
       roleFilter = "(&(objectclass=groupOfNames)(member=%s))";
       roleValue = "dn";
+      searchFilterWithGroupFilter = userFilterGroup: userFilter: if (userFilterGroup != null) then "(&${ldap.groupFilter userFilterGroup})" else userFilter;
       sshPublicKeyField = "sshPublicKey";
       searchUID = "search";
       surnameField = "sn";
       userField = "uid";
-      userFilter = param: "(&(objectclass=person)(|(uid=${param})(mail=${param})))";
+      userFilter = replaceStr: "(&(objectclass=person)(|(uid=${replaceStr})(mail=${replaceStr})))";
       userBaseDN = "ou=users";
     };
   };

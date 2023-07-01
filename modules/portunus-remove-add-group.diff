@@ -1,0 +1,25 @@
+diff --git a/internal/frontend/core.go b/internal/frontend/core.go
+index e44ff0c..17ca69e 100644
+--- a/internal/frontend/core.go
++++ b/internal/frontend/core.go
+@@ -56,8 +56,6 @@ func HTTPHandler(engine core.Engine, isBehindTLSProxy bool) http.Handler {
+ 	r.Methods("POST").Path(`/users/{uid}/delete`).Handler(postUserDeleteHandler(engine))
+ 
+ 	r.Methods("GET").Path(`/groups`).Handler(getGroupsHandler(engine))
+-	r.Methods("GET").Path(`/groups/new`).Handler(getGroupsNewHandler(engine))
+-	r.Methods("POST").Path(`/groups/new`).Handler(postGroupsNewHandler(engine))
+ 	r.Methods("GET").Path(`/groups/{name}/edit`).Handler(getGroupEditHandler(engine))
+ 	r.Methods("POST").Path(`/groups/{name}/edit`).Handler(postGroupEditHandler(engine))
+ 	r.Methods("GET").Path(`/groups/{name}/delete`).Handler(getGroupDeleteHandler(engine))
+diff --git a/internal/frontend/groups.go b/internal/frontend/groups.go
+index 056c8ef..a824f95 100644
+--- a/internal/frontend/groups.go
++++ b/internal/frontend/groups.go
+@@ -50,7 +50,6 @@ func getGroupsHandler(e core.Engine) http.Handler {
+ 				<th>Members</th>
+ 				<th>Permissions granted</th>
+ 				<th class="actions">
+-					<a href="/groups/new" class="button button-primary">New group</a>
+ 				</th>
+ 			</tr>
+ 		</thead>
