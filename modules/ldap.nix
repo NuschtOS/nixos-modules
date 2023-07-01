@@ -94,6 +94,17 @@ in
           description = lib.mdDoc "The uid of the service user used by services, often referred as search user.";
         };
 
+        searchFilterWithGroupFilter = lib.mkOption {
+          type = with lib.types; functionTo (functionTo str);
+          example = lib.literalExpression ''userFilterGroup: userFilter: if (userFilterGroup != null) then "(&''${config.security.ldap.groupFilter userFilterGroup})" else userFilter'';
+          description = lib.mdDoc ''
+            A function that returns a search filter that may include a group filter.
+            The first argument may be the group that is filtered upon or null.
+            If set to null no additional filtering is done. If set the supplied filter is combined with the user filter.
+            The second argument must be the user filter including the applications placeholders or ideally the userFilter option.
+          '';
+        };
+
         sshPublicKeyField = lib.mkOption {
           type = lib.types.str;
           example = "sshPublicKey";
