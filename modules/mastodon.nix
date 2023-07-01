@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, libS, ... }:
 
 let
   cfg = config.services.mastodon.ldap;
@@ -9,27 +9,27 @@ in
     services.mastodon.ldap = {
       enable = lib.mkEnableOption (lib.mdDoc "login only via LDAP");
 
-      userFilterGroup = lib.mkOption {
-        type = with lib.types; nullOr str;
-        default = null;
-        description = lib.mdDoc "Restrict logins to users in this group";
-      };
+      userGroup = libS.ldap.mkUserGroupOption;
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    services.mastodon.extraConfig = {
-      LDAP_ENABLED = "true";
-      LDAP_BASE = ldap.userBaseDN;
-      LDAP_BIND_DN = ldap.bindDN;
-      LDAP_HOST = ldap.domainName;
-      LDAP_METHOD = "simple_tls";
-      LDAP_PORT = toString ldap.port;
-      LDAP_UID = ldap.userField;
-      # convert .,- (space) in LDAP usernames to underscore, otherwise those users cannot log in
-      LDAP_UID_CONVERSION_ENABLED = "true";
-    } // lib.optionalAttrs (cfg.userFilterGroup != null) {
-      LDAP_SEARCH_FILTER = "(&${ldap.groupFilter cfg.userFilterGroup}(|(%{uid}=%{email})(%{mail}=%{email})))";
-    };
+  config.services.mastodon.extraConfig = lib.mkIf cfg.enable {
+    LDAP_ENABLED = "true";
+    LDAP_BASE = ldap.userBaseDN;
+    LDAP_BIND_DN = ldap.bindDN;
+    LDAP_HOST = ldap.domainName;
+    LDAP_METHOD = "simple_tls";
+    LDAP_PORT = toString ldap.port;
+    LDAP_UID = ldap.userField;
+    # convert .,- (space) in LDAP usernames to underscore, otherwise those users cannot log in
+    LDAP_UID_CONVERSION_ENABLED = "true";
+    LDAP_SEARCH_FILTER = ldap.searchFilterWithGroupFilter cfg.userGroup "(|(%{uid}=%{email})(%{mail}=%{email}))";
+  };
+
+  config.services.portunus.seedSettings.groups = lib.optional (cfg.userGroup != null) {
+    long_name = "Mastodon Users";
+    name = cfg.userGroup;
+    dont_manage_members = true;
+    permissions = {};
   };
 }
