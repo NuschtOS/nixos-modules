@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, libS, ... }:
 
 let
   cfg = config.services.hedgedoc.ldap;
@@ -12,23 +12,24 @@ in
         Use `service.hedgedoc.environmentFile` in format `bindCredentials=password` to set the credentials used by the search user
       '');
 
-      userFilterGroup = lib.mkOption {
-        type = with lib.types; nullOr str;
-        default = null;
-        description = lib.mdDoc "Restrict logins to users in this group";
-      };
+      userGroup = libS.ldap.mkUserGroupOption;
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    services.hedgedoc.settings.ldap = {
-      url = "ldaps://${ldap.domainName}:${toString ldap.port}";
-      bindDn = ldap.bindDN;
-      bindCredentials = "$bindCredentials";
-      searchBase = ldap.userBaseDN;
-      searchFilter = "(&(${ldap.groupFilter cfg.userFilterGroup})(${ldap.userFilter "{{username}}"}))";
-      tlsca = "/etc/ssl/certs/ca-certificates.crt";
-      useridField = ldap.userField;
-    };
+  config.services.hedgedoc.settings.ldap = lib.mkIf cfg.enable {
+    url = "ldaps://${ldap.domainName}:${toString ldap.port}";
+    bindDn = ldap.bindDN;
+    bindCredentials = "$bindCredentials";
+    searchBase = ldap.userBaseDN;
+    searchFilter = ldap.searchFilterWithGroupFilter cfg.userGroup (ldap.userFilter "{{username}}");
+    tlsca = "/etc/ssl/certs/ca-certificates.crt";
+    useridField = ldap.userField;
+  };
+
+  config.services.portunus.seedSettings.groups = lib.optional (cfg.userGroup != null) {
+    long_name = "Hedgedoc Users";
+    name = cfg.userGroup;
+    dont_manage_members = true;
+    permissions = {};
   };
 }
