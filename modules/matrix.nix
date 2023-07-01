@@ -29,12 +29,7 @@ in
       ldap = {
         enable = lib.mkEnableOption (lib.mdDoc "login via ldap");
 
-        userFilter = lib.mkOption {
-          type = with lib.types; nullOr str;
-          default = null;
-          example = "(objectClass=posixAccount)";
-          description = lib.mdDoc "Ldap filter used for accounts loggin in.";
-        };
+        userGroup = libS.ldap.mkUserGroupOption;
 
         bindPasswordFile = lib.mkOption {
           type = lib.types.str;
@@ -47,120 +42,121 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    environment.etc = {
-      "matrix-synapse/config.yaml".source = cfg.configFile;
-    };
+  config.environment.etc = lib.mkIf cfg.enable {
+    "matrix-synapse/config.yaml".source = cfg.configFile;
+  };
 
-    services = lib.mkMerge [
-      (lib.mkIf cfge.enable {
-        matrix-synapse.settings = rec {
-          email.client_base_url = web_client_location;
-          web_client_location = "https://${cfge.domain}";
-        };
-
-        nginx = {
-          enable = true;
-          virtualHosts."${cfge.domain}" = {
-            forceSSL = true;
-            enableACME = lib.mkDefault true;
-            root = (cfge.package.override {
-              conf = with config.services.matrix-synapse.settings; {
-                default_server_config."m.homeserver" = {
-                  "base_url" = public_baseurl;
-                  "server_name" = server_name;
-                };
-                default_theme = "dark";
-                room_directory.servers = [ server_name ];
-              } // lib.optionalAttrs cfge.enableConfigFeatures {
-                features = {
-                  # https://github.com/matrix-org/matrix-react-sdk/blob/develop/src/settings/Settings.tsx
-                  # https://github.com/vector-im/element-web/blob/develop/docs/labs.md
-                  feature_bridge_state = true;
-                  feature_exploring_public_spaces = true;
-                  feature_jump_to_date = true;
-                  feature_mjolnir = true;
-                  feature_new_device_manager = true;
-                  feature_pinning = true;
-                  feature_poll_history = true;
-                  feature_presence_in_room_list = true;
-                  feature_report_to_moderators = true;
-                  feature_qr_signin_reciprocate_show = true;
-                  feature_thread = true;
-                  feature_threadenabled = true;
-                };
-                show_labs_settings = true;
-              };
-            }).overrideAttrs ({ postInstall ? "", ... }: {
-              # prevent 404 spam in nginx log
-              postInstall = postInstall + ''
-                ln -rs $out/config.json $out/config.${cfge.domain}.json
-              '';
-            });
+  config.services.nginx = lib.mkIf cfge.enable {
+    enable = true;
+    virtualHosts."${cfge.domain}" = {
+      forceSSL = true;
+      enableACME = lib.mkDefault true;
+      root = (cfge.package.override {
+        conf = with config.services.matrix-synapse.settings; {
+          default_server_config."m.homeserver" = {
+            "base_url" = public_baseurl;
+            "server_name" = server_name;
           };
+          default_theme = "dark";
+          room_directory.servers = [ server_name ];
+        } // lib.optionalAttrs cfge.enableConfigFeatures {
+          features = {
+            # https://github.com/matrix-org/matrix-react-sdk/blob/develop/src/settings/Settings.tsx
+            # https://github.com/vector-im/element-web/blob/develop/docs/labs.md
+            feature_bridge_state = true;
+            feature_exploring_public_spaces = true;
+            feature_jump_to_date = true;
+            feature_mjolnir = true;
+            feature_new_device_manager = true;
+            feature_pinning = true;
+            feature_poll_history = true;
+            feature_presence_in_room_list = true;
+            feature_report_to_moderators = true;
+            feature_qr_signin_reciprocate_show = true;
+            feature_thread = true;
+            feature_threadenabled = true;
+          };
+          show_labs_settings = true;
         };
-      })
+      }).overrideAttrs ({ postInstall ? "", ... }: {
+        # prevent 404 spam in nginx log
+        postInstall = postInstall + ''
+          ln -rs $out/config.json $out/config.${cfge.domain}.json
+        '';
+      });
+    };
+  };
 
-      {
-        matrix-synapse = lib.mkMerge [
-          (lib.mkIf cfg.ldap.enable {
-            plugins = with config.services.matrix-synapse.package.plugins; [
-              matrix-synapse-ldap3
-            ];
+  config.services.matrix-synapse = lib.mkMerge [
+    {
+      settings = cfge.enable rec {
+        email.client_base_url = web_client_location;
+        web_client_location = "https://${cfge.domain}";
+      };
+    }
 
-            settings.modules = [{
-              module = "ldap_auth_provider.LdapAuthProviderModule";
-              config = {
-                enabled = true;
-                mode = "search";
-                uri = "ldaps://${ldap.domainName}:${toString ldap.port}";
-                base = ldap.userBaseDN;
-                attributes = {
-                  uid = ldap.userField;
-                  mail = ldap.mailField;
-                  name = ldap.givenNameField;
-                };
-                bind_dn = ldap.bindDN;
-                bind_password_file = cfg.ldap.bindPasswordFile;
-                tls_options.validate = true;
-              } // lib.optionalAttrs (cfg.ldap.userFilter != null) {
-                filter = cfg.ldap.userFilter;
-              };
-            }];
-          })
+    (lib.mkIf cfg.ldap.enable {
+      plugins = with config.services.matrix-synapse.package.plugins; [
+        matrix-synapse-ldap3
+      ];
 
-          (lib.mkIf cfg.addAdditionalOembedProvider {
-            settings.oembed.additional_providers = [
-              (
-                let
-                  providers = pkgs.fetchurl {
-                    url = "https://oembed.com/providers.json?2023-03-23";
-                    sha256 = "sha256-OdgBgkLbtNMn84ixKuC1gGzpyr+X+ORiLl6TAK3lYuQ=";
-                  };
-                in
-                pkgs.runCommand "providers.json"
-                  {
-                    nativeBuildInputs = with pkgs; [ jq ];
-                  } ''
-                  # filter out entries that do not contain a schemes entry
-                  # Error in configuration at 'oembed.additional_providers.<item 0>.<item 22>.endpoints.<item 0>': 'schemes' is a required property
-                  # and have none http protocols: Unsupported oEmbed scheme (spotify) for pattern: spotify:*
-                  jq '[ ..|objects| select(.endpoints[0]|has("schemes")) | .endpoints[0].schemes=([ .endpoints[0].schemes[]|select(.|contains("http")) ]) ]' ${providers} > $out
-                ''
-              )
-            ];
-          })
+      settings.modules = [{
+        module = "ldap_auth_provider.LdapAuthProviderModule";
+        config = {
+          enabled = true;
+          mode = "search";
+          uri = "ldaps://${ldap.domainName}:${toString ldap.port}";
+          base = ldap.userBaseDN;
+          attributes = {
+            uid = ldap.userField;
+            mail = ldap.mailField;
+            name = ldap.givenNameField;
+          };
+          bind_dn = ldap.bindDN;
+          bind_password_file = cfg.ldap.bindPasswordFile;
+          tls_options.validate = true;
+        } // lib.optionalAttrs (cfg.ldap.userFilter != null) {
+          filter = cfg.ldap.userFilter;
+        };
+      }];
+    })
 
-          (lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
-            settings = {
-              federation_client_minimum_tls_version = "1.2";
-              suppress_key_server_warning = true;
-              user_directory.prefer_local_users = true;
+    {
+      settings.oembed.additional_providers = lib.mkIf cfg.addAdditionalOembedProvider [
+        (
+          let
+            providers = pkgs.fetchurl {
+              url = "https://oembed.com/providers.json?2023-03-23";
+              sha256 = "sha256-OdgBgkLbtNMn84ixKuC1gGzpyr+X+ORiLl6TAK3lYuQ=";
             };
-            withJemalloc = true;
-          }))
-        ];
-      }
-    ];
+          in
+          pkgs.runCommand "providers.json"
+            {
+              nativeBuildInputs = with pkgs; [ jq ];
+            } ''
+            # filter out entries that do not contain a schemes entry
+            # Error in configuration at 'oembed.additional_providers.<item 0>.<item 22>.endpoints.<item 0>': 'schemes' is a required property
+            # and have none http protocols: Unsupported oEmbed scheme (spotify) for pattern: spotify:*
+            jq '[ ..|objects| select(.endpoints[0]|has("schemes")) | .endpoints[0].schemes=([ .endpoints[0].schemes[]|select(.|contains("http")) ]) ]' ${providers} > $out
+          ''
+        )
+      ];
+    }
+
+    (lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
+      settings = {
+        federation_client_minimum_tls_version = "1.2";
+        suppress_key_server_warning = true;
+        user_directory.prefer_local_users = true;
+      };
+      withJemalloc = true;
+    }))
+  ];
+
+  config.services.portunus.seedSettings.groups = lib.optional (cfg.ldap.userGroup != null) {
+    long_name = "Matrix Users";
+    name = cfg.ldap.userGroup;
+    dont_manage_members = true;
+    permissions = { };
   };
 }
