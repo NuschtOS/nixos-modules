@@ -2,7 +2,7 @@
 
 let
   cfg = config.services.gitea;
-  cfgl = cfg.ldap.options;
+  cfgl = cfg.ldap;
   inherit (config.security) ldap;
 in
 {
@@ -13,52 +13,74 @@ in
         enable = lib.mkEnableOption (lib.mdDoc "login via ldap");
 
         adminGroup = lib.mkOption {
-          type = lib.types.str;
+          type = with lib.types; nullOr str;
+          default = null;
           example = "gitea-admins";
           description = lib.mdDoc "Name of the ldap group that grants admin access in gitea.";
         };
 
         bindPasswordFile = lib.mkOption {
-          type = lib.types.str;
+          type = with lib.types; nullOr str;
+          default = null;
           example = "/var/lib/secrets/bind-password";
           description = lib.mdDoc "Path to a file containing the bind password.";
         };
 
-        options = let
-          mkOptStr = default: lib.mkOption {
-            type = lib.types.str;
-            inherit default;
+        userGroup = libS.ldap.mkUserGroupOption;
+
+        options =
+          let
+            mkOptStr = lib.mkOption {
+              type = with lib.types; nullOr str;
+              default = null;
+            };
+          in
+          {
+            id = lib.mkOption {
+              type = lib.types.ints.unsigned;
+              default = 1;
+            };
+            name = mkOptStr;
+            security-protocol = mkOptStr;
+            host = mkOptStr;
+            port = lib.mkOption {
+              type = with lib.types; nullOr port;
+              default = null;
+            };
+            bind-dn = mkOptStr;
+            bind-password = mkOptStr;
+            user-search-base = mkOptStr;
+            user-filter = mkOptStr;
+            admin-filter = mkOptStr;
+            username-attribute = mkOptStr;
+            firstname-attribute = mkOptStr;
+            surname-attribute = mkOptStr;
+            email-attribute = mkOptStr;
+            public-ssh-key-attribute = mkOptStr;
           };
-        in {
-          id = lib.mkOption {
-            type = lib.types.ints.unsigned;
-            default = 1;
-          };
-          name = mkOptStr "ldap";
-          security-protocol = mkOptStr "LDAPS";
-          host = mkOptStr ldap.domainName;
-          port = lib.mkOption {
-            type = lib.types.port;
-            default = ldap.port;
-          };
-          bind-dn = mkOptStr ldap.bindDN;
-          bind-password = mkOptStr "$(cat ${cfg.ldap.bindPasswordFile})";
-          user-search-base = mkOptStr ldap.userBaseDN;
-          user-filter = mkOptStr (ldap.userFilter "%[1]s");
-          admin-filter = mkOptStr (ldap.groupFilter cfg.ldap.adminGroup);
-          username-attribute = mkOptStr ldap.userField;
-          firstname-attribute = mkOptStr ldap.givenNameField;
-          surname-attribute = mkOptStr ldap.surnameField;
-          email-attribute = mkOptStr ldap.mailField;
-          public-ssh-key-attribute = mkOptStr ldap.sshPublicKeyField;
-        };
       };
       recommendedDefaults = libS.mkOpinionatedOption "set recommended, secure default settings";
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    services.gitea.settings = lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
+  config.services.gitea = lib.mkIf cfgl.enable {
+    ldap.options = {
+      name = "ldap";
+      security-protocol = "LDAPS";
+      host = ldap.domainName;
+      inherit (ldap) port;
+      bind-dn = ldap.bindDN;
+      bind-password = "$(cat ${cfgl.bindPasswordFile})";
+      user-search-base = ldap.userBaseDN;
+      user-filter = ldap.searchFilterWithGroupFilter cfgl.userGroup (ldap.userFilter "%[1]s");
+      admin-filter = ldap.groupFilter cfgl.adminGroup;
+      username-attribute = ldap.userField;
+      firstname-attribute = ldap.givenNameField;
+      surname-attribute = ldap.surnameField;
+      email-attribute = ldap.mailField;
+      public-ssh-key-attribute = ldap.sshPublicKeyField;
+    };
+    settings = lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
       cors = {
         ALLOW_DOMAIN = cfg.settings.server.DOMAIN;
         ENABLED = true;
@@ -90,19 +112,36 @@ in
       };
       time.DEFAULT_UI_LOCATION = config.time.timeZone;
     });
+  };
 
-    systemd.services.gitea.preStart = let
+  config.systemd.services.gitea.preStart =
+    let
       exe = lib.getExe cfg.package;
       # allow executing shell after the --bind-password argument to e.g. cat a password file
       formatOption = key: value: "--${key} ${if key == "bind-password" then value else lib.escapeShellArg value}";
       ldapOptionsStr = opt: lib.concatStringsSep " " (lib.mapAttrsToList formatOption opt);
       commonArgs = "--attributes-in-bind --synchronize-users";
-    in lib.mkIf cfg.ldap.enable (lib.mkAfter ''
-      if ${exe} admin auth list | grep -q ${cfgl.name}; then
-        ${exe} admin auth update-ldap ${commonArgs} ${ldapOptionsStr cfgl}
+    in
+    lib.mkIf cfgl.enable (lib.mkAfter ''
+      if ${exe} admin auth list | grep -q ${cfgl.options.name}; then
+        ${exe} admin auth update-ldap ${commonArgs} ${ldapOptionsStr cfgl.options}
       else
-        ${exe} admin auth add-ldap ${commonArgs} ${ldapOptionsStr (lib.filterAttrs (name: value: name != "id") cfgl)}
+        ${exe} admin auth add-ldap ${commonArgs} ${ldapOptionsStr (lib.filterAttrs (name: _: name != "id") cfgl.options)}
       fi
     '');
-  };
+
+  config.services.portunus.seedSettings.groups = [
+    (lib.mkIf (cfgl.adminGroup != null) {
+      long_name = "Gitea Administrators";
+      name = cfgl.adminGroup;
+      dont_manage_members = true;
+      permissions = { };
+    })
+    (lib.mkIf (cfgl.userGroup != null) {
+      long_name = "Gitea Users";
+      name = cfgl.userGroup;
+      dont_manage_members = true;
+      permissions = { };
+    })
+  ];
 }
