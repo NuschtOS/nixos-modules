@@ -48,7 +48,7 @@ in
             sslversion = tlsv1_3
           </start_tls_options>
           user_basedn = "${ldap.userBaseDN}"
-          user_filter = "${ldap.searchFilterWithGroupFilter cfg.userFilterGroup (ldap.userFilter "%s")}"
+          user_filter = "${ldap.searchFilterWithGroupFilter cfg.userGroup (ldap.userFilter "%s")}"
           user_scope = one
           user_field = ${ldap.userField}
           <user_search_options>
