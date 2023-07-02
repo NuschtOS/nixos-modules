@@ -101,7 +101,7 @@ in
       roleField = "cn";
       roleFilter = "(&(objectclass=groupOfNames)(member=%s))";
       roleValue = "dn";
-      searchFilterWithGroupFilter = userFilterGroup: userFilter: if (userFilterGroup != null) then "(&${ldap.groupFilter userFilterGroup})" else userFilter;
+      searchFilterWithGroupFilter = userFilterGroup: userFilter: if (userFilterGroup != null) then "(&${ldap.groupFilter userFilterGroup}(${userFilter}))" else userFilter;
       sshPublicKeyField = "sshPublicKey";
       searchUID = "search";
       surnameField = "sn";
