@@ -63,7 +63,7 @@ in
     };
   };
 
-  config.services.gitea = lib.mkIf cfgl.enable {
+  config.services.gitea = lib.mkIf (cfg.enable && cfgl.enable) {
     ldap.options = {
       name = "ldap";
       security-protocol = "LDAPS";
@@ -122,7 +122,7 @@ in
       ldapOptionsStr = opt: lib.concatStringsSep " " (lib.mapAttrsToList formatOption opt);
       commonArgs = "--attributes-in-bind --synchronize-users";
     in
-    lib.mkIf cfgl.enable (lib.mkAfter ''
+    lib.mkIf (cfg.enable && cfgl.enable) (lib.mkAfter ''
       if ${exe} admin auth list | grep -q ${cfgl.options.name}; then
         ${exe} admin auth update-ldap ${commonArgs} ${ldapOptionsStr cfgl.options}
       else
