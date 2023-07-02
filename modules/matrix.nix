@@ -89,7 +89,7 @@ in
 
   config.services.matrix-synapse = lib.mkMerge [
     {
-      settings = cfge.enable rec {
+      settings = lib.mkIf cfge.enable rec {
         email.client_base_url = web_client_location;
         web_client_location = "https://${cfge.domain}";
       };
@@ -144,6 +144,8 @@ in
     }
 
     (lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
+      package = lib.assertMsg (lib.versionOlder pkgs.matrix-synapse.python.pythonVersion "3.11") "Override no longer necessary, please remove!"
+        pkgs.matrix-synapse.override { python3 = pkgs.python311; };
       settings = {
         federation_client_minimum_tls_version = "1.2";
         suppress_key_server_warning = true;
