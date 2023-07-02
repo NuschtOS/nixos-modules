@@ -81,8 +81,8 @@ in
             })
             # add option to not seed group members
             (fetchpatch {
-              url = "https://github.com/majewsky/portunus/commit/0000053dc6cabbdd6ea9b47ca1af7451449d95d1.patch";
-              sha256 = "sha256-szAjybLkzk14LNAMU/LH0Bwm+MpsEvLQmEPMtEgI0po=";
+              url = "https://github.com/majewsky/portunus/commit/000003d2ab2d60f599c40cabc7992026c4b84589.patch";
+              sha256 = "sha256-UD5hciRMl2npDpfyjmbA+EDdtB4ADV+an71eJHZHIIE=";
             })
           ];
         });
