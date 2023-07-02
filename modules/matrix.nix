@@ -115,8 +115,8 @@ in
           bind_dn = ldap.bindDN;
           bind_password_file = cfg.ldap.bindPasswordFile;
           tls_options.validate = true;
-        } // lib.optionalAttrs (cfg.ldap.userFilter != null) {
-          filter = cfg.ldap.userFilter;
+        } // lib.optionalAttrs (cfg.ldap.userGroup != null) {
+          filter = ldap.userFilter cfg.ldap.userGroup;
         };
       }];
     })
