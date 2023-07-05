@@ -145,7 +145,18 @@ in
 
     (lib.mkIf cfg.recommendedDefaults {
       package = assert (lib.assertMsg (lib.versionOlder pkgs.matrix-synapse.python.pythonVersion "3.11") "Override no longer necessary, please remove!");
-        (pkgs.matrix-synapse.override { python3 = pkgs.python311; });
+      (pkgs.matrix-synapse.override { python3 = pkgs.python311; }).overrideAttrs ({ passthru, ... }: {
+        passthru = lib.recursiveUpdate passthru {
+          plugins.matrix-synapse-ldap3 = passthru.plugins.matrix-synapse-ldap3.overridePythonAttrs (_: {
+            # Check whether the following modules can be imported: ldap_auth_provider
+            #   File "/nix/store/k5jhi8p7z3a03cyi5sv7w8f7z6is0z2q-python3.11-matrix-synapse-ldap3-0.2.2/lib/python3.11/site-packages/ldap_auth_provider.py", line 23, in <module>
+            #     import synapse
+            # ModuleNotFoundError: No module named 'synapse'
+            dontUsePythonImportsCheck = true;
+            doCheck = false;
+          });
+        };
+      });
       settings = {
         federation_client_minimum_tls_version = "1.2";
         suppress_key_server_warning = true;
