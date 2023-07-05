@@ -114,21 +114,23 @@ in
     });
   };
 
-  config.systemd.services.gitea.preStart =
-    let
-      exe = lib.getExe cfg.package;
-      # allow executing shell after the --bind-password argument to e.g. cat a password file
-      formatOption = key: value: "--${key} ${if key == "bind-password" then value else lib.escapeShellArg value}";
-      ldapOptionsStr = opt: lib.concatStringsSep " " (lib.mapAttrsToList formatOption opt);
-      commonArgs = "--attributes-in-bind --synchronize-users";
-    in
-    lib.mkIf (cfg.enable && cfgl.enable) (lib.mkAfter ''
-      if ${exe} admin auth list | grep -q ${cfgl.options.name}; then
-        ${exe} admin auth update-ldap ${commonArgs} ${ldapOptionsStr cfgl.options}
-      else
-        ${exe} admin auth add-ldap ${commonArgs} ${ldapOptionsStr (lib.filterAttrs (name: _: name != "id") cfgl.options)}
-      fi
-    '');
+  config.systemd.services = lib.mkIf (cfg.enable && cfgl.enable) {
+    gitea.preStart =
+      let
+        exe = lib.getExe cfg.package;
+        # allow executing shell after the --bind-password argument to e.g. cat a password file
+        formatOption = key: value: "--${key} ${if key == "bind-password" then value else lib.escapeShellArg value}";
+        ldapOptionsStr = opt: lib.concatStringsSep " " (lib.mapAttrsToList formatOption opt);
+        commonArgs = "--attributes-in-bind --synchronize-users";
+      in
+      lib.mkAfter ''
+        if ${exe} admin auth list | grep -q ${cfgl.options.name}; then
+          ${exe} admin auth update-ldap ${commonArgs} ${ldapOptionsStr cfgl.options}
+        else
+          ${exe} admin auth add-ldap ${commonArgs} ${ldapOptionsStr (lib.filterAttrs (name: _: name != "id") cfgl.options)}
+        fi
+      '';
+  };
 
   config.services.portunus.seedSettings.groups = [
     (lib.mkIf (cfgl.adminGroup != null) {
