@@ -75,14 +75,16 @@ in
           ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff
           ++ [
             # display errors when editing seeded groups/users
+            # https://github.com/majewsky/portunus/pull/17
             (fetchpatch {
               url = "https://github.com/majewsky/portunus/commit/9999994e6b90e20405944767fb7d225914c2303b.patch";
               sha256 = "sha256-IEQpWnG3ZekZ+QCEzSZcbMQe6iEalOhDz3qNbjDgg/A=";
             })
             # add option to not seed group members
+            # https://github.com/majewsky/portunus/pull/18
             (fetchpatch {
-              url = "https://github.com/majewsky/portunus/commit/000003d2ab2d60f599c40cabc7992026c4b84589.patch";
-              sha256 = "sha256-UD5hciRMl2npDpfyjmbA+EDdtB4ADV+an71eJHZHIIE=";
+              url = "https://github.com/majewsky/portunus/commit/faff1294378dfb123985d3250e305bbbf278437b.patch";
+              sha256 = "sha256-BCB5zaXCbCnBMmlce64gqaXPh2ZnaeeQfNehqwXfiDI=";
             })
           ];
         });
