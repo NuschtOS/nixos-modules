@@ -169,7 +169,6 @@ in
   config.services.portunus.seedSettings.groups = lib.optional (cfg.ldap.userGroup != null) {
     long_name = "Matrix Users";
     name = cfg.ldap.userGroup;
-    manage_members = false;
     permissions = { };
   };
 }

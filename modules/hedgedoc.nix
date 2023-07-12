@@ -29,7 +29,6 @@ in
   config.services.portunus.seedSettings.groups = lib.optional (cfg.userGroup != null) {
     long_name = "Hedgedoc Users";
     name = cfg.userGroup;
-    manage_members = false;
     permissions = {};
   };
 }

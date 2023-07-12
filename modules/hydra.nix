@@ -81,13 +81,11 @@ in
     (lib.mkIf (cfg.userGroup != null) {
       long_name = "Hydra Users";
       name = cfg.userGroup;
-      manage_members = false;
       permissions = { };
     })
   ] ++ lib.flatten (map lib.attrValues (map (lib.mapAttrs (ldapGroup: _: {
     long_name = "Hydra Role ${ldapGroup}";
     name = ldapGroup;
-    manage_members = false;
     permissions = { };
   })) cfg.roleMappings));
 }

@@ -60,7 +60,6 @@ in
   config.services.portunus.seedSettings.groups = lib.optional (cfgl.userGroup != null) {
     long_name = "Mastodon Users";
     name = cfgl.userGroup;
-    manage_members = false;
     permissions = { };
   };
 }

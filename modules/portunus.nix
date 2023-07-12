@@ -67,26 +67,12 @@ in
           src = fetchFromGitHub {
             owner = "majewsky";
             repo = "portunus";
-            rev = "8bad0661ecca9276991447f8e585c20c450ad57a";
-            hash = "sha256-59AvNWhnsvtrVmAJRcHeNOYOlHCx1ZZSqwFvyAM+Ye8=";
+            rev = "daa9ac8d51d3415e62cbcbe8491cd0ca7ae6fa44";
+            hash = "sha256-0czbrkuhrQ7SUgmEUVouc3tPKyg7d/JsCWKRhXEfXWY=";
           };
 
           patches = patches
-          ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff
-          ++ [
-            # display errors when editing seeded groups/users
-            # https://github.com/majewsky/portunus/pull/17
-            (fetchpatch {
-              url = "https://github.com/majewsky/portunus/commit/9999994e6b90e20405944767fb7d225914c2303b.patch";
-              sha256 = "sha256-IEQpWnG3ZekZ+QCEzSZcbMQe6iEalOhDz3qNbjDgg/A=";
-            })
-            # add option to not seed group members
-            # https://github.com/majewsky/portunus/pull/18
-            (fetchpatch {
-              url = "https://github.com/majewsky/portunus/commit/faff1294378dfb123985d3250e305bbbf278437b.patch";
-              sha256 = "sha256-BCB5zaXCbCnBMmlce64gqaXPh2ZnaeeQfNehqwXfiDI=";
-            })
-          ];
+            ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff;
         });
       })
     ];

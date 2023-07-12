@@ -136,13 +136,11 @@ in
     (lib.mkIf (cfgl.adminGroup != null) {
       long_name = "Gitea Administrators";
       name = cfgl.adminGroup;
-      manage_members = false;
       permissions = { };
     })
     (lib.mkIf (cfgl.userGroup != null) {
       long_name = "Gitea Users";
       name = cfgl.userGroup;
-      manage_members = false;
       permissions = { };
     })
   ];
