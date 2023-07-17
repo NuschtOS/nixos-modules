@@ -67,14 +67,10 @@ in
             feature_exploring_public_spaces = true;
             feature_jump_to_date = true;
             feature_mjolnir = true;
-            feature_new_device_manager = true;
             feature_pinning = true;
-            feature_poll_history = true;
             feature_presence_in_room_list = true;
             feature_report_to_moderators = true;
             feature_qr_signin_reciprocate_show = true;
-            feature_thread = true;
-            feature_threadenabled = true;
           };
           show_labs_settings = true;
         };
