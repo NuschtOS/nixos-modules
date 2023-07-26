@@ -112,7 +112,7 @@ in
           bind_password_file = cfg.ldap.bindPasswordFile;
           tls_options.validate = true;
         } // lib.optionalAttrs (cfg.ldap.userGroup != null) {
-          filter = ldap.userFilter cfg.ldap.userGroup;
+          filter = ldap.groupFilter cfg.ldap.userGroup;
         };
       }];
     })
