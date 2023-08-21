@@ -63,6 +63,7 @@ in
           features = {
             # https://github.com/matrix-org/matrix-react-sdk/blob/develop/src/settings/Settings.tsx
             # https://github.com/vector-im/element-web/blob/develop/docs/labs.md
+            feature_ask_to_join = true;
             feature_bridge_state = true;
             feature_exploring_public_spaces = true;
             feature_jump_to_date = true;
