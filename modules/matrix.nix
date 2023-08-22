@@ -141,7 +141,8 @@ in
     }
 
     (lib.mkIf cfg.recommendedDefaults {
-      package = assert (lib.assertMsg (lib.versionOlder pkgs.matrix-synapse.python.pythonVersion "3.11") "Override no longer necessary, please remove!");
+      # TODO: figure out why passthru.python is not accesible
+      package = /* assert (lib.assertMsg (lib.versionOlder pkgs.matrix-synapse.python.pythonVersion "3.11") "Override no longer necessary, please remove!"); */
       (pkgs.matrix-synapse.override { python3 = pkgs.python311; }).overrideAttrs ({ passthru, ... }: {
         passthru = lib.recursiveUpdate passthru {
           plugins.matrix-synapse-ldap3 = passthru.plugins.matrix-synapse-ldap3.overridePythonAttrs (_: {
