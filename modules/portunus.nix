@@ -67,8 +67,8 @@ in
           src = fetchFromGitHub {
             owner = "majewsky";
             repo = "portunus";
-            rev = "daa9ac8d51d3415e62cbcbe8491cd0ca7ae6fa44";
-            hash = "sha256-0czbrkuhrQ7SUgmEUVouc3tPKyg7d/JsCWKRhXEfXWY=";
+            rev = "aa68cec8bbabdf406351b1630e35a2e272e23d64";
+            hash = "sha256-04QGBG1pUy8nnCDSCB/53R20qbDqh4W268Q/N+vmPxg=";
           };
 
           patches = patches
