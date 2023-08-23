@@ -71,8 +71,14 @@ in
             hash = "sha256-04QGBG1pUy8nnCDSCB/53R20qbDqh4W268Q/N+vmPxg=";
           };
 
-          patches = patches
-            ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff;
+          patches = patches ++ [
+            # create new groups/users from seeds
+            # https://github.com/majewsky/portunus/pull/20
+            (fetchpatch {
+              url = "https://github.com/majewsky/portunus/commit/70505c99cb6217cbaae7aa65f4637490ef0b30a2.patch";
+              hash = "sha256-tyriNCJnrfBEiJfEP0UdAa48hkVFYrGw1jZFmxxWeZ0=";
+            })
+          ] ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff;
         });
       })
     ];
