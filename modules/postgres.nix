@@ -5,31 +5,35 @@ let
   cfgu = config.services.postgresql.upgrade;
 in
 {
-  options.services.postgresql.upgrade = {
-    enable = libS.mkOpinionatedOption "install the upgrade-pg-cluster script to update postgres.";
+  options.services.postgresql = {
+    upgrade = {
+      enable = libS.mkOpinionatedOption "install the upgrade-pg-cluster script to update postgres.";
 
-    extraArgs = lib.mkOption {
-      type = with lib.types; listOf str;
-      default = [ "--link" ];
-      example = [ "--jobs=4" ];
-      description = lib.mdDoc "Extra arguments to pass to pg_upgrade. See https://www.postgresql.org/docs/current/pgupgrade.html for doc.";
+      extraArgs = lib.mkOption {
+        type = with lib.types; listOf str;
+        default = [ "--link" ];
+        example = [ "--jobs=4" ];
+        description = lib.mdDoc "Extra arguments to pass to pg_upgrade. See https://www.postgresql.org/docs/current/pgupgrade.html for doc.";
+      };
+
+      newPackage = (lib.mkPackageOptionMD pkgs "postgresql" {
+        default = [ "postgresql_15" ];
+      }) // {
+        description = lib.mdDoc ''
+          The postgres package to which should be updated.
+          After running upgrade-pg-cluster this must be set to services.postgresql.package to complete the update.
+        '';
+      };
+
+      stopServices = lib.mkOption {
+        type = with lib.types; listOf str;
+        default = [ ];
+        example = [ "hedgedoc" "hydra" "nginx" ];
+        description = lib.mdDoc "Systemd services to stop when upgrade is started.";
+      };
     };
 
-    newPackage = (lib.mkPackageOptionMD pkgs "postgresql" {
-      default = [ "postgresql_15" ];
-    }) // {
-      description = lib.mdDoc ''
-        The postgres package to which should be updated.
-        After running upgrade-pg-cluster this must be set to services.postgresql.package to complete the update.
-      '';
-    };
-
-    stopServices = lib.mkOption {
-      type = with lib.types; listOf str;
-      default = [ ];
-      example = [ "hedgedoc" "hydra" "nginx" ];
-      description = lib.mdDoc "Systemd services to stop when upgrade is started.";
-    };
+    recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
   };
 
   config = lib.mkIf cfg.enable {
@@ -72,5 +76,15 @@ in
         "
       ''
     );
+
+    services = {
+      postgresql.enableJIT = lib.mkIf cfg.recommendedDefaults true;
+
+      postgresqlBackup = lib.mkIf cfg.recommendedDefaults {
+        compression = "zstd";
+        compressionLevel = 9;
+        pgdumpOptions = "--create --clean";
+      };
+    };
   };
 }
