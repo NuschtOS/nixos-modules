@@ -5,7 +5,7 @@ let
 in
 {
   options.services.nginx = {
-    allRecommended = libS.mkOpinionatedOption "all recommended options";
+    allRecommended = libS.mkOpinionatedOption "set all recommended options";
 
     default404Server = {
       enable = lib.mkOption {
@@ -48,6 +48,15 @@ in
 
       nginx = lib.mkMerge [
         {
+          commonHttpConfig = lib.mkIf cfg.cfg.recommendedZstdSettings /* nginx */ ''
+            # TODO: upstream this?
+            zstd_types application/x-nix-archive;
+          '';
+
+          commonServerConfig = lib.mkIf cfg.setHSTSHeader /* nginx */ ''
+            more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
+          '';
+
           resolver.addresses =
             let
               isIPv6 = addr: builtins.match ".*:.*:.*" addr != null;
@@ -65,25 +74,12 @@ in
               default = true;
               forceSSL = lib.mkDefault true;
               useACMEHost = cfg.default404Server.acmeHost;
-              extraConfig = ''
+              extraConfig = /* nginx */ ''
                 return 404;
               '';
             };
           };
         }
-
-        (lib.mkIf cfg.recommendedZstdSettings {
-          commonHttpConfig = /* nginx */ ''
-            # TODO: upstream this?
-            zstd_types application/x-nix-archive;
-          '';
-        })
-
-        (lib.mkIf cfg.setHSTSHeader {
-          commonServerConfig = /* nginx */ ''
-            more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
-          '';
-        })
 
         (lib.mkIf cfg.allRecommended (libS.modules.mkRecursiveDefault {
           recommendedBrotliSettings = true;
