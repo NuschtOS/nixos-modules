@@ -48,7 +48,23 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    boot.kernel.sysctl = lib.mkIf cfg.tcpFastOpen {
+      # enable tcp fastopen for outgoing and incoming connections
+      "net.ipv4.tcp_fastopen" = 3;
+    };
+
     networking.firewall.allowedTCPPorts = lib.mkIf cfg.openFirewall [ 80 443 ];
+
+    nixpkgs.overlays = lib.mkIf cfg.tcpFastOpen [
+      (final: prev: let
+        configureFlags = [ "-DTCP_FASTOPEN=23" ];
+      in {
+        nginx = prev.nginx.override { inherit configureFlags; };
+        nginxQuic = prev.nginxQuic.override { inherit configureFlags; };
+        nginxStable = prev.nginxStable.override { inherit configureFlags; };
+        nginxMainline = prev.nginxMainline.override { inherit configureFlags; };
+      })
+    ];
 
     services = {
       logrotate.settings.nginx = lib.mkIf cfg.rotateLogsFaster {
