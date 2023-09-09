@@ -21,8 +21,8 @@ in
       src = fetchFromGitHub {
         owner = "mstdn";
         repo = "Bird-UI-Theme-Admins";
-        rev = "a050e72cc2508f60c5d9710ce49f81fe3ddccaaa";
-        hash = "sha256-Oio6pOGSAE6jpuE3r8Il0khXAWN905fnFYvZrLFn/Is=";
+        rev = "2f9921db746593f393c13f9b79e5b4c2e19b03bd";
+        hash = "sha256-+7FUm5GNXRWyS9Oiow6kwX+pWh11wO3stm5iOTY3sYY=";
       };
     in {
       mastodonModules = mastodon.mastodonModules.overrideAttrs (oldAttrs: {
