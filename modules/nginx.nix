@@ -57,15 +57,24 @@ in
       };
 
       nginx = lib.mkMerge [
-        {
-          appendConfig = lib.mkIf cfg.recommendedDefaults /* nginx */ ''
+        (lib.mkIf cfg.recommendedDefaults {
+          appendConfig = /* nginx */ ''
             worker_processes auto;
             worker_cpu_affinity auto;
           '';
 
-          commonHttpConfig = lib.mkIf cfg.recommendedDefaults /* nginx */ ''
+          commonHttpConfig = /* nginx */ ''
             error_log syslog:server=unix:/dev/log;
-          '' + lib.mkIf cfg.recommendedZstdSettings /* nginx */ ''
+          '';
+
+          virtualHosts."_" = {
+            kTLS = true;
+            reuseport = true;
+          };
+        })
+
+        {
+          commonHttpConfig = lib.mkIf cfg.recommendedZstdSettings /* nginx */ ''
             # TODO: upstream this?
             zstd_types application/x-nix-archive;
           '';
@@ -95,13 +104,6 @@ in
                 extraConfig = /* nginx */ ''
                   return 404;
                 '';
-              };
-            })
-
-            (lib.mkIf cfg.recommendedDefaults {
-              "_" = {
-                kTLS = true;
-                reuseport = true;
               };
             })
 
