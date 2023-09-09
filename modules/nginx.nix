@@ -130,7 +130,7 @@ in
             quic_bpf on;
           '';
 
-          commonHttpConfig = lib.mkf cfg.quic.enable /* nginx */''
+          commonHttpConfig = lib.mkIf cfg.quic.enable /* nginx */''
             quic_retry on;
           '';
 
