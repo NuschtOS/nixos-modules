@@ -50,7 +50,7 @@ in
   config = lib.mkIf cfg.enable {
     assertions = [
       {
-        assertion = cfg.quic.bpf && !lib.versionOlder cfg.package.version "1.25.0";
+        assertion = cfg.quic.enable && cfg.quic.bpf -> !lib.versionOlder cfg.package.version "1.25.0";
         message = "services.nginx.quic.bpf requires nginx version 1.25.0 or newer while ${cfg.package.version} is used!";
       }
     ];
@@ -83,7 +83,7 @@ in
 
       # NOTE: do not use mkMerge here to prevent infinite recursions
       nginx = {
-        appendConfig = lib.optionalString cfg.quic.bpf /* nginx */ ''
+        appendConfig = lib.optionalString (cfg.quic.enable && cfg.quic.bpf) /* nginx */ ''
           quic_bpf on;
         '' + lib.optionalString cfg.recommendedDefaults /* nginx */ ''
           worker_processes auto;
@@ -164,7 +164,7 @@ in
       params.nginx = { };
     };
 
-    systemd.services.nginx.serviceConfig = lib.mkIf cfg.quic.bpf {
+    systemd.services.nginx.serviceConfig = lib.mkIf (cfg.quic.enable && cfg.quic.bpf) {
       # NOTE: CAP_BPF is included in CAP_SYS_ADMIN but it is not enough alone
       AmbientCapabilities = [ "CAP_BPF" "CAP_NET_ADMIN" "CAP_SYS_ADMIN" ];
       CapabilityBoundingSet = [ "CAP_BPF" "CAP_NET_ADMIN" "CAP_SYS_ADMIN" ];
