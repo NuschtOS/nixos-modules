@@ -48,6 +48,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.quic.bpf && !lib.versionOlder cfg.package.version "1.25.0";
+        message = "services.nginx.quic.bpf requires nginx version 1.25.0 or newer while ${cfg.package.version} is used!";
+      }
+    ];
+
     boot.kernel.sysctl = lib.mkIf cfg.tcpFastOpen {
       # enable tcp fastopen for outgoing and incoming connections
       "net.ipv4.tcp_fastopen" = 3;
