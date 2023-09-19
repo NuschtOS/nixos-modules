@@ -72,7 +72,7 @@ in
 
 
           Run the following commands after setting:
-          services.postgresql.package = pkgs.postgresql_${cfgu.newPackage}
+          services.postgresql.package = pkgs.postgresql_${lib.versions.major cfgu.newPackage.version}
               sudo -u postgres vacuumdb --all --analyze-in-stages
               ${newData}/delete_old_cluster.sh
         "
