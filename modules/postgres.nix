@@ -17,7 +17,7 @@ in
       };
 
       newPackage = (lib.mkPackageOptionMD pkgs "postgresql" {
-        default = [ "postgresql_15" ];
+        default = [ "postgresql_16" ];
       }) // {
         description = lib.mdDoc ''
           The postgres package to which should be updated.
