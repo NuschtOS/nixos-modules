@@ -69,6 +69,8 @@ in
           "$@"
 
         echo "
+
+
           Run the following commands after setting:
           services.postgresql.package = pkgs.postgresql_${cfgu.newPackage}
               sudo -u postgres vacuumdb --all --analyze-in-stages
