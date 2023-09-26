@@ -1,5 +1,7 @@
 { config, lib, libS, pkgs, ... }:
 
+# NOTE: requires https://github.com/NixOS/nixpkgs/pull/257503 because of new usage of extraPlugins
+
 let
   cfg = config.services.postgresql;
   cfgu = config.services.postgresql.upgrade;
@@ -40,9 +42,9 @@ in
     environment.systemPackages = lib.optional cfgu.enable (
       let
         newData = "/var/lib/postgresql/${cfgu.newPackage.psqlSchema}";
-        newBin = "${if cfg.extraPlugins == [] then cfgu.newPackage else cfgu.newPackage.withPackages (_: cfg.extraPlugins)}/bin";
+        newBin = "${if cfg.extraPlugins == [] then cfgu.newPackage else cfgu.newPackage.withPackages cfg.extraPlugins}/bin";
         oldData = config.services.postgresql.dataDir;
-        oldBin = "${config.services.postgresql.package}/bin";
+        oldBin = "${if cfg.extraPlugins == [] then cfg.package else cfg.package.withPackages cfg.extraPlugins}/bin";
         currPkg = cfg.package;
       in
       pkgs.writeScriptBin "upgrade-pg-cluster" /* bash */ ''
