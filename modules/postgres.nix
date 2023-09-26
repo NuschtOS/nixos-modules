@@ -41,19 +41,22 @@ in
   config = lib.mkIf cfg.enable {
     environment.systemPackages = lib.optional cfgu.enable (
       let
+        # conditions copied from nixos/modules/services/databases/postgresql.nix
+        newPackage = if cfg.enableJIT && !cfgu.newPackage.jitSupport then cfgu.newPackage.withJIT else cfg.newPackage;
         newData = "/var/lib/postgresql/${cfgu.newPackage.psqlSchema}";
         newBin = "${if cfg.extraPlugins == [] then cfgu.newPackage else cfgu.newPackage.withPackages cfg.extraPlugins}/bin";
+
+        oldPackage = if cfg.enableJIT && !cfg.package.jitSupport then cfg.package.withJIT else cfg.package;
         oldData = config.services.postgresql.dataDir;
-        oldBin = "${if cfg.extraPlugins == [] then cfg.package else cfg.package.withPackages cfg.extraPlugins}/bin";
-        currPkg = cfg.package;
+        oldBin = "${if cfg.extraPlugins == [] then oldPackage else oldPackage.withPackages cfg.extraPlugins}/bin";
       in
       pkgs.writeScriptBin "upgrade-pg-cluster" /* bash */ ''
         set -eu
 
-        echo "Current version: ${currPkg.version}"
+        echo "Current version: ${cfg.package.version}"
         echo "Update version:  ${cfgu.newPackage.version}"
 
-        if [[ ${cfgu.newPackage.version} == ${currPkg.version} ]]; then
+        if [[ ${cfgu.newPackage.version} == ${cfg.package.version} ]]; then
           echo "There is no major postgres update available."
           exit 2
         fi
