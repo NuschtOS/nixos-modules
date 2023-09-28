@@ -13,8 +13,7 @@ in
 
       extraArgs = lib.mkOption {
         type = with lib.types; listOf str;
-        default = [ "--link" ];
-        example = [ "--jobs=4" ];
+        default = [ "--link" "--jobs=$(nproc)" ];
         description = lib.mdDoc "Extra arguments to pass to pg_upgrade. See https://www.postgresql.org/docs/current/pgupgrade.html for doc.";
       };
 
