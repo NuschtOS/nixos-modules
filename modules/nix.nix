@@ -75,7 +75,7 @@ in
         text = ''
           if [[ -e /run/current-system && -e $systemConfig ]]; then
             echo System package diff:
-            ${lib.getExe config.nix.package} store diff-closures /run/current-system $systemConfig || true
+            ${lib.getExe config.nix.package} --extra-experimental-features nix-command store diff-closures /run/current-system $systemConfig || true
           fi
         '';
       };
