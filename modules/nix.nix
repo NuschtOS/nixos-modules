@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, libS, pkgs, ... }:
 
 let
   cfg = config.nix;
@@ -9,7 +9,7 @@ in
 
     deleteUserProfiles = lib.mkEnableOption "" // { description = "Whether to delete all user profiles on a system switch."; };
 
-    diffSystem = lib.libS.mkOpinionatedOption "system closure diffing on updates";
+    diffSystem = libS.mkOpinionatedOption "system closure diffing on updates";
 
     remoteBuilder = {
       enable = lib.mkEnableOption "restricted nix remote builder";
