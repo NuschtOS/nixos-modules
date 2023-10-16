@@ -9,6 +9,8 @@ in
 
     deleteUserProfiles = lib.mkEnableOption "" // { description = "Whether to delete all user profiles on a system switch."; };
 
+    diffSystem = lib.libS.mkOpinionatedOption "system closure diffing on updates";
+
     remoteBuilder = {
       enable = lib.mkEnableOption "restricted nix remote builder";
 
@@ -67,6 +69,16 @@ in
         echo "Deleting all user profiles..."
         rm -rf /root/.nix-profile /home/*/.nix-profile /nix/var/nix/profiles/per-user/*/profile* || true
       '';
+
+      diff-system = lib.mkIf cfg.diffSystem {
+        supportsDryActivation = true;
+        text = ''
+          if [[ -e /run/current-system && -e $systemConfig ]]; then
+            echo System package diff:
+            ${lib.getExe config.nix.package} store diff-closures /run/current-system $systemConfig || true
+          fi
+        '';
+      };
     };
   };
 }
