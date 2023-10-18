@@ -8,7 +8,12 @@ in
   options = {
     services.home-assistant = {
       ldap = {
-        enable = lib.mkEnableOption (lib.mdDoc "login only via LDAP");
+        enable = lib.mkEnableOption (lib.mdDoc ''login only via LDAP
+
+          ::: {.note}
+          Only enable this after completing the onboarding!
+          :::
+        '');
         userGroup = libS.ldap.mkUserGroupOption;
       };
 
