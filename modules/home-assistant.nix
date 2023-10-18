@@ -20,7 +20,6 @@ in
     (lib.mkIf cfg.recommendedDefaults {
       config = {
         default_config = { }; # yes, this is required...
-        automation = "!include automations.yaml";
         homeassistant = {
           auth_providers = lib.mkIf (!cfg.ldap.enable) [
             { type = "homeassistant"; }
