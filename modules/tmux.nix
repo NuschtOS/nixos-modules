@@ -5,10 +5,10 @@ let
 in
 {
   options = {
-    programs.tmux.allRecommended = libS.mkOpinionatedOption "set recommended tmux settings";
+    programs.tmux.recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
   };
 
-  config = lib.mkIf cfg.allRecommended {
+  config = lib.mkIf cfg.recommendedDefaults {
     programs.tmux = {
       aggressiveResize = true;
       baseIndex = 1;
