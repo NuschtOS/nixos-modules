@@ -63,22 +63,24 @@ in
 
     nixpkgs.overlays = [
       (final: prev: with final; {
-        portunus = prev.portunus.overrideAttrs ({ patches ? [ ], ... }: {
+        portunus = (prev.portunus.override { buildGoModule = buildGo121Module; }).overrideAttrs ({ patches ? [ ], buildInputs ? [ ], ... }: let
+          version = "2.0.0-beta.1";
+        in {
+          inherit version;
+
           src = fetchFromGitHub {
             owner = "majewsky";
             repo = "portunus";
-            rev = "aa68cec8bbabdf406351b1630e35a2e272e23d64";
-            hash = "sha256-04QGBG1pUy8nnCDSCB/53R20qbDqh4W268Q/N+vmPxg=";
+            rev = "v${version}";
+            hash = "sha256-ShPljeqAgDkgjcywale6Dh6TEIA5cgF64qhcj++b7Rk=";
           };
 
-          patches = patches ++ [
-            # create new groups/users from seeds
-            # https://github.com/majewsky/portunus/pull/20
-            (fetchpatch {
-              url = "https://github.com/majewsky/portunus/commit/70505c99cb6217cbaae7aa65f4637490ef0b30a2.patch";
-              hash = "sha256-tyriNCJnrfBEiJfEP0UdAa48hkVFYrGw1jZFmxxWeZ0=";
-            })
-          ] ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff;
+          patches = patches
+            ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff;
+
+          buildInputs = buildInputs ++ [
+            libxcrypt-legacy
+          ];
         });
       })
     ];
