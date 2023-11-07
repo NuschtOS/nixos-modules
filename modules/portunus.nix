@@ -72,7 +72,7 @@ in
             owner = "majewsky";
             repo = "portunus";
             rev = "v${version}";
-            hash = "sha256-ShPljeqAgDkgjcywale6Dh6TEIA5cgF64qhcj++b7Rk=";
+            hash = "sha256-slu4RdYfzwQlRBsa4zw0xQMUKS1bhGKIf7xJVsmSv14=";
           };
 
           patches = patches
