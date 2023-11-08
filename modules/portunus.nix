@@ -68,16 +68,18 @@ in
         in {
           inherit version;
 
+          # TODO: upstream
           src = fetchFromGitHub {
             owner = "majewsky";
             repo = "portunus";
-            rev = "v${version}";
-            hash = "sha256-slu4RdYfzwQlRBsa4zw0xQMUKS1bhGKIf7xJVsmSv14=";
+            rev = "d501eebbcfe1add820823479108593814390c9ae";
+            hash = "sha256-hd0n1fmSwMMDY4S3xemIyevSIUhr4az8jpi5rVVYnaA=";
           };
 
           patches = patches
             ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff;
 
+          # TODO: upstream
           buildInputs = buildInputs ++ [
             libxcrypt-legacy
           ];
