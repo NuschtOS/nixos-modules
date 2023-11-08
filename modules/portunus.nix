@@ -76,8 +76,13 @@ in
             hash = "sha256-hd0n1fmSwMMDY4S3xemIyevSIUhr4az8jpi5rVVYnaA=";
           };
 
-          patches = patches
-            ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff;
+          patches = patches ++ [
+            # fix seeded user hash comparison
+            (fetchpatch {
+              url = "https://github.com/majewsky/portunus/commit/f32a3c6bb83302f112b5da47c2db3bfeaccf5112.patch";
+              hash = "sha256-oH0gtbhKLgnQT+9ZQYyVn6493i2P2qap2StN/S9hhjQ=";
+            })
+          ] ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff;
 
           # TODO: upstream
           buildInputs = buildInputs ++ [
