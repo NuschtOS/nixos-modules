@@ -52,7 +52,7 @@ in
           };
 
           installPhase = ''
-            install -Dm755 ldap-auth-sh $out
+            install -Dm755 ldap-auth.sh -t $out/bin
           '';
 
           solutions.default = {
@@ -60,9 +60,9 @@ in
             inputs = with pkgs; [ coreutils curl gnugrep gnused openldap ];
             interpreter = "${pkgs.bash}/bin/bash";
             keep."source:$CONFIG_FILE" = true;
-            scripts = [ "." ];
+            scripts = [ "bin/ldap-auth.sh" ];
           };
-        };
+        }+ "/bin/ldap-auth.sh";
         args = [
           # https://github.com/bob1de/ldap-auth-sh/blob/master/examples/home-assistant.cfg
           (pkgs.writeText "config.cfg" /* shell */ ''
