@@ -39,21 +39,30 @@ in
     (lib.mkIf cfg.ldap.enable {
       config.homeassistant.auth_providers = [{
         type = "command_line";
-        command =
-          # the script is not inheriting PATH from home-assistant
-          pkgs.resholve.writeScript "ldap-auth-sh"
-            {
-              fake.external = [ "on_auth_failure" "on_auth_success" ];
-              inputs = with pkgs; [ coreutils curl gnugrep gnused openldap ];
-              interpreter = "${pkgs.bash}/bin/bash";
-              keep."source:$CONFIG_FILE" = true;
-            }
-            (builtins.readFile "${pkgs.fetchFromGitHub {
-          owner = "bob1de";
-          repo = "ldap-auth-sh";
-          rev = "819f9233116e68b5af5a5f45167bcbb4ed412ed4";
-          sha256 = "sha256-+QjRP5SKUojaCv3lZX2Kv3wkaNvpWFd97phwsRlhroY=";
-        }}/ldap-auth.sh");
+        # the script is not inheriting PATH from home-assistant
+        command = pkgs.resholve.mkDerivation {
+          pname = "ldap-auth-sh";
+          version = "unstable-2019-02-23";
+
+          src = pkgs.fetchFromGitHub {
+            owner = "bob1de";
+            repo = "ldap-auth-sh";
+            rev = "819f9233116e68b5af5a5f45167bcbb4ed412ed4";
+            hash = "sha256-+QjRP5SKUojaCv3lZX2Kv3wkaNvpWFd97phwsRlhroY=";
+          };
+
+          installPhase = ''
+            install -Dm755 ldap-auth-sh $out
+          '';
+
+          solutions.default = {
+            fake.external = [ "on_auth_failure" "on_auth_success" ];
+            inputs = with pkgs; [ coreutils curl gnugrep gnused openldap ];
+            interpreter = "${pkgs.bash}/bin/bash";
+            keep."source:$CONFIG_FILE" = true;
+            scripts = [ "." ];
+          };
+        };
         args = [
           # https://github.com/bob1de/ldap-auth-sh/blob/master/examples/home-assistant.cfg
           (pkgs.writeText "config.cfg" /* shell */ ''
