@@ -64,7 +64,7 @@ in
     nixpkgs.overlays = [
       (final: prev: with final; {
         portunus = (prev.portunus.override { buildGoModule = buildGo121Module; }).overrideAttrs ({ patches ? [ ], buildInputs ? [ ], ... }: let
-          version = "2.0.0-beta.1";
+          version = "2.0.0-beta.2";
         in {
           inherit version;
 
@@ -72,17 +72,12 @@ in
           src = fetchFromGitHub {
             owner = "majewsky";
             repo = "portunus";
-            rev = "d501eebbcfe1add820823479108593814390c9ae";
-            hash = "sha256-hd0n1fmSwMMDY4S3xemIyevSIUhr4az8jpi5rVVYnaA=";
+            rev = "v${version}";
+            hash = "sha256-1OU3bepvqriGCW1qDszPnUDJ6eqBzNTiBZ2J4KF4ynw=";
           };
 
-          patches = patches ++ [
-            # fix seeded user hash comparison
-            (fetchpatch {
-              url = "https://github.com/majewsky/portunus/commit/f32a3c6bb83302f112b5da47c2db3bfeaccf5112.patch";
-              hash = "sha256-oH0gtbhKLgnQT+9ZQYyVn6493i2P2qap2StN/S9hhjQ=";
-            })
-          ] ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff;
+          patches = patches
+            ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff;
 
           # TODO: upstream
           buildInputs = buildInputs ++ [
