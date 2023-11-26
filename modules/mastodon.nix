@@ -18,11 +18,21 @@ in
 
   config.services.mastodon = {
     package = lib.mkIf cfg.enableBirdUITheme (pkgs.mastodon.overrideAttrs (_: with pkgs; let
-      src = fetchFromGitHub {
-        owner = "mstdn";
-        repo = "Bird-UI-Theme-Admins";
-        rev = "2f9921db746593f393c13f9b79e5b4c2e19b03bd";
-        hash = "sha256-+7FUm5GNXRWyS9Oiow6kwX+pWh11wO3stm5iOTY3sYY=";
+      src = pkgs.applyPatches {
+        src = fetchFromGitHub {
+          owner = "mstdn";
+          repo = "Bird-UI-Theme-Admins";
+          rev = "2f9921db746593f393c13f9b79e5b4c2e19b03bd";
+          hash = "sha256-+7FUm5GNXRWyS9Oiow6kwX+pWh11wO3stm5iOTY3sYY=";
+        };
+
+        patches = [
+          # fix compose box background
+          (fetchpatch {
+            url = "https://github.com/mstdn/Bird-UI-Theme-Admins/commit/d5a07d653680fba0ad8dd941405e2d0272ff9cd1.patch";
+            hash = "sha256-1gnQNCSSuTE/pkPCf49lJQbmeLAbaiPD9u/q8KiFvlU=";
+          })
+        ];
       };
     in {
       mastodonModules = mastodon.mastodonModules.overrideAttrs (oldAttrs: {
