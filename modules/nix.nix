@@ -11,6 +11,8 @@ in
 
     diffSystem = libS.mkOpinionatedOption "system closure diffing on updates";
 
+    recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
+
     remoteBuilder = {
       enable = lib.mkEnableOption "restricted nix remote builder";
 
@@ -31,7 +33,12 @@ in
   config = {
     # based on https://github.com/numtide/srvos/blob/main/nixos/roles/nix-remote-builder.nix
     # and https://discourse.nixos.org/t/wrapper-to-restrict-builder-access-through-ssh-worth-upstreaming/25834
-    nix.settings.trusted-users = lib.mkIf cfg.remoteBuilder.enable [ cfg.remoteBuilder.name ];
+    nix.settings = {
+      builders-use-substitutes = lib.mkIf cfg.recommendedDefaults true;
+      connect-timeout = lib.mkIf cfg.recommendedDefaults 20;
+      experimental-features = lib.mkIf cfg.recommendedDefaults [ "nix-command" "flakes" ];
+      trusted-users = lib.mkIf cfg.remoteBuilder.enable [ cfg.remoteBuilder.name ];
+    };
 
     users.users.${cfg.remoteBuilder.name} = lib.mkIf cfg.remoteBuilder.enable {
       group = "nogroup";
