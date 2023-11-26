@@ -104,7 +104,7 @@ in
         COOKIE_SECURE = true;
         PROVIDER = "db";
         SAME_SITE = "strict";
-        SESSION_LIFE_TIME = 21 * 86400; # 21 days
+        SESSION_LIFE_TIME = 28 * 86400; # 28 days
       };
       "ssh.minimum_key_sizes" = {
         ECDSA = -1;
