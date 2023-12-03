@@ -63,6 +63,20 @@ in
 
     nixpkgs.overlays = [
       (final: prev: with final; {
+        dex-oidc = prev.dex-oidc.override {
+          buildGoModule = args: buildGoModule (args // {
+            patches = args.patches or [ ] ++ [
+              # remember session
+              (fetchpatch {
+                url = "https://github.com/SuperSandro2000/dex/commit/cfcd6ac9f64dea0b068314048d2c534149f6c925.patch";
+                hash = "sha256-T5MH9NIJhL0eqrz5jFQhf+uBNhuYS+weaffflEzDptw=";
+              })
+            ];
+
+            vendorHash = "sha256-YIi67pPIcVndIjWk94ckv6X4WLELUe/J/03e+XWIdHE=";
+          });
+        };
+
         portunus = (prev.portunus.override { buildGoModule = buildGo121Module; }).overrideAttrs ({ patches ? [ ], buildInputs ? [ ], ... }: let
           version = "2.0.0-beta.2";
         in {
