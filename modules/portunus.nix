@@ -68,8 +68,8 @@ in
             patches = args.patches or [ ] ++ [
               # remember session
               (fetchpatch {
-                url = "https://github.com/SuperSandro2000/dex/commit/cfcd6ac9f64dea0b068314048d2c534149f6c925.patch";
-                hash = "sha256-T5MH9NIJhL0eqrz5jFQhf+uBNhuYS+weaffflEzDptw=";
+                url = "https://github.com/SuperSandro2000/dex/commit/d2fb6cdf8188e6973721ddac657a7c5d3daf6955.patch";
+                hash = "sha256-PKC7jsNyFN28qFZ7SLYgnd0s09G2cb+vBeFvRzyyLGQ=";
               })
             ];
 
