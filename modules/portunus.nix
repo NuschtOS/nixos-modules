@@ -55,7 +55,7 @@ in
     };
   };
 
-  config = {
+  config = lib.mkIf cfg.enable {
     networking.hosts = lib.mkIf cfg.addToHosts {
       ${cfg.internalIp4} = [ cfg.domain ];
       ${cfg.internalIp6} = [ cfg.domain ];
@@ -101,7 +101,12 @@ in
       })
     ];
 
-    services.portunus.seedPath = pkgs.writeText "seed.json" (builtins.toJSON cfg.seedSettings);
+    services = {
+      # the user has no other option to accept this and all clients are internal anyway
+      dex.settings.oauth2.skipApprovalScreen = true;
+
+      portunus.seedPath = pkgs.writeText "seed.json" (builtins.toJSON cfg.seedSettings);
+    };
 
     security.ldap = lib.mkIf cfg.ldapPreset {
       domainName = cfg.domain;
