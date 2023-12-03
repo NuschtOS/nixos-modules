@@ -56,6 +56,7 @@ in
           feedback_links_enabled = false;
           reporting_enabled = false;
         };
+        log.level = "warn";
         security = {
           cookie_secure = true;
           content_security_policy = true;
