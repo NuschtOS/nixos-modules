@@ -5,12 +5,32 @@ let
 in
 {
   options = {
-    services.grafana.recommendedDefaults = libS.mkOpinionatedOption "set recommended and secure default settings";
+    services.grafana = {
+      oauth = {
+        enable = lib.mkEnableOption (lib.mdDoc ''login only via OAuth2'');
+        enableViewerRole = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = lib.mdDoc "Wether to enable the fallback Viewer role when users do not have the user- or adminGroup.";
+        };
+        adminGroup = libS.ldap.mkUserGroupOption;
+        userGroup = libS.ldap.mkUserGroupOption;
+      };
+
+      recommendedDefaults = libS.mkOpinionatedOption "set recommended and secure default settings";
+    };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = {
     # the default values are hardcoded instead of using options. because I couldn't figure out how to extract them from the freeform type
-    assertions = [
+    assertions = lib.mkIf cfg.enable [
+      {
+        assertion = cfg.oauth.enable -> cfg.settings."auth.generic_oauth".client_secret != null;
+        message = ''
+          services.grafana.settings."auth.generic_oauth".client_secret must be set for oauth to work!
+          Use this `$__file{/path/to/some/secret}` syntax to reference secrets securely!
+        '';
+      }
       {
         assertion = cfg.settings.security.secret_key != "SW2YcwTIb9zpOOhoPsMm";
         message = "services.grafana.settings.security.secret_key must be changed from it's insecure, default value!";
@@ -21,23 +41,69 @@ in
       }
     ];
 
-    services.grafana.settings = lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
-      # no analytics, sorry, not sorry
-      analytics = {
-        # TODO: drop after https://github.com/NixOS/nixpkgs/pull/240323 is merged
-        check_for_updates = false;
-        feedback_links_enabled = false;
-        reporting_enabled = false;
-      };
-      security = {
-        cookie_secure = true;
-        content_security_policy = true;
-        strict_transport_security = true;
-      };
-      server = {
-        enable_gzip = true;
-        root_url = "https://${cfg.settings.server.domain}";
-      };
-    });
+    services.grafana.settings = lib.mkMerge [
+      (lib.mkIf (cfg.enable && cfg.recommendedDefaults) (libS.modules.mkRecursiveDefault {
+        # no analytics, sorry, not sorry
+        analytics = {
+          # TODO: drop after https://github.com/NixOS/nixpkgs/pull/240323 is merged
+          check_for_updates = false;
+          feedback_links_enabled = false;
+          reporting_enabled = false;
+        };
+        security = {
+          cookie_secure = true;
+          content_security_policy = true;
+          strict_transport_security = true;
+        };
+        server = {
+          enable_gzip = true;
+          root_url = "https://${cfg.settings.server.domain}";
+        };
+      }))
+
+      (lib.mkIf (cfg.enable && cfg.oauth.enable) {
+        "auth.generic_oauth" = let
+          cfgd = config.services.dex.settings;
+          cfgp = config.services.portunus;
+        in {
+          enabled = true;
+          allow_assign_grafana_admin = true; # required for grafana-admins
+          allow_sign_up = true; # otherwise no new users can be created
+          api_url = "https://${cfgd.issuer}/userinfo";
+          auth_url = "https://${cfgd.issuer}/auth";
+          client_id = "grafana";
+          disable_login_form = true; # only allow OAuth
+          icon = "signin";
+          name = cfgp.domain;
+          oauth_allow_insecure_email_lookup = true;
+          oauth_auto_login = true; # redirect automatically to the only oauth provider
+          role_attribute_path = "contains(groups[*], 'grafana-admins') && 'Admin' || contains(info.roles[*], 'grafana-user') && 'Editor'"
+            + lib.optionalString cfg.oauth.enableViewerRole "|| 'Viewer'";
+          role_attribute_strict = true;
+          # https://dexidp.io/docs/custom-scopes-claims-clients/
+          scopes = "openid email groups profile offline_access";
+          token_url = "https://${cfgd.issuer}/token";
+        };
+      })
+    ];
+  };
+
+  config.services.portunus = {
+    dex = lib.mkIf cfg.oauth.enable {
+      enable = true;
+      oidcClients = [{
+        callbackURL = "https://${cfg.settings.server.domain}/login/generic_oauth";
+        id = "grafana";
+      }];
+    };
+    seedSettings.groups = lib.optional (cfg.oauth.adminGroup != null) {
+      long_name = "Grafana Administrators";
+      name = cfg.ldap.adminGroup;
+      permissions = { };
+    } ++ lib.optional (cfg.oauth.userGroup != null) {
+      long_name = "Grafana Users";
+      name = cfg.ldap.userGroup;
+      permissions = { };
+    };
   };
 }
