@@ -82,8 +82,9 @@ in
           disable_login_form = true; # only allow OAuth
           icon = "signin";
           name = cfgp.domain;
-          oauth_allow_insecure_email_lookup = true;
+          oauth_allow_insecure_email_lookup = true; # otherwise updating the mail in ldap will break login
           oauth_auto_login = true; # redirect automatically to the only oauth provider
+          use_refresh_token = true;
           role_attribute_path = "contains(groups[*], 'grafana-admins') && 'Admin' || contains(info.roles[*], 'grafana-user') && 'Editor'"
             + lib.optionalString cfg.oauth.enableViewerRole "|| 'Viewer'";
           role_attribute_strict = true;
