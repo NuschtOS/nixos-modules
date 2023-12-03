@@ -16,7 +16,7 @@ in
         enable = lib.mkEnableOption (lib.mdDoc ''login only via OAuth2'');
         enableViewerRole = lib.mkOption {
           type = lib.types.bool;
-          default = true;
+          default = false;
           description = lib.mdDoc "Wether to enable the fallback Viewer role when users do not have the user- or adminGroup.";
         };
         adminGroup = libS.ldap.mkUserGroupOption;
@@ -90,6 +90,7 @@ in
           scopes = "openid email groups profile offline_access";
           token_url = "${cfgd.issuer}/token";
         };
+        server.protocol = "socket";
       })
     ];
   };
