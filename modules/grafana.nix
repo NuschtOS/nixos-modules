@@ -6,6 +6,12 @@ in
 {
   options = {
     services.grafana = {
+      configureNginx = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = lib.mdDoc "Wether to configure Nginx.";
+      };
+
       oauth = {
         enable = lib.mkEnableOption (lib.mdDoc ''login only via OAuth2'');
         enableViewerRole = lib.mkOption {
@@ -88,6 +94,19 @@ in
     ];
   };
 
+  config.services.nginx = lib.mkIf (cfg.enable && cfg.configureNginx) {
+    upstreams.grafana.servers."unix:${cfg.settings.server.socket}" = {};
+    virtualHosts = {
+      "${cfg.settings.server.domain}".locations = {
+        "/".proxyPass = "http://grafana";
+        "/api/live/ws" = {
+          proxyPass = "http://grafana";
+          proxyWebsockets = true;
+        };
+      };
+    };
+  };
+
   config.services.portunus = {
     dex = lib.mkIf cfg.oauth.enable {
       enable = true;
@@ -98,11 +117,11 @@ in
     };
     seedSettings.groups = lib.optional (cfg.oauth.adminGroup != null) {
       long_name = "Grafana Administrators";
-      name = cfg.ldap.adminGroup;
+      name = cfg.oauth.adminGroup;
       permissions = { };
     } ++ lib.optional (cfg.oauth.userGroup != null) {
       long_name = "Grafana Users";
-      name = cfg.ldap.userGroup;
+      name = cfg.oauth.userGroup;
       permissions = { };
     };
   };
