@@ -75,8 +75,8 @@ in
           enabled = true;
           allow_assign_grafana_admin = true; # required for grafana-admins
           allow_sign_up = true; # otherwise no new users can be created
-          api_url = "https://${cfgd.issuer}/userinfo";
-          auth_url = "https://${cfgd.issuer}/auth";
+          api_url = "${cfgd.issuer}/userinfo";
+          auth_url = "${cfgd.issuer}/auth";
           client_id = "grafana";
           disable_login_form = true; # only allow OAuth
           icon = "signin";
@@ -88,7 +88,7 @@ in
           role_attribute_strict = true;
           # https://dexidp.io/docs/custom-scopes-claims-clients/
           scopes = "openid email groups profile offline_access";
-          token_url = "https://${cfgd.issuer}/token";
+          token_url = "${cfgd.issuer}/token";
         };
       })
     ];
