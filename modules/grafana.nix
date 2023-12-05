@@ -70,18 +70,17 @@ in
 
       (lib.mkIf (cfg.enable && cfg.oauth.enable) {
         "auth.generic_oauth" = let
-          cfgd = config.services.dex.settings;
-          cfgp = config.services.portunus;
+          inherit (config.services.dex.settings) issuer;
         in {
           enabled = true;
           allow_assign_grafana_admin = true; # required for grafana-admins
           allow_sign_up = true; # otherwise no new users can be created
-          api_url = "${cfgd.issuer}/userinfo";
-          auth_url = "${cfgd.issuer}/auth";
+          api_url = "${issuer}/userinfo";
+          auth_url = "${issuer}/auth";
           client_id = "grafana";
           disable_login_form = true; # only allow OAuth
           icon = "signin";
-          name = cfgp.domain;
+          name = config.services.portunus.domain;
           oauth_allow_insecure_email_lookup = true; # otherwise updating the mail in ldap will break login
           oauth_auto_login = true; # redirect automatically to the only oauth provider
           use_refresh_token = true;
@@ -90,7 +89,7 @@ in
           role_attribute_strict = true;
           # https://dexidp.io/docs/custom-scopes-claims-clients/
           scopes = "openid email groups profile offline_access";
-          token_url = "${cfgd.issuer}/token";
+          token_url = "${issuer}/token";
         };
         server.protocol = "socket";
       })
