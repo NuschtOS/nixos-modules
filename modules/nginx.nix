@@ -51,7 +51,7 @@ in
     assertions = [
       {
         assertion = cfg.quic.enable && cfg.quic.bpf -> !lib.versionOlder cfg.package.version "1.25.0";
-        message = "services.nginx.quic.bpf requires nginx version 1.25.0 or newer while ${cfg.package.version} is used!";
+        message = "Setting services.nginx.quic.bpf to true requires nginx version 1.25.0 or newer, but currently \"${cfg.package.version}\" is used!";
       }
     ];
 

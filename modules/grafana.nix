@@ -33,8 +33,8 @@ in
       {
         assertion = cfg.oauth.enable -> cfg.settings."auth.generic_oauth".client_secret != null;
         message = ''
-          services.grafana.settings."auth.generic_oauth".client_secret must be set for oauth to work!
-          Use this `$__file{/path/to/some/secret}` syntax to reference secrets securely!
+          Setting services.grafana.oauth.enable to true requires to set services.grafana.settings."auth.generic_oauth".client_secret.
+          Use this `$__file{/path/to/some/secret}` syntax to reference secrets securely.
         '';
       }
       {
