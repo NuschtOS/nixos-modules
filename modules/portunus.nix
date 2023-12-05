@@ -14,6 +14,16 @@ in
       description = lib.mdDoc "Whether to add a hosts entry for the portunus domain pointing to externalIp";
     };
 
+    configureOAuth2Proxy = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = lib.mdDoc ''
+        Wether to configure OAuth2 Proxy with Portunus' Dex.
+
+        Use `services.oauth2_proxy.nginx.virtualHosts` to configure the nginx virtual hosts that should require authentication.
+      '';
+    };
+
     internalIp4 = lib.mkOption {
       type = with lib.types; nullOr str;
       default = null;
@@ -56,6 +66,16 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.configureOAuth2Proxy -> config.services.oauth2_proxy.keyFile != null;
+        message = ''
+          Setting services.portunus.configureOAuth2Proxy to true requires to set service.oauth2_proxy.keyFile
+          to a file that contains `OAUTH2_PROXY_CLIENT_SECRET` and `OAUTH2_PROXY_COOKIE_SECRET`.
+        '';
+      }
+    ];
+
     networking.hosts = lib.mkIf cfg.addToHosts {
       ${cfg.internalIp4} = [ cfg.domain ];
       ${cfg.internalIp6} = [ cfg.domain ];
@@ -101,11 +121,35 @@ in
       })
     ];
 
-    services = {
-      # the user has no other option to accept this and all clients are internal anyway
-      dex.settings.oauth2.skipApprovalScreen = true;
+    services = let
+      callbackURL = "https://${cfg.domain}/oauth2/callback";
+    in {
+      dex = {
+        enable = lib.mkIf cfg.configureOAuth2Proxy true;
+        # the user has no other option to accept this and all clients are internal anyway
+        settings.oauth2.skipApprovalScreen = true;
+      };
 
-      portunus.seedPath = pkgs.writeText "seed.json" (builtins.toJSON cfg.seedSettings);
+      oauth2_proxy = lib.mkIf cfg.configureOAuth2Proxy {
+        enable = true;
+        clientID = "oauth2-proxy";
+        provider = "oidc";
+        redirectURL = callbackURL;
+        reverseProxy = true;
+        upstream = "http://127.0.0.1:4181";
+        extraConfig = {
+          oidc-issuer-url = config.services.dex.settings.issuer;
+          provider-display-name = "Portunus";
+        };
+      };
+
+      portunus = {
+         dex.oidcClients = lib.mkIf cfg.configureOAuth2Proxy [{
+          inherit callbackURL;
+          id = "oauth2-proxy";
+        }];
+        seedPath = pkgs.writeText "seed.json" (builtins.toJSON cfg.seedSettings);
+      };
     };
 
     security.ldap = lib.mkIf cfg.ldapPreset {
