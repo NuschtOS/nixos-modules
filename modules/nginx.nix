@@ -149,6 +149,8 @@ in
               '';
 
               listen = lib.mkIf cfg.tcpFastOpen (lib.mkDefault [
+                { addr = "0.0.0.0"; port = 80; inherit extraParameters; }
+                { addr = "0.0.0.0"; port = 443; ssl = true; inherit extraParameters; }
                 { addr = "[::]"; port = 80; inherit extraParameters; }
                 { addr = "[::]"; port = 443; ssl = true; inherit extraParameters; }
               ]);
