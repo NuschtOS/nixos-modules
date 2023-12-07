@@ -65,7 +65,7 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = {
     assertions = [
       {
         assertion = cfg.configureOAuth2Proxy -> config.services.oauth2_proxy.keyFile != null;
@@ -81,7 +81,7 @@ in
       ${cfg.internalIp6} = [ cfg.domain ];
     };
 
-    nixpkgs.overlays = [
+    nixpkgs.overlays = lib.mkIf cfg.enable [
       (final: prev: with final; {
         dex-oidc = prev.dex-oidc.override {
           buildGoModule = args: buildGoModule (args // {
