@@ -139,6 +139,9 @@ in
       oauth2_proxy = lib.mkIf cfg.configureOAuth2Proxy {
         enable = true;
         inherit clientID;
+        nginx = {
+          inherit (config.services.portunus) domain;
+        };
         provider = "oidc";
         redirectURL = callbackURL;
         reverseProxy = true;
