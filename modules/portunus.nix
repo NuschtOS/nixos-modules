@@ -128,6 +128,7 @@ in
 
     services = let
       callbackURL = "https://${cfg.domain}/oauth2/callback";
+      clientID = "oauth2_proxy"; # - is not allowed in environment variables
     in {
       dex = {
         enable = lib.mkIf cfg.configureOAuth2Proxy true;
@@ -137,7 +138,7 @@ in
 
       oauth2_proxy = lib.mkIf cfg.configureOAuth2Proxy {
         enable = true;
-        clientID = "oauth2-proxy";
+        inherit clientID;
         provider = "oidc";
         redirectURL = callbackURL;
         reverseProxy = true;
@@ -151,7 +152,7 @@ in
       portunus = {
          dex.oidcClients = lib.mkIf cfg.configureOAuth2Proxy [{
           inherit callbackURL;
-          id = "oauth2-proxy";
+          id = clientID;
         }];
         seedPath = pkgs.writeText "seed.json" (builtins.toJSON cfg.seedSettings);
       };
