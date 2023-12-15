@@ -24,6 +24,7 @@ in
   config.services.home-assistant = lib.mkMerge [
     (lib.mkIf cfg.recommendedDefaults {
       config = {
+        automation = "!include automations.yaml";
         default_config = { }; # yes, this is required...
         homeassistant = {
           auth_providers = lib.mkIf (!cfg.ldap.enable) [
@@ -95,4 +96,8 @@ in
     name = cfg.ldap.userGroup;
     permissions = { };
   };
+
+  config.systemd.tmpfiles.rules = lib.mkIf cfg.recommendedDefaults [
+    "f ${cfg.configDir}/automations.yaml 0755 hass hass"
+  ];
 }
