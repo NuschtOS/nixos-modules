@@ -98,6 +98,6 @@ in
   };
 
   config.systemd.tmpfiles.rules = lib.mkIf cfg.recommendedDefaults [
-    "f ${cfg.configDir}/automations.yaml 0755 hass hass"
+    "f ${cfg.configDir}/automations.yaml 0444 hass hass"
   ];
 }
