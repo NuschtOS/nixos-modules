@@ -22,7 +22,7 @@ in
   };
 
   config.services.home-assistant = lib.mkMerge [
-    (lib.mkIf cfg.recommendedDefaults {
+    (lib.mkIf (cfg.enable && cfg.recommendedDefaults) {
       config = {
         automation = "!include automations.yaml";
         default_config = { }; # yes, this is required...
@@ -37,7 +37,7 @@ in
       };
     })
 
-    (lib.mkIf cfg.ldap.enable {
+    (lib.mkIf (cfg.enable && cfg.ldap.enable) {
       config.homeassistant.auth_providers = [{
         type = "command_line";
         # the script is not inheriting PATH from home-assistant
@@ -97,7 +97,7 @@ in
     permissions = { };
   };
 
-  config.systemd.tmpfiles.rules = lib.mkIf cfg.recommendedDefaults [
+  config.systemd.tmpfiles.rules = lib.mkIf (cfg.enable && cfg.recommendedDefaults) [
     "f ${cfg.configDir}/automations.yaml 0444 hass hass"
   ];
 }
