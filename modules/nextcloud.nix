@@ -6,7 +6,7 @@ in
 {
   options = {
     services.nextcloud = {
-      recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings for Nextcloud";
+      recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
 
       configureImaginary = libS.mkOpinionatedOption "configure and use Imaginary for preview generation";
 
