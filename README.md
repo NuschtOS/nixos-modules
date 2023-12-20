@@ -1,6 +1,6 @@
-# nixos-modules
+# NixOS Modules
 
-Opinionated shared NixOS configurations.
+Opinionated, shared NixOS configurations.
 
 ## Usage
 
@@ -28,5 +28,5 @@ Add or merge the following settings to your `flake.nix`:
 
 ## Similar projects
 
-* https://github.com/numtide/srvos
-* https://gitea.c3d2.de/C3D2/nix-user-module
+* <https://github.com/numtide/srvos>
+* <https://gitea.c3d2.de/C3D2/nix-user-module>
