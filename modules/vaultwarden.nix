@@ -76,12 +76,12 @@ in
           LOG_LEVEL = "warn";
           PASSWORD_ITERATIONS = 600000;
           ROCKET_ADDRESS = "127.0.0.1";
-          ROCKET_PORT = 8222;
+          ROCKET_PORT = lib.mkDefault 8222;
           SIGNUPS_VERIFY = true;
           TRASH_AUTO_DELETE_DAYS = 30;
           WEBSOCKET_ADDRESS = "127.0.0.1";
           WEBSOCKET_ENABLED = true;
-          WEBSOCKET_PORT = 8223;
+          WEBSOCKET_PORT = lib.mkDefault 8223;
         })
       ];
     };
