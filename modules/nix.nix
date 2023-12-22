@@ -67,19 +67,19 @@ in
     };
 
     system.activationScripts = {
-      deleteChannels = lib.mkIf cfg.deleteChannels ''
+      deleteChannels = lib.mkIf cfg.deleteChannels /* bash */ ''
         echo "Deleting all channels..."
         rm -rf /root/.nix-channels /home/*/.nix-channels /nix/var/nix/profiles/per-user/*/channels* || true
       '';
 
-      deleteUserProfiles = lib.mkIf cfg.deleteUserProfiles ''
+      deleteUserProfiles = lib.mkIf cfg.deleteUserProfiles /* bash */ ''
         echo "Deleting all user profiles..."
         rm -rf /root/.nix-profile /home/*/.nix-profile /nix/var/nix/profiles/per-user/*/profile* || true
       '';
 
       diff-system = lib.mkIf cfg.diffSystem {
         supportsDryActivation = true;
-        text = ''
+        text = /* bash */ ''
           if [[ -e /run/current-system && -e $systemConfig ]]; then
             echo System package diff:
             ${lib.getExe config.nix.package} --extra-experimental-features nix-command store diff-closures /run/current-system $systemConfig || true

@@ -1,7 +1,5 @@
 { config, lib, libS, pkgs, ... }:
 
-# NOTE: requires https://github.com/NixOS/nixpkgs/pull/257503 because of new usage of extraPlugins
-
 let
   cfg = config.services.postgresql;
   cfgu = config.services.postgresql.upgrade;
@@ -41,7 +39,6 @@ in
     environment.systemPackages = lib.optional cfgu.enable (
       let
         # conditions copied from nixos/modules/services/databases/postgresql.nix
-        newPackage = if cfg.enableJIT && !cfgu.newPackage.jitSupport then cfgu.newPackage.withJIT else cfg.newPackage;
         newData = "/var/lib/postgresql/${cfgu.newPackage.psqlSchema}";
         newBin = "${if cfg.extraPlugins == [] then cfgu.newPackage else cfgu.newPackage.withPackages cfg.extraPlugins}/bin";
 

@@ -46,44 +46,6 @@ in
     "matrix-synapse/config.yaml".source = cfg.configFile;
   };
 
-  config.services.nginx = lib.mkIf cfge.enable {
-    enable = true;
-    virtualHosts."${cfge.domain}" = {
-      forceSSL = true;
-      enableACME = lib.mkDefault true;
-      root = (cfge.package.override {
-        conf = with config.services.matrix-synapse.settings; {
-          default_server_config."m.homeserver" = {
-            "base_url" = public_baseurl;
-            "server_name" = server_name;
-          };
-          default_theme = "dark";
-          room_directory.servers = [ server_name ];
-        } // lib.optionalAttrs cfge.enableConfigFeatures {
-          features = {
-            # https://github.com/matrix-org/matrix-react-sdk/blob/develop/src/settings/Settings.tsx
-            # https://github.com/vector-im/element-web/blob/develop/docs/labs.md
-            feature_ask_to_join = true;
-            feature_bridge_state = true;
-            feature_exploring_public_spaces = true;
-            feature_jump_to_date = true;
-            feature_mjolnir = true;
-            feature_pinning = true;
-            feature_presence_in_room_list = true;
-            feature_report_to_moderators = true;
-            feature_qr_signin_reciprocate_show = true;
-          };
-          show_labs_settings = true;
-        };
-      }).overrideAttrs ({ postInstall ? "", ... }: {
-        # prevent 404 spam in nginx log
-        postInstall = postInstall + ''
-          ln -rs $out/config.json $out/config.${cfge.domain}.json
-        '';
-      });
-    };
-  };
-
   config.services.matrix-synapse = lib.mkMerge [
     {
       settings = lib.mkIf cfge.enable rec {
@@ -149,6 +111,44 @@ in
       withJemalloc = true;
     })
   ];
+
+  config.services.nginx = lib.mkIf cfge.enable {
+    enable = true;
+    virtualHosts."${cfge.domain}" = {
+      forceSSL = true;
+      enableACME = lib.mkDefault true;
+      root = (cfge.package.override {
+        conf = with config.services.matrix-synapse.settings; {
+          default_server_config."m.homeserver" = {
+            "base_url" = public_baseurl;
+            "server_name" = server_name;
+          };
+          default_theme = "dark";
+          room_directory.servers = [ server_name ];
+        } // lib.optionalAttrs cfge.enableConfigFeatures {
+          features = {
+            # https://github.com/matrix-org/matrix-react-sdk/blob/develop/src/settings/Settings.tsx
+            # https://github.com/vector-im/element-web/blob/develop/docs/labs.md
+            feature_ask_to_join = true;
+            feature_bridge_state = true;
+            feature_exploring_public_spaces = true;
+            feature_jump_to_date = true;
+            feature_mjolnir = true;
+            feature_pinning = true;
+            feature_presence_in_room_list = true;
+            feature_report_to_moderators = true;
+            feature_qr_signin_reciprocate_show = true;
+          };
+          show_labs_settings = true;
+        };
+      }).overrideAttrs ({ postInstall ? "", ... }: {
+        # prevent 404 spam in nginx log
+        postInstall = postInstall + ''
+          ln -rs $out/config.json $out/config.${cfge.domain}.json
+        '';
+      });
+    };
+  };
 
   config.services.portunus.seedSettings.groups = lib.optional (cfg.ldap.userGroup != null) {
     long_name = "Matrix Users";

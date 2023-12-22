@@ -114,6 +114,19 @@ in
     });
   };
 
+  config.services.portunus.seedSettings.groups = [
+    (lib.mkIf (cfgl.adminGroup != null) {
+      long_name = "Gitea Administrators";
+      name = cfgl.adminGroup;
+      permissions = { };
+    })
+    (lib.mkIf (cfgl.userGroup != null) {
+      long_name = "Gitea Users";
+      name = cfgl.userGroup;
+      permissions = { };
+    })
+  ];
+
   config.systemd.services = lib.mkIf (cfg.enable && cfgl.enable) {
     gitea.preStart =
       let
@@ -131,17 +144,4 @@ in
         fi
       '';
   };
-
-  config.services.portunus.seedSettings.groups = [
-    (lib.mkIf (cfgl.adminGroup != null) {
-      long_name = "Gitea Administrators";
-      name = cfgl.adminGroup;
-      permissions = { };
-    })
-    (lib.mkIf (cfgl.userGroup != null) {
-      long_name = "Gitea Users";
-      name = cfgl.userGroup;
-      permissions = { };
-    })
-  ];
 }

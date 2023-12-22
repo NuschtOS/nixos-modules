@@ -18,7 +18,7 @@ in
 
   config = lib.mkIf cfgP.addPopularKnownHosts {
     programs.ssh = {
-      extraConfig = lib.mkIf cfgP.recommendedDefaults ''
+      extraConfig = lib.mkIf cfgP.recommendedDefaults /* sshconfig */ ''
         # hard complain about wrong knownHosts
         StrictHostKeyChecking accept-new
         # make automated host key rotation possible
