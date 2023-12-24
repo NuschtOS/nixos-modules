@@ -7,7 +7,7 @@ in
 {
   options.services.postgresql = {
     upgrade = {
-      enable = libS.mkOpinionatedOption "install the upgrade-pg-cluster script to update postgres.";
+      enable = libS.mkOpinionatedOption "install the upgrade-pg-cluster script to update postgres";
 
       extraArgs = lib.mkOption {
         type = with lib.types; listOf str;
