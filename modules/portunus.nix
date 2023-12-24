@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, options, pkgs, ... }:
 
 let
   cfg = config.services.portunus;
@@ -21,6 +21,8 @@ in
         Wether to configure OAuth2 Proxy with Portunus' Dex.
 
         Use `services.oauth2_proxy.nginx.virtualHosts` to configure the nginx virtual hosts that should require authentication.
+
+        To properly function this requires the services.oauth2_proxy.nginx.domain option from <https://github.com/NixOS/nixpkgs/pull/273234>.
       '';
     };
 
@@ -139,7 +141,7 @@ in
       oauth2_proxy = lib.mkIf cfg.configureOAuth2Proxy {
         enable = true;
         inherit clientID;
-        nginx = {
+        nginx = lib.optionalAttrs (options.services.oauth2_proxy.nginx.domain or false) {
           inherit (config.services.portunus) domain;
         };
         provider = "oidc";
