@@ -45,6 +45,23 @@ in
     setHSTSHeader = libS.mkOpinionatedOption "add the HSTS header to all virtual hosts";
 
     tcpFastOpen = libS.mkOpinionatedOption "enable tcp fast open";
+
+    # source https://gist.github.com/danbst/f1e81358d5dd0ba9c763a950e91a25d0
+    virtualHosts = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.submodule {
+        options.locations = lib.mkOption {
+          type = lib.types.attrsOf (lib.types.submodule ({ config, ...}: {
+          #   options.commonServerConfig = lib.mkOption {
+          #   type = lib.types.bool;
+          #   default = false;
+          # };
+            config.extraConfig = lib.mkIf cfg.setHSTSHeader /* nginx */ ''
+              more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
+            '';
+          }));
+        };
+      });
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -97,10 +114,6 @@ in
         '' + lib.optionalString cfg.recommendedZstdSettings /* nginx */ ''
           # TODO: upstream this?
           zstd_types application/x-nix-archive;
-        '';
-
-        commonServerConfig = lib.mkIf cfg.setHSTSHeader /* nginx */ ''
-          more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
         '';
 
         package = lib.mkIf cfg.quic.enable pkgs.nginxQuic; # based on pkgs.nginxMainline
