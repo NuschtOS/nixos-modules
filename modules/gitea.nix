@@ -87,8 +87,8 @@ in
         SCHEME = "https";
       };
       cron.ENABLED = true;
-      "cron.resync_all_sshkeys".ENABLED = true;
-      "cron.resync_all_hooks".ENABLED = true;
+      "cron.delete_old_actions".ENABLED = true;
+      "cron.delete_old_system_notices".ENABLED = true;
       other.SHOW_FOOTER_VERSION = false;
       repository.ACCESS_CONTROL_ALLOW_ORIGIN = cfg.settings.server.DOMAIN;
       "repository.signing".DEFAULT_TRUST_MODEL = "committer";
