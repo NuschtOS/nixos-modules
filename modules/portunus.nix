@@ -141,7 +141,7 @@ in
       oauth2_proxy = lib.mkIf cfg.configureOAuth2Proxy {
         enable = true;
         inherit clientID;
-        nginx = lib.optionalAttrs (options.services.oauth2_proxy.nginx.domain or false) {
+        nginx = lib.optionalAttrs (options.services.oauth2_proxy.nginx.domain or false != null) {
           inherit (config.services.portunus) domain;
         };
         provider = "oidc";
