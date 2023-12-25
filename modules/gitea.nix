@@ -64,7 +64,7 @@ in
   };
 
   imports = [
-    (lib.mkRenamedOptionModule [ "services" "girea" "bindPasswordFile" ] [ "services" "gitea" "ldapSearchUserPasswordFile" ])
+    (lib.mkRenamedOptionModule [ "services" "gitea" "ldap" "bindPasswordFile" ] [ "services" "gitea" "ldap" "ldapSearchUserPasswordFile" ])
   ];
 
   config.services.gitea = lib.mkIf (cfg.enable && cfgl.enable) {
