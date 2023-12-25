@@ -19,11 +19,11 @@ in
           description = lib.mdDoc "Name of the ldap group that grants admin access in gitea.";
         };
 
-        bindPasswordFile = lib.mkOption {
+        ldapSearchUserPasswordFile = lib.mkOption {
           type = with lib.types; nullOr str;
           default = null;
-          example = "/var/lib/secrets/bind-password";
-          description = lib.mdDoc "Path to a file containing the bind password.";
+          example = "/var/lib/secrets/search-user-password";
+          description = lib.mdDoc "Path to a file containing the password for the search/bind user.";
         };
 
         userGroup = libS.ldap.mkUserGroupOption;
@@ -62,6 +62,10 @@ in
       recommendedDefaults = libS.mkOpinionatedOption "set recommended, secure default settings";
     };
   };
+
+  imports = [
+    (lib.mkRenamedOptionModule [ "services" "girea" "bindPasswordFile" ] [ "services" "gitea" "ldapSearchUserPasswordFile" ])
+  ];
 
   config.services.gitea = lib.mkIf (cfg.enable && cfgl.enable) {
     ldap.options = {
