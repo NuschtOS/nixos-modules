@@ -5,7 +5,7 @@ let
 in
 {
   options.services.nginx = {
-    allCompression = libS.mkOpinionatedOption "set all recommended compression options";
+    allRecommendOptions = libS.mkOpinionatedOption "set all upstream options starting with `recommended`";
 
     default404Server = {
       enable = lib.mkOption {
@@ -63,6 +63,10 @@ in
       });
     };
   };
+
+  imports = [
+    (lib.mkRenamedOptionModule [ "services" "nginx" "allCompression" ] [ "services" "nginx" "allRecommendOptions" ])
+  ];
 
   config = lib.mkIf cfg.enable {
     assertions = [
