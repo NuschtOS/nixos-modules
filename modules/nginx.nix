@@ -7,6 +7,14 @@ in
   options.services.nginx = {
     allRecommendOptions = libS.mkOpinionatedOption "set all upstream options starting with `recommended`";
 
+    commonServerConfig = lib.mkOption {
+      type = lib.types.strings;
+      default = "";
+      description = lib.mdDoc ''
+        Shared configuration snipped added to every virtualHosts' extraConfig.
+      '';
+    };
+
     default404Server = {
       enable = lib.mkOption {
         type = lib.types.bool;
@@ -57,7 +65,7 @@ in
           # };
             config.extraConfig = lib.mkIf cfg.setHSTSHeader /* nginx */ ''
               more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
-            '';
+            '' + cfg.commonServerConfig;
           }));
         };
       });
