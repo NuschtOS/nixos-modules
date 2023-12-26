@@ -19,7 +19,7 @@ in
           description = lib.mdDoc "Name of the ldap group that grants admin access in gitea.";
         };
 
-        ldapSearchUserPasswordFile = lib.mkOption {
+        searchUserPasswordFile = lib.mkOption {
           type = with lib.types; nullOr str;
           default = null;
           example = "/var/lib/secrets/search-user-password";
@@ -64,7 +64,7 @@ in
   };
 
   imports = [
-    (lib.mkRenamedOptionModule [ "services" "gitea" "ldap" "bindPasswordFile" ] [ "services" "gitea" "ldap" "ldapSearchUserPasswordFile" ])
+    (lib.mkRenamedOptionModule [ "services" "gitea" "ldap" "bindPasswordFile" ] [ "services" "gitea" "ldap" "searchUserPasswordFile" ])
   ];
 
   config.services.gitea = lib.mkIf (cfg.enable && cfgl.enable) {
@@ -74,7 +74,7 @@ in
       host = ldap.domainName;
       inherit (ldap) port;
       bind-dn = ldap.bindDN;
-      bind-password = "$(cat ${cfgl.bindPasswordFile})";
+      bind-password = "$(cat ${cfgl.searchUserPasswordFile})";
       user-search-base = ldap.userBaseDN;
       user-filter = ldap.searchFilterWithGroupFilter cfgl.userGroup (ldap.userFilter "%[1]s");
       admin-filter = ldap.groupFilter cfgl.adminGroup;
