@@ -8,7 +8,7 @@ in
     allRecommendOptions = libS.mkOpinionatedOption "set all upstream options starting with `recommended`";
 
     commonServerConfig = lib.mkOption {
-      type = lib.types.strings;
+      type = lib.types.lines;
       default = "";
       description = lib.mdDoc ''
         Shared configuration snipped added to every virtualHosts' extraConfig.
@@ -63,7 +63,7 @@ in
           #   type = lib.types.bool;
           #   default = false;
           # };
-            config.extraConfig = lib.mkIf cfg.setHSTSHeader /* nginx */ ''
+            config.extraConfig = lib.optionalString cfg.setHSTSHeader /* nginx */ ''
               more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
             '' + cfg.commonServerConfig;
           }));
