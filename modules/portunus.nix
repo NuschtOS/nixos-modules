@@ -105,7 +105,7 @@ in
         };
 
         portunus = (prev.portunus.override { buildGoModule = buildGo121Module; }).overrideAttrs ({ patches ? [ ], buildInputs ? [ ], ... }: let
-          version = "2.0.0-beta.2";
+          version = "2.0.0";
         in {
           inherit version;
 
@@ -114,7 +114,7 @@ in
             owner = "majewsky";
             repo = "portunus";
             rev = "v${version}";
-            hash = "sha256-1OU3bepvqriGCW1qDszPnUDJ6eqBzNTiBZ2J4KF4ynw=";
+            hash = "sha256-jicqH31Q+kDkOvtCg+HStQ4LUUzKm5ZO4utnAkCOLvY=";
           };
 
           patches = patches
