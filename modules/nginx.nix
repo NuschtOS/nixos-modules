@@ -56,19 +56,35 @@ in
 
     # source https://gist.github.com/danbst/f1e81358d5dd0ba9c763a950e91a25d0
     virtualHosts = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.submodule {
-        options.locations = lib.mkOption {
-          type = lib.types.attrsOf (lib.types.submodule ({ config, ...}: {
-          #   options.commonServerConfig = lib.mkOption {
-          #   type = lib.types.bool;
-          #   default = false;
-          # };
-            config.extraConfig = lib.optionalString cfg.setHSTSHeader /* nginx */ ''
-              more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
-            '' + cfg.commonServerConfig;
-          }));
+      type = lib.types.attrsOf (lib.types.submodule ({ config, ... }: let
+        cfgv = config;
+      in {
+        options = {
+          commonLocationsConfig = lib.mkOption {
+            type = lib.types.lines;
+            default = "";
+            description = lib.mdDoc ''
+              Shared configuration snipped added to every locations' extraConfig.
+
+              ::: {.note}
+              This option mainly exists because nginx' add_header and headers_more's more_set_headers function do not support inheritance to lower levels.
+              :::
+            '';
+          };
+
+          locations = lib.mkOption {
+            type = lib.types.attrsOf (lib.types.submodule ({ config, ...}: {
+            #   options.commonServerConfig = lib.mkOption {
+            #   type = lib.types.bool;
+            #   default = false;
+            # };
+              config.extraConfig = lib.optionalString cfg.setHSTSHeader /* nginx */ ''
+                more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
+              '' + cfg.commonServerConfig + cfgv.commonLocationsConfig;
+            }));
+          };
         };
-      });
+      }));
     };
   };
 
