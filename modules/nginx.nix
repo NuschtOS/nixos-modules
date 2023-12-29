@@ -105,7 +105,10 @@ in
       "net.ipv4.tcp_fastopen" = 3;
     };
 
-    networking.firewall.allowedTCPPorts = lib.mkIf cfg.openFirewall [ 80 443 ];
+    networking.firewall = lib.mkIf cfg.openFirewall {
+      allowedTCPPorts = [ 80 443 ];
+      allowedUDPPorts = lib.mkIf cfg.quic.enable [ 443 ];
+    };
 
     nixpkgs.overlays = lib.mkIf cfg.tcpFastOpen [
       (final: prev:
