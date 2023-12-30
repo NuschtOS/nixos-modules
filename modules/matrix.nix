@@ -31,16 +31,20 @@ in
 
         userGroup = libS.ldap.mkUserGroupOption;
 
-        bindPasswordFile = lib.mkOption {
+        searchUserPasswordFile = lib.mkOption {
           type = lib.types.str;
-          example = "/var/lib/secrets/bind-password";
-          description = lib.mdDoc "Path to a file containing the bind password.";
+          example = "/var/lib/secrets/search-user-password";
+          description = lib.mdDoc "Path to a file containing the password for the search/bind user.";
         };
       };
 
       recommendedDefaults = libS.mkOpinionatedOption "set recommended and secure default settings";
     };
   };
+
+  imports = [
+    (lib.mkRenamedOptionModule [ "services" "matrix-synapse" "ldap" "bindPasswordFile" ] [ "services" "matrix-synapse" "ldap" "searchUserPasswordFile" ])
+  ];
 
   config.environment.etc = lib.mkIf cfg.enable {
     "matrix-synapse/config.yaml".source = cfg.configFile;
