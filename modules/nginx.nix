@@ -74,10 +74,6 @@ in
 
           locations = lib.mkOption {
             type = lib.types.attrsOf (lib.types.submodule ({ config, ...}: {
-            #   options.commonServerConfig = lib.mkOption {
-            #   type = lib.types.bool;
-            #   default = false;
-            # };
               config.extraConfig = lib.optionalString cfg.setHSTSHeader /* nginx */ ''
                 more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
               '' + cfg.commonServerConfig + cfgv.commonLocationsConfig;
