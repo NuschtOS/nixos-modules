@@ -76,7 +76,7 @@ in
             name = ldap.givenNameField;
           };
           bind_dn = ldap.bindDN;
-          bind_password_file = cfg.ldap.bindPasswordFile;
+          bind_password_file = cfg.ldap.searchUserPasswordFile;
           tls_options.validate = true;
         } // lib.optionalAttrs (cfg.ldap.userGroup != null) {
           filter = ldap.groupFilter cfg.ldap.userGroup;
