@@ -56,7 +56,7 @@ in
 
     # source https://gist.github.com/danbst/f1e81358d5dd0ba9c763a950e91a25d0
     virtualHosts = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.submodule ({ config, ... }: let
+      type = with lib.types; attrsOf (submodule ({ config, ... }: let
         cfgv = config;
       in {
         options = {
@@ -73,7 +73,7 @@ in
           };
 
           locations = lib.mkOption {
-            type = lib.types.attrsOf (lib.types.submodule ({ config, ...}: {
+            type = with lib.types; attrsOf (submodule ({ config, ...}: {
               config.extraConfig = lib.optionalString cfg.setHSTSHeader /* nginx */ ''
                 more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
               '' + cfg.commonServerConfig + cfgv.commonLocationsConfig;
