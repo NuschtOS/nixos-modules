@@ -61,7 +61,7 @@ in
             '';
 
           in
-          "restrict,pty,command=\"${wrapper-dispatch-ssh-nix}/bin/wrapper-dispatch-ssh-nix\" ${key}"
+          "restrict,pty,command=\"${lib.getExe wrapper-dispatch-ssh-nix}\" ${key}"
         )
         config.nix.remoteBuilder.sshPublicKeys;
     };

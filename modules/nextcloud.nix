@@ -85,9 +85,9 @@ in
               ''OC\Preview\Movie''
             ];
 
-            "memories.exiftool" = "${pkgs.exiftool}/bin/exiftool";
+            "memories.exiftool" = lib.getExe pkgs.exiftool;
             "memories.vod.vaapi" = lib.mkIf cfg.configureMemoriesVaapi true;
-            "memories.vod.ffmpeg" = "${pkgs.ffmpeg-headless}/bin/ffmpeg";
+            "memories.vod.ffmpeg" = lib.getExe pkgs.ffmpeg-headless;
             "memories.vod.ffprobe" = "${pkgs.ffmpeg-headless}/bin/ffprobe";
           })
 

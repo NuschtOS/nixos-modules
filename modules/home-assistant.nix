@@ -59,7 +59,7 @@ in
           solutions.default = {
             fake.external = [ "on_auth_failure" "on_auth_success" ];
             inputs = with pkgs; [ coreutils curl gnugrep gnused openldap ];
-            interpreter = "${pkgs.bash}/bin/bash";
+            interpreter = lib.getExe pkgs.bash;
             keep."source:$CONFIG_FILE" = true;
             scripts = [ "bin/ldap-auth.sh" ];
           };
