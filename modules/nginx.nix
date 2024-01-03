@@ -15,6 +15,8 @@ in
       '';
     };
 
+    configureQuic = lib.mkEnableOption (lib.mdDoc "quic support in nginx");
+
     default404Server = {
       enable = lib.mkOption {
         type = lib.types.bool;
@@ -36,13 +38,7 @@ in
 
     generateDhparams = libS.mkOpinionatedOption "generate more secure, 2048 bits dhparams replacing the default 1024 bits";
 
-    openFirewall = libS.mkOpinionatedOption "open the firewall port for the http (80) and https (443) default ports";
-
-    quic = {
-      enable = lib.mkEnableOption (lib.mdDoc "quic support in nginx");
-
-      bpf = libS.mkOpinionatedOption "configure nginx' bpf support which routes quic packets from the same source to the same worker";
-    };
+    openFirewall = libS.mkOpinionatedOption "open the firewall port for the http (80/tcp), https (443/tcp) and if enabled quic (443/udp) ports";
 
     recommendedDefaults = libS.mkOpinionatedOption "set recommended performance options not grouped into other settings";
 
@@ -86,16 +82,11 @@ in
 
   imports = [
     (lib.mkRenamedOptionModule [ "services" "nginx" "allCompression" ] [ "services" "nginx" "allRecommendOptions" ])
+    (lib.mkRenamedOptionModule [ "services" "nginx" "quic" "bpf" ] [ "services" "nginx" "enableQuicBPF" ])
+    (lib.mkRenamedOptionModule [ "services" "nginx" "quic" "enable" ] [ "services" "nginx" "configureQuic" ])
   ];
 
   config = lib.mkIf cfg.enable {
-    assertions = [
-      {
-        assertion = cfg.quic.enable && cfg.quic.bpf -> !lib.versionOlder cfg.package.version "1.25.0";
-        message = "Setting services.nginx.quic.bpf to true requires nginx version 1.25.0 or newer, but currently \"${cfg.package.version}\" is used!";
-      }
-    ];
-
     boot.kernel.sysctl = lib.mkIf cfg.tcpFastOpen {
       # enable tcp fastopen for outgoing and incoming connections
       "net.ipv4.tcp_fastopen" = 3;
@@ -127,9 +118,7 @@ in
 
       # NOTE: do not use mkMerge here to prevent infinite recursions
       nginx = {
-        appendConfig = lib.optionalString (cfg.quic.enable && cfg.quic.bpf) /* nginx */ ''
-          quic_bpf on;
-        '' + lib.optionalString cfg.recommendedDefaults /* nginx */ ''
+        appendConfig = lib.optionalString cfg.recommendedDefaults /* nginx */ ''
           worker_processes auto;
           worker_cpu_affinity auto;
         '';
@@ -142,6 +131,8 @@ in
           # TODO: upstream this?
           zstd_types application/x-nix-archive;
         '';
+
+        enableQuicBPF = lib.mkIf cfg.quic.enable true;
 
         package = lib.mkIf cfg.quic.enable pkgs.nginxQuic; # based on pkgs.nginxMainline
 
@@ -206,11 +197,5 @@ in
       params.nginx = { };
     };
 
-    systemd.services.nginx.serviceConfig = lib.mkIf (cfg.quic.enable && cfg.quic.bpf) {
-      # NOTE: CAP_BPF is included in CAP_SYS_ADMIN but it is not enough alone
-      AmbientCapabilities = [ "CAP_BPF" "CAP_NET_ADMIN" "CAP_SYS_ADMIN" ];
-      CapabilityBoundingSet = [ "CAP_BPF" "CAP_NET_ADMIN" "CAP_SYS_ADMIN" ];
-      SystemCallFilter = [ "bpf" ];
-    };
   };
 }
