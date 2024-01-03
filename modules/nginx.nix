@@ -197,5 +197,6 @@ in
       params.nginx = { };
     };
 
+    systemd.services.nginx.restartTriggers = lib.mkIf cfg.recommendedDefaults [ config.users.users.${cfg.user}.extraGroups ];
   };
 }
