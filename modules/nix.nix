@@ -55,7 +55,7 @@ in
                   exec ${config.nix.package}/bin/nix-store --serve --write
                   ;;
                 *)
-                  echo "Access is only allowed for the nix remote builder" 1>&2
+                  echo "Access is only allowed for nix remote building, not running command \"$SSH_ORIGINAL_COMMAND\"" 1>&2
                   exit 1
               esac
             '';
