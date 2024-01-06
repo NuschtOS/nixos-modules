@@ -175,9 +175,9 @@ in
               default = lib.mkIf cfg.default404Server.enable true;
               addSSL = lib.mkIf cfg.default404Server.enable true;
               useACMEHost = lib.mkIf cfg.default404Server.enable cfg.default404Server.acmeHost;
-              extraConfig = lib.mkIf cfg.default404Server.enable /* nginx */ ''
-                return 404;
-              '';
+              locations = lib.mkIf cfg.default404Server.enable {
+                "/".return = 404;
+              };
 
               listen = lib.mkIf cfg.tcpFastOpen (lib.mkDefault [
                 { addr = "0.0.0.0"; port = 80; inherit extraParameters; }
