@@ -77,8 +77,7 @@ in
 
           (lib.mkIf cfg.configureMemories {
             enabledPreviewProviders = [
-              # https://github.com/pulsejet/memories/wiki/File-Type-Support
-              # TODO: not sure if this should be under configurePreviewSettings instead or both
+              # https://memories.gallery/file-types/
               ''OC\Preview\Image'' # alias for png,jpeg,gif,bmp
               ''OC\Preview\HEIC''
               ''OC\Preview\TIFF''

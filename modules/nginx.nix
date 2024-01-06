@@ -128,7 +128,7 @@ in
         '' + lib.optionalString cfg.quic.enable /* nginx */''
           quic_retry on;
         '' + lib.optionalString cfg.recommendedZstdSettings /* nginx */ ''
-          # TODO: upstream this?
+          # from harmonia readme
           zstd_types application/x-nix-archive;
         '';
 

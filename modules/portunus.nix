@@ -6,7 +6,6 @@ let
 in
 {
   options.services.portunus = {
-    # TODO: how to automatically set this?
     # maybe based on $service.ldap.enable && services.portunus.enable?
     addToHosts = lib.mkOption {
       type = lib.types.bool;
@@ -57,6 +56,7 @@ in
     };
 
     # TODO: upstream to nixos
+    # https://github.com/NixOS/nixpkgs/pull/279050
     seedSettings = lib.mkOption {
       type = with lib.types; nullOr (attrsOf (listOf (attrsOf anything)));
       default = null;
@@ -104,26 +104,9 @@ in
           });
         };
 
-        portunus = (prev.portunus.override { buildGoModule = buildGo121Module; }).overrideAttrs ({ patches ? [ ], buildInputs ? [ ], ... }: let
-          version = "2.0.0";
-        in {
-          inherit version;
-
-          # TODO: upstream
-          src = fetchFromGitHub {
-            owner = "majewsky";
-            repo = "portunus";
-            rev = "v${version}";
-            hash = "sha256-jicqH31Q+kDkOvtCg+HStQ4LUUzKm5ZO4utnAkCOLvY=";
-          };
-
+        portunus = prev.portunus.overrideAttrs ({ patches ? [ ], ... }: {
           patches = patches
             ++ lib.optional cfg.removeAddGroup ./portunus-remove-add-group.diff;
-
-          # TODO: upstream
-          buildInputs = buildInputs ++ [
-            libxcrypt-legacy
-          ];
         });
       })
     ];
