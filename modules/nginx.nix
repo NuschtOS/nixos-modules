@@ -173,7 +173,7 @@ in
               reuseport = lib.mkIf (cfg.recommendedDefaults || cfg.quic.enable) true;
 
               default = lib.mkIf cfg.default404Server.enable true;
-              forceSSL = lib.mkIf cfg.default404Server.enable true;
+              addSSL = lib.mkIf cfg.default404Server.enable true;
               useACMEHost = lib.mkIf cfg.default404Server.enable cfg.default404Server.acmeHost;
               extraConfig = lib.mkIf cfg.default404Server.enable /* nginx */ ''
                 return 404;
