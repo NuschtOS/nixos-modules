@@ -76,6 +76,10 @@ in
           to a file that contains `OAUTH2_PROXY_CLIENT_SECRET` and `OAUTH2_PROXY_COOKIE_SECRET`.
         '';
       }
+      {
+        assertion = lib.versionAtLeast config.services.portunus.package.version "2.0.0";
+        message = "Portunus 2.0.0 is required for this module!";
+      }
     ];
 
     networking.hosts = lib.mkIf cfg.addToHosts {
