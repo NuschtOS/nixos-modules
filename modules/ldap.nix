@@ -8,9 +8,9 @@ in
     type = lib.types.submodule {
       options = {
         bindDN = lib.mkOption {
-          type = lib.types.str;
+          type = with lib.types; nullOr str;
           example = "uid=search";
-          default = "uid=${cfg.searchUID}";
+          default = if cfg.searchUID != null then "uid=${cfg.searchUID}" else null;
           apply = s: s + "," + cfg.userBaseDN;
           description = lib.mdDoc ''
             The DN of the service user used by services.
@@ -89,7 +89,8 @@ in
         };
 
         searchUID = lib.mkOption {
-          type = lib.types.str;
+          type = with lib.types; nullOr str;
+          default = null;
           example = "search";
           description = lib.mdDoc "The uid of the service user used by services, often referred as search user.";
         };
