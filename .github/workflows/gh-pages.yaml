@@ -38,7 +38,7 @@ jobs:
           path: public/
 
   deploy:
-    name: Deploy gh pages
+    name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
     needs: build
     steps:
