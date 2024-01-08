@@ -24,4 +24,19 @@
         -e 's|file\:///nix/store/.+\-source/(.+)\)|${url}/\1/default\.nix\)|g' \
       > $out/options.md
   '';
+
+  mkMdBook = { projectName, moduleDoc }: with pkgs; stdenv.mkDerivation {
+    name = "${projectName}-docs";
+    nativeBuildInputs = [ mdbook ];
+    buildCommand = ''
+      mkdir src
+
+      echo -e "[book]\ntitle=\"${projectName}\"" > src/book.toml
+      echo -e "# Summary\n\n- [Options](options.md)" > src/SUMMARY.md
+      ln -s ${moduleDoc}/options.md ./src
+
+      mdbook build
+      mv book $out
+    '';
+  };
 }

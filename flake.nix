@@ -32,7 +32,7 @@
         in
         lib' // {
           # some functions get promoted to be directly under libS
-          inherit (lib'.doc) mkModuleDoc;
+          inherit (lib'.doc) mkModuleDoc mkMdBook;
           inherit (lib'.modules) mkOpinionatedOption mkRecursiveDefault;
           inherit (lib'.ssh) mkPubKey;
         };
@@ -57,9 +57,15 @@
       } // flake-utils.lib.eachDefaultSystem (system: let
         libS = self.lib { config = { }; inherit lib; pkgs = nixpkgs.legacyPackages.${system}; };
       in {
-      packages.options-doc = libS.mkModuleDoc {
-        module = self.nixosModule;
-        urlPrefix = "https://github.com/SuperSandro2000/nixos-modules/tree/master/";
-      };
+        packages = rec {
+          options-doc = libS.mkModuleDoc {
+            module = self.nixosModule;
+            urlPrefix = "https://github.com/SuperSandro2000/nixos-modules/tree/master/";
+          };
+          options-html = libS.mkMdBook {
+            projectName = "nixos-modules";
+            moduleDoc = options-doc;
+          };
+        };
     });
 }
