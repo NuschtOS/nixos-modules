@@ -31,7 +31,10 @@
     buildCommand = ''
       mkdir src
 
-      echo -e "[book]\ntitle=\"${projectName}\"" > src/book.toml
+      cp ${pkgs.substituteAll {
+        src = ./book.toml;
+        inherit projectName;
+      }} src/book.toml
       echo -e "# Summary\n\n- [Options](options.md)" > src/SUMMARY.md
       ln -s ${moduleDoc}/options.md ./src
 

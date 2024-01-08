@@ -1,0 +1,5 @@
+[book]
+title="@projectName@"
+
+[output.html.print]
+enable = false # don't encourage people to create more dead trees
