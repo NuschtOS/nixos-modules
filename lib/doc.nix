@@ -39,7 +39,7 @@
       ln -s ${moduleDoc}/options.md ./src
 
       mdbook build
-      mv book $out
+      mv book/html $out
     '';
   };
 }
