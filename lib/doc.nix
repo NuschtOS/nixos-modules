@@ -27,7 +27,10 @@
 
   mkMdBook = { projectName, moduleDoc }: with pkgs; stdenv.mkDerivation {
     name = "${projectName}-docs";
-    nativeBuildInputs = [ mdbook ];
+    nativeBuildInputs = [
+      mdbook
+      # mdbook-linkcheck # obiously doesn't work in sandbox
+    ];
     buildCommand = ''
       mkdir src
 
