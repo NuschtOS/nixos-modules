@@ -1,9 +1,10 @@
 [book]
-title="@projectName@"
+title = "@projectName@"
 
 [output.html.print]
 enable = false # don't encourage people to create more dead trees
 
 [output.linkcheck]
+optional = true
 follow-web-links = true
 warning-policy = "error"

@@ -27,17 +27,14 @@
 
   mkMdBook = { projectName, moduleDoc }: with pkgs; stdenv.mkDerivation {
     name = "${projectName}-docs";
-    nativeBuildInputs = [
-      mdbook
-      # mdbook-linkcheck # obiously doesn't work in sandbox
-    ];
+    nativeBuildInputs = [ mdbook ];
     buildCommand = ''
       mkdir src
 
       cp ${pkgs.substituteAll {
         src = ./book.toml;
         inherit projectName;
-      }} src/book.toml
+      }} book.toml
       echo -e "# Summary\n\n- [Options](options.md)" > src/SUMMARY.md
       ln -s ${moduleDoc}/options.md ./src
 
