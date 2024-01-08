@@ -2,11 +2,11 @@
 
 {
   # based on https://github.com/j-brn/nixos-vfio/blob/master/lib/mkModuleDoc.nix
-  mkModuleDoc = { module, urlPrefix }: let
+  mkModuleDoc = { modules, urlPrefix }: let
     inherit (lib.evalModules {
-      modules = [ {
+      modules = lib.singleton {
         config._module.check = false;
-      } module ];
+      } ++ modules;
     }) options;
     filteredOptions = lib.filterAttrs (key: _: key != "_module") options;
     docs = pkgs.nixosOptionsDoc {
