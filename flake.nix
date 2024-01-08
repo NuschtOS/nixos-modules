@@ -22,16 +22,14 @@
       );
     in
     {
-      lib = args:
-        let
-          lib' = importDirToKey "lib" args;
-        in
-        lib' // {
-          # some functions get promoted to be directly under libS
-          inherit (lib'.doc) mkModuleDoc mkMdBook;
-          inherit (lib'.modules) mkOpinionatedOption mkRecursiveDefault;
-          inherit (lib'.ssh) mkPubKey;
-        };
+      lib = args: let
+        lib' = importDirToKey "lib" args;
+      in lib' // {
+        # some functions get promoted to be directly under libS
+        inherit (lib'.doc) mkModuleDoc mkMdBook;
+        inherit (lib'.modules) mkOpinionatedOption mkRecursiveDefault;
+        inherit (lib'.ssh) mkPubKey;
+      };
 
       # NOTE: requires libS to be imported once which can be done like:
       # _module.args.libS = lib.mkOverride 1001 (nixos-modules.lib { inherit lib config; });
@@ -53,25 +51,24 @@
         _module.args.libS = lib.mkOverride 1000 (self.lib { inherit lib config; });
         imports = fileList "modules";
       };
-    } // flake-utils.lib.eachDefaultSystem (system:
-      let
-        libS = self.lib { config = { }; inherit lib; pkgs = nixpkgs.legacyPackages.${system}; };
-      in
-      {
-        packages = rec {
-          options-doc-md = libS.mkModuleDoc {
-            modules = [
-              ({ config, lib, ... }: {
-                _module.args.libS = self.lib { inherit config lib; };
-              })
-              self.nixosModule
-            ];
-            urlPrefix = "https://github.com/SuperSandro2000/nixos-modules/tree/master/";
-          };
-          options-doc = libS.mkMdBook {
-            projectName = "nixos-modules";
-            moduleDoc = options-doc-md;
-          };
+    } // flake-utils.lib.eachDefaultSystem (system: let
+      libS = self.lib { config = { }; inherit lib; pkgs = nixpkgs.legacyPackages.${system}; };
+    in {
+      packages = rec {
+        options-doc-md = libS.mkModuleDoc {
+          modules = [
+            ({ config, lib, ... }: {
+              _module.args.libS = self.lib { inherit config lib; };
+            })
+            self.nixosModule
+          ];
+          urlPrefix = "https://github.com/SuperSandro2000/nixos-modules/tree/master/";
         };
-      });
+
+        options-doc = libS.mkMdBook {
+          projectName = "nixos-modules";
+          moduleDoc = options-doc-md;
+        };
+      };
+    });
 }

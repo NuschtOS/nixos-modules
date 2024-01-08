@@ -164,10 +164,10 @@ in
               # 1080 files/photos app when viewing picture
               ${occ} config:app:set --value="256 1080" previewgenerator heightSizes
             '';
-            serviceConfig = {
-              Type = "oneshot";
-              User = "nextcloud";
-            };
+          serviceConfig = {
+            Type = "oneshot";
+            User = "nextcloud";
+          };
         };
 
         nextcloud-setup = lib.mkIf cfg.configureRecognize {

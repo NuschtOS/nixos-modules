@@ -22,16 +22,16 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    assertions = [ {
+    assertions = [{
       assertion = cfg.configureNginx -> cfg.domain != null;
       message = ''
         Setting services.vaultwarden.configureNginx to true requires configuring services.vaultwarden.domain!
       '';
-    } ];
+    }];
 
     nixpkgs.overlays = lib.mkIf cfg.recommendedDefaults [
       (final: prev: {
-        vaultwarden = prev.vaultwarden.overrideAttrs ({ patches ? [], ... }: {
+        vaultwarden = prev.vaultwarden.overrideAttrs ({ patches ? [ ], ... }: {
           patches = patches ++ [
             # add eu region push support
             (final.fetchpatch {

@@ -95,7 +95,7 @@ in
   };
 
   config.services.nginx = lib.mkIf (cfg.enable && cfg.configureNginx) {
-    upstreams.grafana.servers."unix:${cfg.settings.server.socket}" = {};
+    upstreams.grafana.servers."unix:${cfg.settings.server.socket}" = { };
     virtualHosts = {
       "${cfg.settings.server.domain}".locations = {
         "/".proxyPass = "http://grafana";

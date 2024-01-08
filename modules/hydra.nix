@@ -83,9 +83,11 @@ in
       name = cfg.userGroup;
       permissions = { };
     })
-  ] ++ lib.flatten (map lib.attrValues (map (lib.mapAttrs (ldapGroup: _: {
-    long_name = "Hydra Role ${ldapGroup}";
-    name = ldapGroup;
-    permissions = { };
-  })) cfg.roleMappings));
+  ] ++ lib.flatten (map lib.attrValues (map
+    (lib.mapAttrs (ldapGroup: _: {
+      long_name = "Hydra Role ${ldapGroup}";
+      name = ldapGroup;
+      permissions = { };
+    }))
+    cfg.roleMappings));
 }

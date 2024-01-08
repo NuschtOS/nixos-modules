@@ -7,7 +7,7 @@
 
   config = {
     hardware.opengl = {
-     extraPackages = with pkgs; lib.mkIf config.hardware.intelGPU [
+      extraPackages = with pkgs; lib.mkIf config.hardware.intelGPU [
         intel-compute-runtime # OpenCL library for iGPU
         # video encoding/decoding hardware acceleration
         intel-media-driver # broadwell or newer
