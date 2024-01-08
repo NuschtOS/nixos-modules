@@ -58,13 +58,13 @@
         libS = self.lib { config = { }; inherit lib; pkgs = nixpkgs.legacyPackages.${system}; };
       in {
         packages = rec {
-          options-doc = libS.mkModuleDoc {
+          options-doc-md = libS.mkModuleDoc {
             module = self.nixosModule;
             urlPrefix = "https://github.com/SuperSandro2000/nixos-modules/tree/master/";
           };
-          options-html = libS.mkMdBook {
+          options-doc = libS.mkMdBook {
             projectName = "nixos-modules";
-            moduleDoc = options-doc;
+            moduleDoc = options-doc-md;
           };
         };
     });
