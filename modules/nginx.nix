@@ -95,7 +95,7 @@ in
 
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ 80 443 ];
-      allowedUDPPorts = lib.mkIf cfg.quic.enable [ 443 ];
+      allowedUDPPorts = lib.mkIf cfg.configureQuic [ 443 ];
     };
 
     nixpkgs.overlays = lib.mkIf cfg.tcpFastOpen [
@@ -126,16 +126,16 @@ in
 
         commonHttpConfig = lib.optionalString cfg.recommendedDefaults /* nginx */ ''
           error_log syslog:server=unix:/dev/log;
-        '' + lib.optionalString cfg.quic.enable /* nginx */''
+        '' + lib.optionalString cfg.configureQuic /* nginx */''
           quic_retry on;
         '' + lib.optionalString cfg.recommendedZstdSettings /* nginx */ ''
           # from harmonia readme
           zstd_types application/x-nix-archive;
         '';
 
-        enableQuicBPF = lib.mkIf cfg.quic.enable true;
+        enableQuicBPF = lib.mkIf cfg.configureQuic true;
 
-        package = lib.mkIf cfg.quic.enable pkgs.nginxQuic; # based on pkgs.nginxMainline
+        package = lib.mkIf cfg.configureQuic pkgs.nginxQuic; # based on pkgs.nginxMainline
 
         recommendedBrotliSettings = lib.mkIf cfg.allRecommendOptions true;
         recommendedGzipSettings = lib.mkIf cfg.allRecommendOptions true;
@@ -168,10 +168,10 @@ in
               "fastopen=256" # requires nginx to be compiled with -DTCP_FASTOPEN=23
             ];
           in
-          lib.mkIf (cfg.recommendedDefaults || cfg.default404Server.enable || cfg.quic.enable) {
+          lib.mkIf (cfg.recommendedDefaults || cfg.default404Server.enable || cfg.configureQuic) {
             "_" = {
               kTLS = lib.mkIf cfg.recommendedDefaults true;
-              reuseport = lib.mkIf (cfg.recommendedDefaults || cfg.quic.enable) true;
+              reuseport = lib.mkIf (cfg.recommendedDefaults || cfg.configureQuic) true;
 
               default = lib.mkIf cfg.default404Server.enable true;
               addSSL = lib.mkIf cfg.default404Server.enable true;
@@ -187,7 +187,7 @@ in
                 { addr = "[::]"; port = 443; ssl = true; inherit extraParameters; }
               ]);
 
-              quic = lib.mkIf cfg.quic.enable true;
+              quic = lib.mkIf cfg.configureQuic true;
             };
           };
       };
