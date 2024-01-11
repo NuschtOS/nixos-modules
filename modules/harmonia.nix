@@ -1,0 +1,51 @@
+{ config, lib, libS, ... }:
+
+let
+  cfg = config.services.harmonia;
+in
+{
+  options = {
+    services.harmonia = {
+      configureNginx = libS.mkOpinionatedOption "configure nginx";
+
+      domain = lib.mkOption {
+        type = lib.types.str;
+        description = lib.mdDoc ''
+          Domain under which harmonia should be available.
+        '';
+      };
+
+      port = lib.mkOption {
+        type = lib.types.port;
+        description = lib.mdDoc ''
+          Port on which harmonia should internally listen on.
+        '';
+      };
+
+      recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
+    };
+  };
+
+  config = lib.mkIf cfg.enabled {
+    services = {
+      harmonia.settings = lib.mkIf cfg.recommendedDefaults {
+        bind = "[::]:${toString cfg.port}";
+        settings.priority = 50; # prefer cache.nixos.org
+      };
+
+      nginx = lib.mkif cfg.configureNginx {
+        enable = true;
+        virtualHosts."${cfg.domain}".locations."/" = {
+          proxyPass = "http://127.0.0.1:${toString cfg.porcfg.port}";
+          # harmonia serves already compressed content and we want to preserve Content-Length
+          extraConfig = /* nginx */ ''
+            proxy_buffering off;
+            brotli off;
+            gzip off;
+            zstd off;
+          '';
+        };
+      };
+    };
+  };
+}
