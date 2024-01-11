@@ -26,17 +26,17 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enabled {
+  config = lib.mkIf cfg.enable {
     services = {
       harmonia.settings = lib.mkIf cfg.recommendedDefaults {
         bind = "[::]:${toString cfg.port}";
         settings.priority = 50; # prefer cache.nixos.org
       };
 
-      nginx = lib.mkif cfg.configureNginx {
+      nginx = lib.mkIf cfg.configureNginx {
         enable = true;
         virtualHosts."${cfg.domain}".locations."/" = {
-          proxyPass = "http://127.0.0.1:${toString cfg.porcfg.port}";
+          proxyPass = "http://127.0.0.1:${toString cfg.port}";
           # harmonia serves already compressed content and we want to preserve Content-Length
           extraConfig = /* nginx */ ''
             proxy_buffering off;
