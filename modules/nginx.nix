@@ -25,6 +25,7 @@ in
           Wether to add a default server which always responds with 404.
           This is useful when using a wildcard cname with a wildcard certitificate to not return the first server entry in the config on unknown subdomains
           or to do the same for an old and not fully removed domain.
+          The addresses to listen on are derived from services.nginx.defaultListenAddresses.
         '';
       };
 
@@ -180,12 +181,10 @@ in
                 "/".return = 404;
               };
 
-              listen = lib.mkIf cfg.tcpFastOpen (lib.mkDefault [
-                { addr = "0.0.0.0"; port = 80; inherit extraParameters; }
-                { addr = "0.0.0.0"; port = 443; ssl = true; inherit extraParameters; }
-                { addr = "[::]"; port = 80; inherit extraParameters; }
-                { addr = "[::]"; port = 443; ssl = true; inherit extraParameters; }
-              ]);
+              listen = lib.mkIf cfg.tcpFastOpen (lib.mkDefault (lib.flatten (map (addr: [
+                { inherit addr; port = 80; inherit extraParameters; }
+                { inherit addr; port = 443; ssl = true; inherit extraParameters; }
+              ]) config.services.nginx.defaultListenAddresses)));
 
               quic = lib.mkIf cfg.configureQuic true;
             };
