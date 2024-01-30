@@ -51,7 +51,7 @@ in
           "opcache.jit_buffer_size" = "128M";
         };
 
-        extraOptions = lib.mkMerge [
+        settings = lib.mkMerge [
           (lib.mkIf cfg.recommendedDefaults {
             # otherwise the Logging App does not function
             log_type = "file";
