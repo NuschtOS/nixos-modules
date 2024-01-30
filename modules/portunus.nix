@@ -54,17 +54,6 @@ in
       default = false;
       description = lib.mdDoc "Wether to seed groups configured in services as not member managed groups.";
     };
-
-    # TODO: upstream to nixos
-    # https://github.com/NixOS/nixpkgs/pull/279050
-    seedSettings = lib.mkOption {
-      type = with lib.types; nullOr (attrsOf (listOf (attrsOf anything)));
-      default = null;
-      description = lib.mdDoc ''
-        Seed settings for users and grousp.
-        See upstream for format <https://github.com/majewsky/portunus#seeding-users-and-groups-from-static-configuration>
-      '';
-    };
   };
 
   config = {
@@ -141,13 +130,10 @@ in
         };
       };
 
-      portunus = {
-         dex.oidcClients = lib.mkIf cfg.configureOAuth2Proxy [{
-          inherit callbackURL;
-          id = clientID;
-        }];
-        seedPath = pkgs.writeText "seed.json" (builtins.toJSON cfg.seedSettings);
-      };
+      portunus.dex.oidcClients = lib.mkIf cfg.configureOAuth2Proxy [{
+        inherit callbackURL;
+        id = clientID;
+      }];
     };
 
     security.ldap = lib.mkIf cfg.ldapPreset {
