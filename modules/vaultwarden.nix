@@ -29,20 +29,6 @@ in
       '';
     }];
 
-    nixpkgs.overlays = lib.mkIf cfg.recommendedDefaults [
-      (final: prev: {
-        vaultwarden = prev.vaultwarden.overrideAttrs ({ patches ? [ ], ... }: {
-          patches = patches ++ [
-            # add eu region push support
-            (final.fetchpatch {
-              url = "https://github.com/dani-garcia/vaultwarden/pull/3752.diff";
-              hash = "sha256-QWbuUotNss1TkIIW6c54Y7U7u2yLg2xHopEngtNawcc=";
-            })
-          ];
-        });
-      })
-    ];
-
     services = {
       nginx = lib.mkIf cfg.configureNginx {
         upstreams.vaultwarden.servers."127.0.0.1:${toString config.services.vaultwarden.config.ROCKET_PORT}" = { };
