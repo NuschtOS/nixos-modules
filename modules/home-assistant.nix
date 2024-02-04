@@ -14,12 +14,43 @@ in
           Only enable this after completing the onboarding!
           :::
         '');
+
         userGroup = libS.ldap.mkUserGroupOption;
+        adminGroup = lib.mkOption {
+          type = with lib.types; nullOr str;
+          default = null;
+          example = "home-assistant-admins";
+          description = lib.mdDoc "Name of the ldap group that grants admin access in Home-Assistant.";
+        };
       };
 
       recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
     };
   };
+
+  config.nixpkgs.overlays = lib.mkIf cfg.enable [
+    (final: prev: {
+      home-assistant = (prev.home-assistant.override (lib.optionalAttrs cfg.recommendedDefaults {
+        extraPackages = ps: with ps; [
+          pyqrcode # for TOTP qrcode
+        ];
+      })).overrideAttrs ({ patches ? [ ], ... }: {
+        patches = patches ++ lib.optionals cfg.recommendedDefaults [
+          ./home-assistant-increase-local_temperature_calibration.diff
+          ./home-assistant-no-cloud.diff
+        ] ++ lib.optionals cfg.ldap.enable [
+          # expand command_line authentication provider
+          (final.fetchpatch {
+            url = "https://github.com/home-assistant/core/pull/107419.diff";
+            hash = "sha256-rbdu6aMpBExblMT2oOuPS4kb+S71AFtyxBCgKWLi6g8=";
+          })
+          ./home-assistant-create-person-when-credentials-exist.diff
+        ];
+
+        doInstallCheck = false;
+      });
+    })
+  ];
 
   config.services.home-assistant = lib.mkMerge [
     (lib.mkIf (cfg.enable && cfg.recommendedDefaults) {
@@ -67,10 +98,10 @@ in
         args = [
           # https://github.com/bob1de/ldap-auth-sh/blob/master/examples/home-assistant.cfg
           (pkgs.writeText "config.cfg" /* shell */ ''
-            ATTRS="${ldap.userField}"
+            ATTRS="${ldap.userField} ${ldap.roleField} isMemberOf"
             CLIENT="ldapsearch"
             DEBUG=0
-            FILTER="${ldap.groupFilter "home-assistant-users"}"
+            FILTER="${ldap.groupFilter cfg.ldap.userGroup}"
             NAME_ATTR="${ldap.userField}"
             SCOPE="base"
             SERVER="ldaps://${ldap.domainName}"
@@ -80,8 +111,12 @@ in
             on_auth_success() {
               # print the meta entries for use in HA
               if [ ! -z "$NAME_ATTR" ]; then
-                name=$(echo "$output" | ${lib.getExe pkgs.gnused} -nr "s/^\s*$NAME_ATTR:\s*(.+)\s*\$/\1/Ip")
-                [ -z "$name" ] || echo "name=$name"
+                name=$(echo "$output" | ${lib.getExe pkgs.gnused} -nr "s/^\s*${ldap.userField}:\s*(.+)\s*\$/\1/Ip")
+                [ -z "$name" ] || echo "$name = $name"
+                fullname=$(echo "$output" | ${lib.getExe pkgs.gnused} -nr "s/^\s*${ldap.roleField}:\s*(.+)\s*\$/\1/Ip")
+                [ -z "$fullname" ] || echo "fullname = $fullname"
+                group=$(echo "$output" | ${lib.getExe pkgs.gnused} -nr "s/^\s*isMemberOf: cn=${cfg.ldap.adminGroup}\s*(.+)\s*\$/\1/Ip")
+                [ -z "$group" ] && echo "group = system-users" || echo "group = system-admin"
               fi
             }
           '')
@@ -94,6 +129,10 @@ in
   config.services.portunus.seedSettings.groups = lib.optional (cfg.ldap.userGroup != null) {
     long_name = "Home-Assistant Users";
     name = cfg.ldap.userGroup;
+    permissions = { };
+  } ++ lib.optional (cfg.ldap.adminGroup != null) {
+    long_name = "Home-Assistant Administrators";
+    name = cfg.ldap.adminGroup;
     permissions = { };
   };
 
