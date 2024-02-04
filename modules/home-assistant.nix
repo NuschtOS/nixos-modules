@@ -115,8 +115,10 @@ in
                 [ -z "$name" ] || echo "$name = $name"
                 fullname=$(echo "$output" | ${lib.getExe pkgs.gnused} -nr "s/^\s*${ldap.roleField}:\s*(.+)\s*\$/\1/Ip")
                 [ -z "$fullname" ] || echo "fullname = $fullname"
+                ${lib.optionalString (cfg.ldap.adminGroup != null) /* bash */ ''
                 group=$(echo "$output" | ${lib.getExe pkgs.gnused} -nr "s/^\s*isMemberOf: cn=${cfg.ldap.adminGroup}\s*(.+)\s*\$/\1/Ip")
                 [ -z "$group" ] && echo "group = system-users" || echo "group = system-admin"
+                ''}
               fi
             }
           '')
