@@ -80,12 +80,19 @@ in
       (final: prev: with final; {
         dex-oidc = prev.dex-oidc.override {
           buildGoModule = args: buildGoModule (args // {
-            patches = args.patches or [ ] ++ [
+            patches = args.patches or [ ] ++ lib.optionals (lib.versionOlder prev.dex-oidc.version "2.38") [
               # remember session
               (fetchpatch {
                 url = "https://github.com/SuperSandro2000/dex/commit/d2fb6cdf8188e6973721ddac657a7c5d3daf6955.patch";
                 hash = "sha256-PKC7jsNyFN28qFZ7SLYgnd0s09G2cb+vBeFvRzyyLGQ=";
               })
+            ] ++ lib.optionals (lib.versionAtLeast prev.dex-oidc.version "2.38") [
+              # remember session
+              (fetchpatch {
+                url = "https://github.com/SuperSandro2000/dex/commit/c70ebc86c3d7d4edb5065f5f0e8102e5ef02e953.patch";
+                hash = "sha256-2OaSbK1iiXw0kB/GtIupR3ew3H0LwdWVm8NG9S/8PdQ=";
+              })
+            ] ++ [
               # Complain if the env set in SecretEnv cannot be found
               (fetchpatch {
                 url = "https://github.com/dexidp/dex/commit/f25f72053c9282cfe22521cd508698a07dc5190f.patch";
@@ -93,7 +100,10 @@ in
               })
             ];
 
-            vendorHash = "sha256-YIi67pPIcVndIjWk94ckv6X4WLELUe/J/03e+XWIdHE=";
+            vendorHash = if lib.versionOlder prev.dex-oidc.version "2.38" then
+              "sha256-YIi67pPIcVndIjWk94ckv6X4WLELUe/J/03e+XWIdHE="
+            else
+              "sha256-f0b4z+Li0nspdWQyg4DPv6kFCO9xzO8IZBScSX2DoIs=";
           });
         };
 
