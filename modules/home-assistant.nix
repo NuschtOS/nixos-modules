@@ -58,7 +58,8 @@ in
         automation = "!include automations.yaml";
         default_config = { }; # yes, this is required...
         homeassistant = {
-          auth_providers = lib.mkIf (!cfg.ldap.enable) [
+          # required for https://github.com/home-assistant/core/pull/107419 to allow new users
+          auth_providers = [
             { type = "homeassistant"; }
           ];
           temperature_unit = "C";
