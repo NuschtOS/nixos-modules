@@ -30,7 +30,7 @@ in
     services = {
       harmonia.settings = lib.mkIf cfg.recommendedDefaults {
         bind = "[::]:${toString cfg.port}";
-        settings.priority = 50; # prefer cache.nixos.org
+        priority = 50; # prefer cache.nixos.org
       };
 
       nginx = lib.mkIf cfg.configureNginx {
