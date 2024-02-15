@@ -174,7 +174,7 @@ in
 
       # recreate symlinks for desired blueprints
     '' + lib.concatMapStringsSep "\n" (blueprint: ''
-      ln -fns "${blueprint}/${blueprint.passthru.path}" "${cfg.configDir}/blueprints/${blueprint.passthru.domain}/${blueprint.passthru.author}/"
+      ln -fns "${pkgs.copyPathToStore "${blueprint}/${blueprint.passthru.path}"}" "${cfg.configDir}/blueprints/${blueprint.passthru.domain}/${blueprint.passthru.author}/"
     '') cfg.blueprints;
   };
 
