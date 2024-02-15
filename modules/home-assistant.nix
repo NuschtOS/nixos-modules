@@ -7,6 +7,26 @@ in
 {
   options = {
     services.home-assistant = {
+      blueprints = lib.mkOption {
+        type = with lib.types; listOf package;
+        default = [];
+        example = lib.literalExpression ''
+          [
+            (pkgs.fetchFromGitHub {
+              owner = "...";
+              repo = "...";
+              rev = "...";
+              hash = "...";
+              passthru = {
+                path = "../...yaml";
+                domain = "automation"; # or script
+                author = "...";
+              };
+            })
+          ]
+        '';
+      };
+
       ldap = {
         enable = lib.mkEnableOption (lib.mdDoc ''login only via LDAP
 
@@ -137,6 +157,25 @@ in
     long_name = "Home-Assistant Administrators";
     name = cfg.ldap.adminGroup;
     permissions = { };
+  };
+
+  config.systemd.services = lib.mkIf (cfg.enable && cfg.blueprints != []) {
+    # copied and adopted from customComponents
+    home-assistant.preStart = ''
+      mkdir -p "${cfg.configDir}/blueprints"
+
+      # remove components symlinked in from below the /nix/store
+      readarray -d "" blueprint < <(find "${cfg.configDir}/blueprints" -maxdepth 1 -type l -print0)
+      for blueprint in "''${blueprint[@]}"; do
+        if [[ "$(readlink "$blueprint")" =~ ^${lib.escapeShellArg builtins.storeDir} ]]; then
+          rm "$blueprint"
+        fi
+      done
+
+      # recreate symlinks for desired blueprints
+    '' + lib.concatMapStringsSep "\n" (blueprint: ''
+      ln -fns "${blueprint}/${blueprint.passthru.path}" "${cfg.configDir}/blueprints/${blueprint.passthru.domain}/${blueprint.passthru.author}/"
+    '') cfg.blueprints;
   };
 
   config.systemd.tmpfiles.rules = lib.mkIf (cfg.enable && cfg.recommendedDefaults) [
