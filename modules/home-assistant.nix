@@ -176,7 +176,7 @@ in
     '' + lib.concatMapStringsSep "\n" (blueprint: let
       bp = blueprint.passthru;
     in ''
-      ln -fns "${pkgs.copyPathToStore "${blueprint}/${bp.path}"}" "${cfg.configDir}/blueprints/${bp.domain}/${bp.author}/${baseNameOf bp.path}"
+      ln -fns "${pkgs.copyPathToStore "${blueprint}/${bp.path}"}" "${cfg.configDir}/blueprints/${bp.domain}/${bp.author or blueprint.owner}/${baseNameOf bp.path}"
     '') cfg.blueprints;
   };
 
