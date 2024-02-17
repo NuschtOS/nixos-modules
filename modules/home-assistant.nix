@@ -75,7 +75,7 @@ in
   config.services.home-assistant = lib.mkMerge [
     (lib.mkIf (cfg.enable && cfg.recommendedDefaults) {
       config = {
-        automation = "!include automations.yaml";
+        "automation ui" = "!include automations.yaml";
         default_config = { }; # yes, this is required...
         homeassistant = {
           # required for https://github.com/home-assistant/core/pull/107419 to allow new users
