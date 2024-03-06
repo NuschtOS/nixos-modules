@@ -19,9 +19,7 @@ in
           description = lib.mdDoc "The domain that element-web will use.";
         };
 
-        package = lib.mkPackageOptionMD pkgs "Element-Web" {
-          default = [ "element-web" ];
-        };
+        package = lib.mkPackageOptionMD pkgs "element-web" { };
 
         enableConfigFeatures = libS.mkOpinionatedOption "enable most features available via config.json";
       };
