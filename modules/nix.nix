@@ -2,6 +2,17 @@
 
 let
   cfg = config.nix;
+
+  # based on https://gist.github.com/Ma27/6650d10f772511931647d3189b3eb1d7
+  diffBoot = /* bash */ ''
+    if [[ "''${NIXOS_ACTION-}" == boot && -e /run/current-system && -e "''${1-}" ]]; then
+      (
+        unset PS4
+        set -x
+        ${lib.getExe config.nix.package} --extra-experimental-features nix-command store diff-closures /run/current-system "''${1-}"
+      )
+    fi
+  '';
 in
 {
   options.nix = {
@@ -31,6 +42,11 @@ in
   };
 
   config = {
+    boot.loader = {
+      grub.extraInstallCommands = lib.mkIf cfg.diffSystem diffBoot;
+      systemd-boot.extraInstallCommands = lib.mkIf cfg.diffSystem diffBoot;
+    };
+
     # based on https://github.com/numtide/srvos/blob/main/nixos/roles/nix-remote-builder.nix
     # and https://discourse.nixos.org/t/wrapper-to-restrict-builder-access-through-ssh-worth-upstreaming/25834
     nix.settings = {
@@ -66,26 +82,40 @@ in
         config.nix.remoteBuilder.sshPublicKeys;
     };
 
-    system.activationScripts = {
-      deleteChannels = lib.mkIf cfg.deleteChannels /* bash */ ''
-        echo "Deleting all channels..."
-        rm -rfv /root/{.nix-channels,.nix-defexpr} /home/*/{.nix-channels,.nix-defexpr} /nix/var/nix/profiles/per-user/*/channels* || true
-      '';
-
-      deleteUserProfiles = lib.mkIf cfg.deleteUserProfiles /* bash */ ''
-        echo "Deleting all user profiles..."
-        rm -rfv /root/.nix-profile /home/*/.nix-profile /nix/var/nix/profiles/per-user/*/profile* || true
-      '';
-
-      diff-system = lib.mkIf cfg.diffSystem {
-        supportsDryActivation = true;
-        text = /* bash */ ''
-          if [[ -e /run/current-system && -e $systemConfig ]]; then
-            echo System package diff:
-            ${lib.getExe config.nix.package} --extra-experimental-features nix-command store diff-closures /run/current-system $systemConfig || true
-          fi
+    system = {
+      activationScripts = {
+        deleteChannels = lib.mkIf cfg.deleteChannels /* bash */ ''
+          echo "Deleting all channels..."
+          rm -rfv /root/{.nix-channels,.nix-defexpr} /home/*/{.nix-channels,.nix-defexpr} /nix/var/nix/profiles/per-user/*/channels* || true
         '';
+
+        deleteUserProfiles = lib.mkIf cfg.deleteUserProfiles /* bash */ ''
+          echo "Deleting all user profiles..."
+          rm -rfv /root/.nix-profile /home/*/.nix-profile /nix/var/nix/profiles/per-user/*/profile* || true
+        '';
+
+        diff-system = lib.mkIf cfg.diffSystem {
+          supportsDryActivation = true;
+          text = /* bash */ ''
+            if [[ -e /run/current-system && -e $systemConfig ]]; then
+              echo System package diff:
+              (
+                unset PS4
+                set -x
+                ${lib.getExe config.nix.package} --extra-experimental-features nix-command store diff-closures /run/current-system $systemConfig || true
+              )
+            fi
+          '';
+        };
       };
+
+      build.installBootLoader = lib.mkIf cfg.diffSystem (lib.mkMerge [
+        (lib.mkIf config.boot.isContainer (pkgs.writeShellScript "diff-closures-on-nspawn" diffBoot))
+        (lib.mkIf (config.boot.loader.external.enable && !config.boot.isContainer) (lib.mkForce (pkgs.writeShellScript "install-bootloader-external" ''
+          ${diffBoot}
+          exec ${config.boot.loader.external.installHook}
+        '')))
+      ]);
     };
   };
 }
