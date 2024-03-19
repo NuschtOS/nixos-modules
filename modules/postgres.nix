@@ -42,7 +42,7 @@ in
         newData = "/var/lib/postgresql/${cfgu.newPackage.psqlSchema}";
         newBin = "${if cfg.extraPlugins == [] then cfgu.newPackage else cfgu.newPackage.withPackages cfg.extraPlugins}/bin";
 
-        oldPackage = if cfg.enableJIT && !cfg.package.jitSupport then cfg.package.withJIT else cfg.package;
+        oldPackage = if cfg.enableJIT then cfg.package.withJIT else cfg.package;
         oldData = config.services.postgresql.dataDir;
         oldBin = "${if cfg.extraPlugins == [] then oldPackage else oldPackage.withPackages cfg.extraPlugins}/bin";
       in
