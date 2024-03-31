@@ -80,18 +80,24 @@ in
       (final: prev: with final; {
         dex-oidc = prev.dex-oidc.override {
           buildGoModule = args: buildGoModule (args // {
-            patches = args.patches or [ ] ++ lib.optionals (lib.versionOlder prev.dex-oidc.version "2.38") [
+            patches = args.patches or [ ] ++ [
               # remember session
-              (fetchpatch {
-                url = "https://github.com/SuperSandro2000/dex/commit/d2fb6cdf8188e6973721ddac657a7c5d3daf6955.patch";
-                hash = "sha256-PKC7jsNyFN28qFZ7SLYgnd0s09G2cb+vBeFvRzyyLGQ=";
-              })
-            ] ++ lib.optionals (lib.versionAtLeast prev.dex-oidc.version "2.38") [
-              # remember session
-              (fetchpatch {
-                url = "https://github.com/SuperSandro2000/dex/commit/c70ebc86c3d7d4edb5065f5f0e8102e5ef02e953.patch";
-                hash = "sha256-2OaSbK1iiXw0kB/GtIupR3ew3H0LwdWVm8NG9S/8PdQ=";
-              })
+              (if (lib.versionAtLeast prev.dex-oidc.version "2.39") then
+                (fetchpatch {
+                  url = "https://github.com/SuperSandro2000/dex/commit/b1cecedb6dba9027679b0a0fcd0a2863dece2e8d.patch";
+                  hash = "sha256-2k5ulZ6sh1g0u3cAGnsL3O6m4vX0NBnpjgDSagMobx8=";
+                })
+              else if (lib.versionAtLeast prev.dex-oidc.version "2.38") then
+                (fetchpatch {
+                  url = "https://github.com/SuperSandro2000/dex/commit/c1b2ac971920f1e07ce0e3d5890fe4f5d4e6207a.patch";
+                  hash = "sha256-UVlA9sJrjg05tlqd3ELPB1OZtWlRXSvKTYPiz9oIuc0=";
+                })
+              else
+                (fetchpatch {
+                  url = "https://github.com/SuperSandro2000/dex/commit/d2fb6cdf8188e6973721ddac657a7c5d3daf6955.patch";
+                  hash = "sha256-PKC7jsNyFN28qFZ7SLYgnd0s09G2cb+vBeFvRzyyLGQ=";
+                })
+              )
             ] ++ [
               # Complain if the env set in SecretEnv cannot be found
               (fetchpatch {
@@ -100,10 +106,12 @@ in
               })
             ];
 
-            vendorHash = if lib.versionOlder prev.dex-oidc.version "2.38" then
-              "sha256-YIi67pPIcVndIjWk94ckv6X4WLELUe/J/03e+XWIdHE="
+            vendorHash = if lib.versionAtLeast prev.dex-oidc.version "2.39" then
+              "sha256-3hk/yJjX4BHi/6aeBdtF0Fw6/3yqVn0YPVIa92mNQnI="
+            else if lib.versionAtLeast prev.dex-oidc.version "2.38" then
+              "sha256-f0b4z+Li0nspdWQyg4DPv6kFCO9xzO8IZBScSX2DoIs="
             else
-              "sha256-f0b4z+Li0nspdWQyg4DPv6kFCO9xzO8IZBScSX2DoIs=";
+              "sha256-YIi67pPIcVndIjWk94ckv6X4WLELUe/J/03e+XWIdHE=";
           });
         };
 
