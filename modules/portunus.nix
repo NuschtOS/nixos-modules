@@ -107,7 +107,7 @@ in
             ];
 
             vendorHash = if lib.versionAtLeast prev.dex-oidc.version "2.39" then
-              "sha256-3hk/yJjX4BHi/6aeBdtF0Fw6/3yqVn0YPVIa92mNQnI="
+              "sha256-NgKZb2Oi4BInO/dSLzSUK722L/3pWQFWSNynjSj5sEE="
             else if lib.versionAtLeast prev.dex-oidc.version "2.38" then
               "sha256-f0b4z+Li0nspdWQyg4DPv6kFCO9xzO8IZBScSX2DoIs="
             else
