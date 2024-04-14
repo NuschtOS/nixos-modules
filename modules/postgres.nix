@@ -39,8 +39,9 @@ in
     environment.systemPackages = lib.optional cfgu.enable (
       let
         # conditions copied from nixos/modules/services/databases/postgresql.nix
+        newPackage = if cfg.enableJIT then cfgu.newPackage.withJIT else cfgu.newPackage;
         newData = "/var/lib/postgresql/${cfgu.newPackage.psqlSchema}";
-        newBin = "${if cfg.extraPlugins == [] then cfgu.newPackage else cfgu.newPackage.withPackages cfg.extraPlugins}/bin";
+        newBin = "${if cfg.extraPlugins == [] then newPackage else newPackage.withPackages cfg.extraPlugins}/bin";
 
         oldPackage = if cfg.enableJIT then cfg.package.withJIT else cfg.package;
         oldData = config.services.postgresql.dataDir;
