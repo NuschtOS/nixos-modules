@@ -119,7 +119,7 @@ in
     virtualHosts."${cfge.domain}" = {
       forceSSL = true;
       enableACME = lib.mkDefault true;
-      root = (cfge.package.override {
+      locations."/".root = (cfge.package.override {
         conf = with config.services.matrix-synapse.settings; {
           default_server_config."m.homeserver" = {
             "base_url" = public_baseurl;
