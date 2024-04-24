@@ -88,6 +88,13 @@ in
   ];
 
   config = lib.mkIf cfg.enable {
+    assertions = lib.mkIf cfg.setHSTSHeader (lib.attrValues (lib.mapAttrs (host: hostConfig: {
+      assertion = hostConfig.root == null;
+      message = let
+        name = ''services.nginx.virtualHosts."${host}"'';
+      in "Use ${name}.locations./.root instead of ${name}.root to properly apply .locations.*.extraConfig set by services.nginx.setHSTSHeader";
+    }) cfg.virtualHosts));
+
     boot.kernel.sysctl = lib.mkIf cfg.tcpFastOpen {
       # enable tcp fastopen for outgoing and incoming connections
       "net.ipv4.tcp_fastopen" = 3;
