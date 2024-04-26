@@ -90,7 +90,7 @@ in
 
   config = lib.mkIf cfg.enable {
     assertions = lib.mkIf cfg.setHSTSHeader (lib.attrValues (lib.mapAttrs (host: hostConfig: {
-      assertion = hostConfig.root == null;
+      assertion = (lib.length (lib.attrNames hostConfig.locations)) == 0 -> hostConfig.root == null;
       message = let
         name = ''services.nginx.virtualHosts."${host}"'';
       in "Use ${name}.locations./.root instead of ${name}.root to properly apply .locations.*.extraConfig set by services.nginx.setHSTSHeader";
