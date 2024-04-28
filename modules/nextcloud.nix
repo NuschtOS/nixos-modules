@@ -211,8 +211,8 @@ in
         # required for recognize app
         ++ lib.optionals cfg.configureRecognize [
           gnumake # installation requirement
-          nodejs_16 # runtime and installation requirement
-          nodejs_16.pkgs.node-pre-gyp # installation requirement
+          nodejs_20 # runtime and installation requirement
+          nodejs_20.pkgs.node-pre-gyp # installation requirement
           python3 # requirement for node-pre-gyp otherwise fails with exit code 236
           util-linux # runtime requirement for taskset
         ];
