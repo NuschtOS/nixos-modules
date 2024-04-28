@@ -155,7 +155,11 @@ in
         resolver.addresses =
           let
             isIPv6 = addr: builtins.match ".*:.*:.*" addr != null;
-            escapeIPv6 = addr:
+            escapeIPv6 = entry:
+            let
+              # cut off potential domain name from DoT
+              addr = toString (lib.take 1 (builtins.split "#" entry));
+            in
               if isIPv6 addr then
                 "[${addr}]"
               else
