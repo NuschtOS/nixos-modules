@@ -126,11 +126,8 @@ in
       callbackURL = "https://${cfg.domain}/oauth2/callback";
       clientID = "oauth2_proxy"; # - is not allowed in environment variables
     in {
-      dex = {
-        enable = lib.mkIf cfg.configureOAuth2Proxy true;
-        # the user has no other option to accept this and all clients are internal anyway
-        settings.oauth2.skipApprovalScreen = true;
-      };
+      # the user has no other option to accept this and all clients are internal anyway
+      dex.settings.oauth2.skipApprovalScreen = true;
 
       oauth2_proxy = lib.mkIf cfg.configureOAuth2Proxy {
         enable = true;
@@ -148,10 +145,13 @@ in
         };
       };
 
-      portunus.dex.oidcClients = lib.mkIf cfg.configureOAuth2Proxy [{
-        inherit callbackURL;
-        id = clientID;
-      }];
+      portunus.dex = lib.mkIf cfg.configureOAuth2Proxy {
+        enable = true;
+        oidcClients = [{
+          inherit callbackURL;
+          id = clientID;
+        }];
+      };
     };
 
     security.ldap = lib.mkIf cfg.ldapPreset {
