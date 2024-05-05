@@ -62,7 +62,7 @@ in
           # expand command_line authentication provider
           (final.fetchpatch {
             url = "https://github.com/home-assistant/core/pull/107419.diff";
-            hash = "sha256-rbdu6aMpBExblMT2oOuPS4kb+S71AFtyxBCgKWLi6g8=";
+            hash = "sha256-e477JfbvwVVHMLJ3XMAyK6lcnZV6QCK6r/Bwihl+iUs=";
           })
           ./home-assistant-create-person-when-credentials-exist.diff
         ];
