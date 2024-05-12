@@ -19,9 +19,9 @@ in
       description = lib.mdDoc ''
         Wether to configure OAuth2 Proxy with Portunus' Dex.
 
-        Use `services.oauth2_proxy.nginx.virtualHosts` to configure the nginx virtual hosts that should require authentication.
+        Use `services.oauth2-proxy.nginx.virtualHosts` to configure the nginx virtual hosts that should require authentication.
 
-        To properly function this requires the services.oauth2_proxy.nginx.domain option from <https://github.com/NixOS/nixpkgs/pull/273234>.
+        To properly function this requires the services.oauth2-proxy.nginx.domain option from <https://github.com/NixOS/nixpkgs/pull/273234>.
       '';
     };
 
@@ -59,9 +59,9 @@ in
   config = {
     assertions = [
       {
-        assertion = cfg.configureOAuth2Proxy -> config.services.oauth2_proxy.keyFile != null;
+        assertion = cfg.configureOAuth2Proxy -> config.services.oauth2-proxy.keyFile != null;
         message = ''
-          Setting services.portunus.configureOAuth2Proxy to true requires to set service.oauth2_proxy.keyFile
+          Setting services.portunus.configureOAuth2Proxy to true requires to set service.oauth2-proxy.keyFile
           to a file that contains `OAUTH2_PROXY_CLIENT_SECRET` and `OAUTH2_PROXY_COOKIE_SECRET`.
         '';
       }
@@ -129,7 +129,7 @@ in
       # the user has no other option to accept this and all clients are internal anyway
       dex.settings.oauth2.skipApprovalScreen = true;
 
-      oauth2_proxy = lib.mkIf cfg.configureOAuth2Proxy {
+      oauth2-proxy = lib.mkIf cfg.configureOAuth2Proxy {
         enable = true;
         inherit clientID;
         nginx = lib.optionalAttrs (options.services.oauth2-proxy.nginx.domain or null != null) {
