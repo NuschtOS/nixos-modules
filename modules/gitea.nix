@@ -92,6 +92,10 @@ in
         SCHEME = "https";
       };
       cron.ENABLED = true;
+      "cron.archive_cleanup" = {
+        SCHEDULE = "@every 3h";
+        OLDER_THAN = "6h";
+      };
       "cron.delete_old_actions".ENABLED = true;
       "cron.delete_old_system_notices".ENABLED = true;
       other.SHOW_FOOTER_VERSION = false;
