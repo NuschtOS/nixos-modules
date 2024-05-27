@@ -104,6 +104,9 @@ in
       security.DISABLE_GIT_HOOKS = true;
       server = {
         ENABLE_GZIP = true;
+        # The description of this setting is wrong and it doesn't control any CDN functionality but acts just as an override to the avatar federation.
+        # see https://github.com/go-gitea/gitea/issues/31112
+        OFFLINE_MODE = false;
         ROOT_URL = "https://${cfg.settings.server.DOMAIN}/";
         SSH_SERVER_CIPHERS = "chacha20-poly1305@openssh.com, aes256-gcm@openssh.com, aes128-gcm@openssh.com";
         SSH_SERVER_KEY_EXCHANGES = "curve25519-sha256@libssh.org, ecdh-sha2-nistp521, ecdh-sha2-nistp384, ecdh-sha2-nistp256, diffie-hellman-group14-sha1";
