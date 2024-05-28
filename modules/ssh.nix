@@ -1,8 +1,10 @@
-{ config, lib, libS, ... }:
+{ config, lib, libS, pkgs, ... }:
 
 let
   cfgP = config.programs.ssh;
   cfgS = config.services.openssh;
+
+  sshKeygen = "${config.programs.ssh.package}/bin/ssh-keygen";
 in
 {
   options = {
@@ -13,6 +15,7 @@ in
 
     services.openssh = {
       fixPermissions = libS.mkOpinionatedOption "fix host key permissions to prevent lock outs";
+      regenerateWeakRSAHostKey = libS.mkOpinionatedOption "regenerate weak (less than 4096 bits) RSA host keys.";
     };
   };
 
@@ -41,6 +44,14 @@ in
         (libS.mkPubKey "git.sr.ht" "ssh-ed25519" "AAAAC3NzaC1lZDI1NTE5AAAAIMZvRd4EtM7R+IHVMWmDkVU3VLQTSwQDSAvW0t2Tkj60")
       ];
     };
+
+    system.activationScripts.regenWeakRSAKeys = ''
+      if [[ -e /etc/ssh/ssh_host_rsa_key && $(${sshKeygen} -l -f /etc/ssh/ssh_host_rsa_key | ${pkgs.gawk}/bin/awk '{print $1}') != 4096 ]]; then
+        echo "Upgrading OPENSSH RSA hostkey with less than 4096 bits..."
+        rm -f /etc/ssh/ssh_host_rsa_key /etc/ssh/ssh_host_rsa_key.pub
+        ${sshKeygen} -t rsa -b 4096 -N "" -f /etc/ssh/ssh_host_rsa_key
+      fi
+    '';
 
     systemd.tmpfiles.rules = lib.mkIf cfgS.fixPermissions [
       "d /etc 0755 root root -"
