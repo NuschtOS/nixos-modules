@@ -26,14 +26,14 @@ in
       sshKeygen = "${config.programs.ssh.package}/bin/ssh-keygen";
     in lib.optionalString cfg.generateHostKeys /* bash */ ''
       if [[ ! -e ${initrdEd25519Key} || ! -e ${initrdRsaKey} ]]; then
-        echo "Generating initrd OpenSSH hostkeys..."
+        echo "Generating OpenSSH initrd hostkeys..."
         mkdir -m700 -p /etc/ssh/initrd/
         ${sshKeygen} -t ed25519 -N "" -f ${initrdEd25519Key}
         ${sshKeygen} -t rsa -b 4096 -N "" -f ${initrdRsaKey}
       fi
     '' + lib.optionalString cfg.regenerateWeakRSAHostKey /* bash */ ''
       if [[ -e ${initrdRsaKey} && $(${sshKeygen} -l -f ${initrdRsaKey} | ${pkgs.gawk}/bin/awk '{print $1}') != 4096 ]]; then
-        echo "Upgrading OPENSSH initrd RSA hostkey with less than 4096 bits..."
+        echo "Regenerating OpenSSH initrd RSA hostkey which had less than 4096 bits..."
         rm -f ${initrdRsaKey} ${initrdRsaKey}.pub
         ${sshKeygen} -t rsa -b 4096 -N "" -f ${initrdRsaKey}
       fi
