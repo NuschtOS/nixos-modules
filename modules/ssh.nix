@@ -15,6 +15,7 @@ in
 
     services.openssh = {
       fixPermissions = libS.mkOpinionatedOption "fix host key permissions to prevent lock outs";
+      recommendedDefaults = libS.mkOpinionatedOption "set recommend and secure default settings";
       regenerateWeakRSAHostKey = libS.mkOpinionatedOption "regenerate weak (less than 4096 bits) RSA host keys.";
     };
   };
@@ -43,6 +44,24 @@ in
         (libS.mkPubKey "git.sr.ht" "ecdsa-sha2-nistp256" "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCj6y+cJlqK3BHZRLZuM+KP2zGPrh4H66DacfliU1E2DHAd1GGwF4g1jwu3L8gOZUTIvUptqWTkmglpYhFp4Iy4=")
         (libS.mkPubKey "git.sr.ht" "ssh-ed25519" "AAAAC3NzaC1lZDI1NTE5AAAAIMZvRd4EtM7R+IHVMWmDkVU3VLQTSwQDSAvW0t2Tkj60")
       ];
+    };
+
+    services.openssh = lib.mkIf cfgS.recommendedDefaults {
+      settings = {
+        # following ssh-audit: nixos default minus 2048 bit modules
+        KexAlgorithms = [
+          "sntrup761x25519-sha512@openssh.com"
+          "curve25519-sha256"
+          "curve25519-sha256@libssh.org"
+        ];
+        # following ssh-audit: nixos defaults minus encrypt-and-MAC
+        Macs = [
+          "hmac-sha2-512-etm@openssh.com"
+          "hmac-sha2-256-etm@openssh.com"
+          "umac-128-etm@openssh.com"
+        ];
+        RequiredRSASize = 4095;
+      };
     };
 
     system.activationScripts.regenWeakRSAKeys = ''
