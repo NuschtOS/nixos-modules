@@ -20,7 +20,7 @@ in
     };
   };
 
-  config = lib.mkIf (cfgP.enable || cfgS.enable) {
+  config = {
     programs.ssh = {
       extraConfig = lib.mkIf cfgP.recommendedDefaults /* sshconfig */ ''
         # hard complain about wrong knownHosts
@@ -72,7 +72,7 @@ in
       fi
     '';
 
-    systemd.tmpfiles.rules = lib.mkIf cfgS.fixPermissions [
+    systemd.tmpfiles.rules = lib.mkIf (cfgS.enable && cfgS.fixPermissions) [
       "d /etc 0755 root root -"
       "d /etc/ssh 0755 root root -"
       "f /etc/ssh/ssh_host_ed25519_key 0700 root root -"
