@@ -8,8 +8,8 @@ in
 {
   options = {
     boot.initrd.network.ssh = {
-      configureHostKeys = lib.mkOption "generate openssh host keys for the initrd. This must be enabled before they can be configured";
-      generateHostKeys = lib.mkOption "generate openssh host keys for the initrd. This must be enabled before they can be configured";
+      configureHostKeys = lib.mkEnableOption "generate openssh host keys for the initrd. This must be enabled before they can be configured";
+      generateHostKeys = lib.mkEnableOption "generate openssh host keys for the initrd. This must be enabled before they can be configured";
       regenerateWeakRSAHostKey = libS.mkOpinionatedOption "regenerate weak (less than 4096 bits) RSA host keys." // {
         default = config.services.openssh.regenerateWeakRSAHostKey;
       };
