@@ -31,5 +31,7 @@ in
         intel-vaapi-driver # older hardware like haswell
       ];
     };
+
+    programs.firefox.hardwareAcceleration = true;
   };
 }
