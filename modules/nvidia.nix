@@ -12,7 +12,7 @@ in
     environment.sessionVariables = {
       # source https://github.com/elFarto/nvidia-vaapi-driver#firefox
       LIBVA_DRIVER_NAME = "nvidia";
-      __EGL_VENDOR_LIBRARY_FILENAMES = "/run/opengl-driver/share/egl/egl_external_platform.d/10_nvidia_wayland.json";
+      __EGL_VENDOR_LIBRARY_FILENAMES = "/run/opengl-driver/share/glvnd/egl_vendor.d/10_nvidia.json";
 
       # source https://discourse.nixos.org/t/nvk-error-when-using-prop-nvidia-drivers/43300/4
       VK_DRIVER_FILES = "/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.x86_64.json";
