@@ -36,6 +36,7 @@ in
         # the cut drops /run/opengl-driver/
         [[ -e ${openglDriver}/$(echo ${config.environment.sessionVariables.__EGL_VENDOR_LIBRARY_FILENAMES} | cut -d'/' -f4-) ]]
         [[ -e ${openglDriver}/$(echo ${config.environment.sessionVariables.VK_DRIVER_FILES} | cut -d'/' -f4-) ]]
+        touch $out
       '')
     ];
   };
