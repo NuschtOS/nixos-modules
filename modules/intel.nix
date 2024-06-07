@@ -12,7 +12,6 @@ in
     environment.sessionVariables = {
       # source https://github.com/elFarto/nvidia-vaapi-driver#firefox
       LIBVA_DRIVER_NAME = "intel";
-      __EGL_VENDOR_LIBRARY_FILENAMES = "intel";
 
       # source https://discourse.nixos.org/t/nvk-error-when-using-prop-nvidia-drivers/43300/4
       VK_DRIVER_FILES = "/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json";
