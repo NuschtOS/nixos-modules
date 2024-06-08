@@ -91,7 +91,7 @@ in
           name = config.services.portunus.domain;
           oauth_allow_insecure_email_lookup = true; # otherwise updating the mail in ldap will break login
           use_refresh_token = true;
-          role_attribute_path = "contains(groups[*], 'grafana-admins') && 'Admin' || contains(info.roles[*], 'grafana-user') && 'Editor'"
+          role_attribute_path = "contains(groups[*], 'grafana-admins') && 'Admin' || contains(groups[*], 'grafana-user') && 'Editor'"
             + lib.optionalString cfg.oauth.enableViewerRole "|| 'Viewer'";
           role_attribute_strict = true;
           # https://dexidp.io/docs/custom-scopes-claims-clients/
