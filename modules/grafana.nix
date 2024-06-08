@@ -84,12 +84,12 @@ in
           allow_sign_up = true; # otherwise no new users can be created
           api_url = "${issuer}/userinfo";
           auth_url = "${issuer}/auth";
+          auto_login = true; # redirect automatically to the only oauth provider
           client_id = "grafana";
           disable_login_form = true; # only allow OAuth
           icon = "signin";
           name = config.services.portunus.domain;
           oauth_allow_insecure_email_lookup = true; # otherwise updating the mail in ldap will break login
-          oauth_auto_login = true; # redirect automatically to the only oauth provider
           use_refresh_token = true;
           role_attribute_path = "contains(groups[*], 'grafana-admins') && 'Admin' || contains(info.roles[*], 'grafana-user') && 'Editor'"
             + lib.optionalString cfg.oauth.enableViewerRole "|| 'Viewer'";
