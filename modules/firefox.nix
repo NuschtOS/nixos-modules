@@ -5,7 +5,7 @@ let
 in
 {
   options.programs.firefox = {
-    hardwareAcceleration = libS.mkOpinionatedOption "Firefox hardware acceleration";
+    hardwareAcceleration = libS.mkOption "Firefox hardware acceleration";
   };
 
   config = lib.mkIf cfg.hardwareAcceleration {
