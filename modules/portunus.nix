@@ -82,21 +82,14 @@ in
           buildGoModule = args: buildGoModule (args // {
             patches = args.patches or [ ] ++ [
               # remember session
-              (if (lib.versionAtLeast prev.dex-oidc.version "2.39") then
-                (fetchpatch {
-                  url = "https://github.com/SuperSandro2000/dex/commit/b1cecedb6dba9027679b0a0fcd0a2863dece2e8d.patch";
-                  hash = "sha256-2k5ulZ6sh1g0u3cAGnsL3O6m4vX0NBnpjgDSagMobx8=";
-                })
+              (if (lib.versionAtLeast prev.dex-oidc.version "2.40") then
+                ./dex-session-cookie-password-connector-2.40.patch
+              else if (lib.versionAtLeast prev.dex-oidc.version "2.39") then
+                ./dex-session-cookie-password-connector-2.39.patch
               else if (lib.versionAtLeast prev.dex-oidc.version "2.38") then
-                (fetchpatch {
-                  url = "https://github.com/SuperSandro2000/dex/commit/c1b2ac971920f1e07ce0e3d5890fe4f5d4e6207a.patch";
-                  hash = "sha256-UVlA9sJrjg05tlqd3ELPB1OZtWlRXSvKTYPiz9oIuc0=";
-                })
+                ./dex-session-cookie-password-connector-2.38.patch
               else
-                (fetchpatch {
-                  url = "https://github.com/SuperSandro2000/dex/commit/d2fb6cdf8188e6973721ddac657a7c5d3daf6955.patch";
-                  hash = "sha256-PKC7jsNyFN28qFZ7SLYgnd0s09G2cb+vBeFvRzyyLGQ=";
-                })
+                ./dex-session-cookie-password-connector-2.37.patch
               )
             ] ++ [
               # Complain if the env set in SecretEnv cannot be found
@@ -106,7 +99,9 @@ in
               })
             ];
 
-            vendorHash = if lib.versionAtLeast prev.dex-oidc.version "2.39" then
+            vendorHash = if lib.versionAtLeast prev.dex-oidc.version "2.40" then
+              "sha256-oxu3eNsjUGo6Mh6QybeGggsCZsZOGYo7nBD5ZU8MSy8="
+            else if lib.versionAtLeast prev.dex-oidc.version "2.39" then
               "sha256-NgKZb2Oi4BInO/dSLzSUK722L/3pWQFWSNynjSj5sEE="
             else if lib.versionAtLeast prev.dex-oidc.version "2.38" then
               "sha256-f0b4z+Li0nspdWQyg4DPv6kFCO9xzO8IZBScSX2DoIs="
