@@ -12,6 +12,8 @@ in
         description = lib.mdDoc "Wether to configure Nginx.";
       };
 
+      configureRedis = libS.mkOpinionatedOption "configure redis as a remote_cache";
+
       oauth = {
         enable = lib.mkEnableOption (lib.mdDoc ''login only via OAuth2'');
         enableViewerRole = lib.mkOption {
@@ -63,6 +65,13 @@ in
         server = {
           enable_gzip = true;
           root_url = "https://${cfg.settings.server.domain}";
+        };
+      }))
+
+      (lib.mkIf (cfg.enable && cfg.configureRedis) (libS.modules.mkRecursiveDefault {
+        remote_cache = {
+          type = "redis";
+          connstr = "addr=${config.services.redis.servers.grafana.bind}:${toString config.services.redis.servers.grafana.port},pool_size=100,db=0,ssl=false";
         };
       }))
 
@@ -123,6 +132,13 @@ in
       long_name = "Grafana Users";
       name = cfg.oauth.userGroup;
       permissions = { };
+    };
+  };
+
+  config.services.redis.servers = lib.mkIf cfg.configureRedis {
+    grafana = {
+      enable = true;
+      port = 6379;
     };
   };
 }
