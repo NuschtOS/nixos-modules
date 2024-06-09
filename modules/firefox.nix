@@ -1,11 +1,11 @@
-{ config, lib, libS, ... }:
+{ config, lib, ... }:
 
 let
   cfg = config.programs.firefox;
 in
 {
   options.programs.firefox = {
-    hardwareAcceleration = libS.mkOption "Firefox hardware acceleration";
+    hardwareAcceleration = lib.mkEnableOption "Firefox hardware acceleration";
   };
 
   config = lib.mkIf cfg.hardwareAcceleration {
