@@ -135,7 +135,7 @@ in
     };
   };
 
-  config.services.redis.servers = lib.mkIf cfg.configureRedis {
+  config.services.redis.servers = lib.mkIf (cfg.enable && cfg.configureRedis) {
     grafana = {
       enable = true;
       port = lib.mkDefault 6379;
