@@ -91,7 +91,7 @@ in
               else
                 ./dex-session-cookie-password-connector-2.37.patch
               )
-            ] ++ [
+
               # Complain if the env set in SecretEnv cannot be found
               (fetchpatch {
                 url = "https://github.com/dexidp/dex/commit/f25f72053c9282cfe22521cd508698a07dc5190f.patch";
