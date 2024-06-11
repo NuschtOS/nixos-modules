@@ -12,13 +12,13 @@ in
       extraArgs = lib.mkOption {
         type = with lib.types; listOf str;
         default = [ "--link" "--jobs=$(nproc)" ];
-        description = lib.mdDoc "Extra arguments to pass to pg_upgrade. See https://www.postgresql.org/docs/current/pgupgrade.html for doc.";
+        description = "Extra arguments to pass to pg_upgrade. See https://www.postgresql.org/docs/current/pgupgrade.html for doc.";
       };
 
       newPackage = (lib.mkPackageOptionMD pkgs "postgresql" {
         default = [ "postgresql_16" ];
       }) // {
-        description = lib.mdDoc ''
+        description = ''
           The postgres package to which should be updated.
           After running upgrade-pg-cluster this must be set to services.postgresql.package to complete the update.
         '';
@@ -28,7 +28,7 @@ in
         type = with lib.types; listOf str;
         default = [ ];
         example = [ "hedgedoc" "hydra" "nginx" ];
-        description = lib.mdDoc "Systemd services to stop when upgrade is started.";
+        description = "Systemd services to stop when upgrade is started.";
       };
     };
 

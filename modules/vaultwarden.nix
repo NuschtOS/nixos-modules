@@ -12,9 +12,7 @@ in
       domain = lib.mkOption {
         type = with lib.types; nullOr str;
         default = null;
-        description = lib.mdDoc ''
-          The domain under which vaultwarden will be reachable.
-        '';
+        description = "The domain under which vaultwarden will be reachable.";
       };
 
       recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";

@@ -10,13 +10,13 @@ in
     addToHosts = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = lib.mdDoc "Whether to add a hosts entry for the portunus domain pointing to externalIp";
+      description = "Whether to add a hosts entry for the portunus domain pointing to externalIp";
     };
 
     configureOAuth2Proxy = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = ''
         Wether to configure OAuth2 Proxy with Portunus' Dex.
 
         Use `services.oauth2-proxy.nginx.virtualHosts` to configure the nginx virtual hosts that should require authentication.
@@ -28,31 +28,31 @@ in
     internalIp4 = lib.mkOption {
       type = with lib.types; nullOr str;
       default = null;
-      description = lib.mdDoc "Internal IPv4 of portunus instance. This is used in the addToHosts option.";
+      description = "Internal IPv4 of portunus instance. This is used in the addToHosts option.";
     };
 
     internalIp6 = lib.mkOption {
       type = with lib.types; nullOr str;
       default = null;
-      description = lib.mdDoc "Internal IPv6 of portunus instance. This is used in the addToHosts option.";
+      description = "Internal IPv6 of portunus instance. This is used in the addToHosts option.";
     };
 
     ldapPreset = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = lib.mdDoc "Whether to set config.security.ldap to portunus specific settings.";
+      description = "Whether to set config.security.ldap to portunus specific settings.";
     };
 
     removeAddGroup = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = lib.mdDoc "When enabled, remove the function to add new Groups via the web ui, to enforce seeding usage.";
+      description = "When enabled, remove the function to add new Groups via the web ui, to enforce seeding usage.";
     };
 
     seedGroups = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = lib.mdDoc "Wether to seed groups configured in services as not member managed groups.";
+      description = "Wether to seed groups configured in services as not member managed groups.";
     };
   };
 

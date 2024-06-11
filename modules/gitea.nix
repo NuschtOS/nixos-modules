@@ -10,20 +10,20 @@ in
     services.gitea = {
       # based on https://github.com/majewsky/nixos-modules/blob/master/gitea.nix
       ldap = {
-        enable = lib.mkEnableOption (lib.mdDoc "login via ldap");
+        enable = lib.mkEnableOption "login via ldap";
 
         adminGroup = lib.mkOption {
           type = with lib.types; nullOr str;
           default = null;
           example = "gitea-admins";
-          description = lib.mdDoc "Name of the ldap group that grants admin access in gitea.";
+          description = "Name of the ldap group that grants admin access in gitea.";
         };
 
         searchUserPasswordFile = lib.mkOption {
           type = with lib.types; nullOr str;
           default = null;
           example = "/var/lib/secrets/search-user-password";
-          description = lib.mdDoc "Path to a file containing the password for the search/bind user.";
+          description = "Path to a file containing the password for the search/bind user.";
         };
 
         userGroup = libS.ldap.mkUserGroupOption;

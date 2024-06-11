@@ -10,18 +10,16 @@ in
     commonServerConfig = lib.mkOption {
       type = lib.types.lines;
       default = "";
-      description = lib.mdDoc ''
-        Shared configuration snipped added to every virtualHosts' extraConfig.
-      '';
+      description = "Shared configuration snipped added to every virtualHosts' extraConfig.";
     };
 
-    configureQuic = lib.mkEnableOption (lib.mdDoc "quic support in nginx");
+    configureQuic = lib.mkEnableOption "quic support in nginx";
 
     default404Server = {
       enable = lib.mkOption {
         type = lib.types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Wether to add a default server which always responds with 404.
           This is useful when using a wildcard cname with a wildcard certitificate to not return the first server entry in the config on unknown subdomains
           or to do the same for an old and not fully removed domain.
@@ -31,9 +29,7 @@ in
 
       acmeHost = lib.mkOption {
         type = lib.types.str;
-        description = lib.mdDoc ''
-          The acme host to use for the default 404 server.
-        '';
+        description = "The acme host to use for the default 404 server.";
       };
     };
 
@@ -60,7 +56,7 @@ in
           commonLocationsConfig = lib.mkOption {
             type = lib.types.lines;
             default = "";
-            description = lib.mdDoc ''
+            description = ''
               Shared configuration snipped added to every locations' extraConfig.
 
               ::: {.note}

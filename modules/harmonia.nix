@@ -10,16 +10,12 @@ in
 
       domain = lib.mkOption {
         type = lib.types.str;
-        description = lib.mdDoc ''
-          Domain under which harmonia should be available.
-        '';
+        description = "Domain under which harmonia should be available.";
       };
 
       port = lib.mkOption {
         type = lib.types.port;
-        description = lib.mdDoc ''
-          Port on which harmonia should internally listen on.
-        '';
+        description = "Port on which harmonia should internally listen on.";
       };
 
       recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";

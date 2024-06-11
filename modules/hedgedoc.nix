@@ -7,10 +7,10 @@ in
 {
   options = {
     services.hedgedoc.ldap = {
-      enable = lib.mkEnableOption (lib.mdDoc ''
+      enable = lib.mkEnableOption ''
         login only via LDAP.
         Use `service.hedgedoc.environmentFile` in format `bindCredentials=password` to set the credentials used by the search user
-      '');
+      '';
 
       userGroup = libS.ldap.mkUserGroupOption;
     };

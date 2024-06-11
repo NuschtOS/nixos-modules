@@ -8,12 +8,12 @@ in
 {
   options.services.mastodon = {
     ldap = {
-      enable = lib.mkEnableOption (lib.mdDoc "login only via LDAP");
+      enable = lib.mkEnableOption "login only via LDAP";
 
       userGroup = libS.ldap.mkUserGroupOption;
     };
 
-    enableBirdUITheme = lib.mkEnableOption (lib.mdDoc "Bird UI Theme");
+    enableBirdUITheme = lib.mkEnableOption "Bird UI Theme";
   };
 
   config.services.mastodon = {

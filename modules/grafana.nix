@@ -9,17 +9,17 @@ in
       configureNginx = lib.mkOption {
         type = lib.types.bool;
         default = false;
-        description = lib.mdDoc "Wether to configure Nginx.";
+        description = "Wether to configure Nginx.";
       };
 
       configureRedis = libS.mkOpinionatedOption "configure redis as a remote_cache";
 
       oauth = {
-        enable = lib.mkEnableOption (lib.mdDoc ''login only via OAuth2'');
+        enable = lib.mkEnableOption "login only via OAuth2";
         enableViewerRole = lib.mkOption {
           type = lib.types.bool;
           default = false;
-          description = lib.mdDoc "Wether to enable the fallback Viewer role when users do not have the user- or adminGroup.";
+          description = "Wether to enable the fallback Viewer role when users do not have the user- or adminGroup.";
         };
         adminGroup = libS.ldap.mkUserGroupOption;
         userGroup = libS.ldap.mkUserGroupOption;

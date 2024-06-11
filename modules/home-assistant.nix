@@ -28,19 +28,19 @@ in
       };
 
       ldap = {
-        enable = lib.mkEnableOption (lib.mdDoc ''login only via LDAP
+        enable = lib.mkEnableOption ''login only via LDAP
 
           ::: {.note}
           Only enable this after completing the onboarding!
           :::
-        '');
+        '';
 
         userGroup = libS.ldap.mkUserGroupOption;
         adminGroup = lib.mkOption {
           type = with lib.types; nullOr str;
           default = null;
           example = "home-assistant-admins";
-          description = lib.mdDoc "Name of the ldap group that grants admin access in Home-Assistant.";
+          description = "Name of the ldap group that grants admin access in Home-Assistant.";
         };
       };
 

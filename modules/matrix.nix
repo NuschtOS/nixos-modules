@@ -11,12 +11,12 @@ in
       addAdditionalOembedProvider = libS.mkOpinionatedOption "add additional oembed providers from oembed.com";
 
       element-web = {
-        enable = lib.mkEnableOption (lib.mdDoc "the element-web client");
+        enable = lib.mkEnableOption "the element-web client";
 
         domain = lib.mkOption {
           type = lib.types.str;
           example = "element.example.org";
-          description = lib.mdDoc "The domain that element-web will use.";
+          description = "The domain that element-web will use.";
         };
 
         package = lib.mkPackageOptionMD pkgs "element-web" { };
@@ -25,14 +25,14 @@ in
       };
 
       ldap = {
-        enable = lib.mkEnableOption (lib.mdDoc "login via ldap");
+        enable = lib.mkEnableOption "login via ldap";
 
         userGroup = libS.ldap.mkUserGroupOption;
 
         searchUserPasswordFile = lib.mkOption {
           type = lib.types.str;
           example = "/var/lib/secrets/search-user-password";
-          description = lib.mdDoc "Path to a file containing the password for the search/bind user.";
+          description = "Path to a file containing the password for the search/bind user.";
         };
       };
 

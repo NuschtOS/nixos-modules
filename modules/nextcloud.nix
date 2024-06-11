@@ -16,7 +16,7 @@ in
         type = lib.types.bool;
         default = config.hardware.intelGPU;
         defaultText = "config.hardware.intelGPU";
-        description = lib.mdDoc ''
+        description = ''
           Wether to configure Memories App to use an Intel iGPU for hardware acceleration.
         '';
       };
@@ -25,7 +25,7 @@ in
         type = lib.types.bool;
         default = cfg.configureImaginary;
         defaultText = "config.services.nextcloud.configureImaginary";
-        description = lib.mdDoc ''
+        description = ''
           Wether to configure the preview settings to be more optimised for real world usage.
           By default this is enabled, when Imaginary is configured.
         '';

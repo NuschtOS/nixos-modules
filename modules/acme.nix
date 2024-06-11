@@ -7,7 +7,7 @@ in
   options.security.acme.staging = lib.mkOption {
     type = lib.types.bool;
     default = false;
-    description = lib.mdDoc ''
+    description = ''
       If set to true, use Let's Encrypt's staging environment instead of the production one.
       The staging environment has much higher rate limits but does not generate fully signed certificates.
       This is great for testing when the normla rate limit is hit fast and impacts other people on the same IP.
