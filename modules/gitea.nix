@@ -150,8 +150,6 @@ in
       cors = {
         ALLOW_DOMAIN = cfg.settings.server.DOMAIN;
         ENABLED = true;
-        # TODO: remove with gitea 1.21.4
-        SCHEME = "https";
       };
       cron.ENABLED = true;
       "cron.archive_cleanup" = {
