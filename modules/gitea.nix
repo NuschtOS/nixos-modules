@@ -143,6 +143,7 @@ in
       secret = "$(cat ${cfgo.clientSecretFile})";
       icon-url = "${config.services.dex.settings.issuer}/theme/favicon.png";
       auto-discover-url = "${config.services.dex.settings.issuer}/.well-known/openid-configuration";
+      scopes = "groups";
       group-claim-name = "groups";
       admin-group = "gitea-admins";
       restricted-group = "gitea-users";
