@@ -91,6 +91,7 @@ in
           name = lib.mkOption {
             type = lib.types.str;
           };
+          provider = mkOptStr;
           key = mkOptStr;
           secret = mkOptStr;
           icon-url = mkOptStr;
@@ -137,6 +138,7 @@ in
 
     oidc.options = lib.mkIf cfgo.enable {
       name = "dex";
+      provider = "openidConnect";
       key = "gitea";
       secret = "$(cat ${cfgo.clientSecretFile})";
       icon-url = "${config.services.dex.settings.issuer}/theme/favicon.png";
