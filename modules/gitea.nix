@@ -3,7 +3,17 @@
 let
   cfg = config.services.gitea;
   cfgl = cfg.ldap;
+  cfgo = cfg.oidc;
   inherit (config.security) ldap;
+
+  mkOptStr = lib.mkOption {
+    type = lib.types.nullOr lib.types.str;
+    default = null;
+  };
+  mkOptBool = lib.mkOption {
+    type = lib.types.bool;
+    default = false;
+  };
 in
 {
   options = {
@@ -21,44 +31,82 @@ in
 
         searchUserPasswordFile = lib.mkOption {
           type = with lib.types; nullOr str;
-          default = null;
           example = "/var/lib/secrets/search-user-password";
           description = "Path to a file containing the password for the search/bind user.";
         };
 
         userGroup = libS.ldap.mkUserGroupOption;
 
-        options =
-          let
-            mkOptStr = lib.mkOption {
-              type = with lib.types; nullOr str;
-              default = null;
-            };
-          in
-          {
-            id = lib.mkOption {
-              type = lib.types.ints.unsigned;
-              default = 1;
-            };
-            name = mkOptStr;
-            security-protocol = mkOptStr;
-            host = mkOptStr;
-            port = lib.mkOption {
-              type = with lib.types; nullOr port;
-              default = null;
-            };
-            bind-dn = mkOptStr;
-            bind-password = mkOptStr;
-            user-search-base = mkOptStr;
-            user-filter = mkOptStr;
-            admin-filter = mkOptStr;
-            username-attribute = mkOptStr;
-            firstname-attribute = mkOptStr;
-            surname-attribute = mkOptStr;
-            email-attribute = mkOptStr;
-            public-ssh-key-attribute = mkOptStr;
+        options = {
+          id = lib.mkOption {
+            type = lib.types.ints.unsigned;
+            default = 1;
           };
+          name = lib.mkOption {
+            type = lib.types.str;
+          };
+          security-protocol = mkOptStr;
+          host = mkOptStr;
+          port = lib.mkOption {
+            type = lib.types.port;
+            default = null;
+          };
+          bind-dn = mkOptStr;
+          bind-password = mkOptStr;
+          user-search-base = mkOptStr;
+          user-filter = mkOptStr;
+          admin-filter = mkOptStr;
+          username-attribute = mkOptStr;
+          firstname-attribute = mkOptStr;
+          surname-attribute = mkOptStr;
+          email-attribute = mkOptStr;
+          public-ssh-key-attribute = mkOptStr;
+          avatar-attribute = mkOptStr;
+          # TODO: enable LDAP groups
+          page-size = lib.mkOption {
+            type  = lib.types.ints.unsigned;
+            default = 0;
+          };
+          attributes-in-bind = mkOptBool;
+          skip-local-2fa = mkOptBool;
+          allow-deactivate-all = mkOptBool;
+          synchronize-users = mkOptBool;
+        };
       };
+
+      oidc = {
+        enable = lib.mkEnableOption "login via OIDC through Dex and Portunus";
+
+        clientSecretFile = lib.mkOption {
+          type = with lib.types; nullOr str;
+          example = "/var/lib/secrets/search-user-password";
+          description = "Path to a file containing the password for the search/bind user.";
+        };
+
+        options = {
+          id = lib.mkOption {
+            type = lib.types.ints.unsigned;
+            default = 2;
+          };
+          name = lib.mkOption {
+            type = lib.types.str;
+          };
+          key = mkOptStr;
+          secret = mkOptStr;
+          icon-url = mkOptStr;
+          auto-discover-url = mkOptStr;
+          skip-local-2fa = mkOptBool;
+          scopes = mkOptStr;
+          required-claim-name = mkOptStr;
+          required-claim-value = mkOptStr;
+          group-claim-name = mkOptStr;
+          admin-group = mkOptStr;
+          restricted-group = mkOptStr;
+          group-team-map = mkOptStr;
+          group-team-map-removal = mkOptBool;
+        };
+      };
+
       recommendedDefaults = libS.mkOpinionatedOption "set recommended, secure default settings";
     };
   };
@@ -67,8 +115,8 @@ in
     (lib.mkRenamedOptionModule [ "services" "gitea" "ldap" "bindPasswordFile" ] [ "services" "gitea" "ldap" "searchUserPasswordFile" ])
   ];
 
-  config.services.gitea = lib.mkIf (cfg.enable && cfgl.enable) {
-    ldap.options = {
+  config.services.gitea = lib.mkIf cfg.enable {
+    ldap.options = lib.mkIf cfgl.enable {
       name = "ldap";
       security-protocol = "LDAPS";
       host = ldap.domainName;
@@ -83,7 +131,21 @@ in
       surname-attribute = ldap.surnameField;
       email-attribute = ldap.mailField;
       public-ssh-key-attribute = ldap.sshPublicKeyField;
+      attributes-in-bind = true;
+      synchronize-users = true;
     };
+
+    oidc.options = lib.mkIf cfgo.enable {
+      name = "dex";
+      key = "gitea";
+      secret = "$(cat ${cfgo.clientSecretFile})";
+      icon-url = "${config.services.dex.settings.issuer}/theme/favicon.png";
+      auto-discover-url = "${config.services.dex.settings.issuer}/.well-known/openid-configuration";
+      group-claim-name = "groups";
+      admin-group = "gitea-admins";
+      restricted-group = "gitea-users";
+    };
+
     settings = lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
       cors = {
         ALLOW_DOMAIN = cfg.settings.server.DOMAIN;
@@ -126,6 +188,14 @@ in
     });
   };
 
+  config.services.portunus.dex = lib.mkIf cfg.oidc.enable {
+    enable = true;
+    oidcClients = [{
+      callbackURL = "https://${cfg.settings.server.DOMAIN}/user/oauth2/${cfgo.options.name}/callback";
+      id = "gitea";
+    }];
+  };
+
   config.services.portunus.seedSettings.groups = [
     (lib.mkIf (cfgl.adminGroup != null) {
       long_name = "Gitea Administrators";
@@ -139,21 +209,30 @@ in
     })
   ];
 
-  config.systemd.services = lib.mkIf (cfg.enable && cfgl.enable) {
+  config.systemd.services = lib.mkIf (cfg.enable && (cfgl.enable || cfgo.enable)) {
     gitea.preStart =
       let
         exe = lib.getExe cfg.package;
-        # allow executing shell after the --bind-password argument to e.g. cat a password file
-        formatOption = key: value: "--${key} ${if key == "bind-password" then value else lib.escapeShellArg value}";
-        ldapOptionsStr = opt: lib.concatStringsSep " " (lib.mapAttrsToList formatOption opt);
-        commonArgs = "--attributes-in-bind --synchronize-users";
+        # Return the option as an argument except if it is null or a special boolean type, then look if the value is truthy.
+        # Also escape it unless it is going to execute shellcode.
+        formatOption = key: value: if (value == null) then ""
+          else if (builtins.isBool value) then (lib.optionalString value "--${key}")
+          # allow executing shell after the --bind-password argument to e.g. cat a password file
+          else "--${key} ${(if (key == "bind-password" || key == "secret") then value else lib.escapeShellArg value)}";
+        optionsStr = opt: lib.concatStringsSep " " (lib.mapAttrsToList formatOption opt);
       in
-      lib.mkAfter ''
+      lib.mkAfter (lib.optionalString cfgl.enable ''
         if ${exe} admin auth list | grep -q ${cfgl.options.name}; then
-          ${exe} admin auth update-ldap ${commonArgs} ${ldapOptionsStr cfgl.options}
+          ${exe} admin auth update-ldap ${optionsStr cfgl.options}
         else
-          ${exe} admin auth add-ldap ${commonArgs} ${ldapOptionsStr (lib.filterAttrs (name: _: name != "id") cfgl.options)}
+          ${exe} admin auth add-ldap ${optionsStr (lib.filterAttrs (name: _: name != "id") cfgl.options)}
         fi
-      '';
+      '' + lib.optionalString cfgo.enable ''
+        if ${exe} admin auth list | grep -q ${cfgo.options.name}; then
+          ${exe} admin auth update-oauth ${optionsStr cfgo.options}
+        else
+          ${exe} admin auth add-oauth ${optionsStr (lib.filterAttrs (name: _: name != "id") cfgo.options)}
+        fi
+      '');
   };
 }
