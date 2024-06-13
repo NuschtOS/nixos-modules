@@ -77,11 +77,20 @@ in
       oidc = {
         enable = lib.mkEnableOption "login via OIDC through Dex and Portunus";
 
+        adminGroup = lib.mkOption {
+          type = with lib.types; nullOr str;
+          default = null;
+          example = "gitea-admins";
+          description = "Name of the ldap group that grants admin access in gitea.";
+        };
+
         clientSecretFile = lib.mkOption {
           type = with lib.types; nullOr str;
           example = "/var/lib/secrets/search-user-password";
           description = "Path to a file containing the password for the search/bind user.";
         };
+
+        userGroup = libS.ldap.mkUserGroupOption;
 
         options = {
           id = lib.mkOption {
@@ -144,9 +153,10 @@ in
       icon-url = "${config.services.dex.settings.issuer}/theme/favicon.png";
       auto-discover-url = "${config.services.dex.settings.issuer}/.well-known/openid-configuration";
       scopes = "groups";
+      required-claim-name = "groups";
+      required-claim-value = cfgo.userGroup;
       group-claim-name = "groups";
-      admin-group = "gitea-admins";
-      restricted-group = "gitea-users";
+      admin-group = cfgo.adminGroup;
     };
 
     settings = lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
