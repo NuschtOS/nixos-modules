@@ -200,7 +200,7 @@ in
 
       "${cfgs.domain}" = lib.mkIf cfgs.enable {
         forceSSL = true;
-        locations."/".proxyPass = "http://matrix-synapse";
+        locations."/".proxyPass = "http://matrix-sliding-sync";
       };
     };
   };
