@@ -177,13 +177,11 @@ in
               # https://github.com/vector-im/element-web/blob/develop/docs/labs.md
               feature_ask_to_join = true;
               feature_bridge_state = true;
-              feature_exploring_public_spaces = true;
               feature_jump_to_date = true;
               feature_mjolnir = true;
+              feature_notifications = true;
               feature_pinning = true;
-              feature_presence_in_room_list = true;
               feature_report_to_moderators = true;
-              feature_qr_signin_reciprocate_show = true;
             };
             show_labs_settings = true;
           };
