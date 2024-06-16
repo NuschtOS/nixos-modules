@@ -225,6 +225,7 @@ in
     groups.matrix-sliding-sync = { };
     users = {
       matrix-sliding-sync = {
+        extraGroups = [ "matrix-synapse" ];
         group = "matrix-sliding-sync";
         isSystemUser = true;
       };
