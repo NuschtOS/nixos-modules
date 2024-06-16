@@ -196,9 +196,11 @@ in
       "${cfg.domain}" = lib.mkIf cfgs.enable {
         forceSSL = true;
         locations."/".proxyPass = "http://matrix-synapse";
-        extraConfig = lib.mkIf cfge.enable ''
-          more_set_headers "Access-Control-Allow-Origin: https://${cfge.domain}";
-        '';
+      };
+
+      "${cfgs.domain}" = lib.mkIf cfgs.enable {
+        forceSSL = true;
+        locations."/".proxyPass = "http://matrix-synapse";
       };
     };
   };
