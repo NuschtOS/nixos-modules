@@ -19,10 +19,9 @@ in
       trim.enable = true;
     };
 
-    # TODO: drop or after https://github.com/NixOS/nixpkgs/pull/307498 is merged
-    virtualisation.containers.storage.settings = lib.mkIf cfg.recommendedDefaults (lib.recursiveUpdate (options.virtualisation.containers.storage.settings.default or { }) {
+    virtualisation.containers.storage.settings = lib.mkIf cfg.recommendedDefaults {
       # fixes: Error: 'overlay' is not supported over zfs, a mount_program is required: backing file system is unsupported for this graph driver
       storage.options.mount_program = lib.getExe pkgs.fuse-overlayfs;
-    });
+    };
   };
 }
