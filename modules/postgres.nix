@@ -6,6 +6,23 @@ let
 in
 {
   options.services.postgresql = {
+    configurePgStatStatements = libS.mkOpinionatedOption "configure and enable pg_stat_statements";
+
+    databases = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      description = ''
+        List of all databases.
+
+        This option is used eg. when intalling extensions like pg_stat_stements in all databases.
+
+        ::: {.note}
+        `services.postgresql.ensureDatabases` and `postgres` are automatically added.
+        :::
+      '';
+    };
+
+    recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
+
     upgrade = {
       enable = libS.mkOpinionatedOption "install the upgrade-pg-cluster script to update postgres";
 
@@ -31,8 +48,6 @@ in
         description = "Systemd services to stop when upgrade is started.";
       };
     };
-
-    recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
   };
 
   config = lib.mkIf cfg.enable {
@@ -82,13 +97,31 @@ in
     );
 
     services = {
-      postgresql.enableJIT = lib.mkIf cfg.recommendedDefaults true;
+      postgresql = {
+        databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
+        enableJIT = lib.mkIf cfg.recommendedDefaults true;
+        settings.shared_preload_libraries = lib.mkIf cfg.configurePgStatStatements "pg_stat_statements";
+      };
 
       postgresqlBackup = lib.mkIf cfg.recommendedDefaults {
         compression = "zstd";
         compressionLevel = 9;
         pgdumpOptions = "--create --clean";
       };
+    };
+
+    systemd.services.postgresql = {
+      # install/update pg_stat_statements extension in all databases
+      # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
+      postStart = lib.mkIf cfg.configurePgStatStatements (lib.concatStrings (map (db:
+        (lib.concatMapStringsSep "\n" (ext: /* bash */ ''
+          $PSQL -tAd "${db}" -c "CREATE EXTENSION IF NOT EXISTS ${ext}"
+          $PSQL -tAd "${db}" -c "ALTER EXTENSION ${ext} UPDATE"
+        '') (lib.splitString "," cfg.settings.shared_preload_libraries)))
+        cfg.databases));
+
+      # reduce downtime for dependend services
+      stopIfChanged = lib.mkIf cfg.recommendedDefaults false;
     };
   };
 }
