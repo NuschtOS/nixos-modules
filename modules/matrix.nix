@@ -160,7 +160,7 @@ in
       matrix-sliding-sync.servers."unix:${config.services.matrix-sliding-sync.settings.SYNCV3_BINDADDR}" = { };
       matrix-synapse.servers."unix:${config.services.matrix-sliding-sync.settings.SYNCV3_SERVER}" = { };
     };
-    virtualHosts = {
+    virtualHosts = lib.mkIf (cfge.enable || cfgs.enable) {
       "${cfge.domain}" = lib.mkIf cfge.enable {
         forceSSL = true;
         locations."/".root = (cfge.package.override {
