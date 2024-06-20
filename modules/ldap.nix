@@ -32,8 +32,14 @@ in
 
         domainName = lib.mkOption {
           type = lib.types.str;
+          example = "auth.internal.example.com";
+          description = "The domain name to connect to the ldap server's ldaps port.";
+        };
+
+        webDomainName = lib.mkOption {
+          type = lib.types.str;
           example = "auth.example.com";
-          description = "The domain name to connect to the ldap server.";
+          description = "The domain name to connect to, to visit the ldap server web interface and to which to issue cookies to.";
         };
 
         givenNameField = lib.mkOption {

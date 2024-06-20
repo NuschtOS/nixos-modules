@@ -88,7 +88,7 @@ in
           client_id = "grafana";
           disable_login_form = true; # only allow OAuth
           icon = "signin";
-          name = config.services.portunus.domain;
+          name = config.services.portunus.webDomain;
           oauth_allow_insecure_email_lookup = true; # otherwise updating the mail in ldap will break login
           use_refresh_token = true;
           role_attribute_path = "contains(groups[*], '${cfg.oauth.adminGroup}') && 'Admin' || contains(groups[*], '${cfg.oauth.userGroup}') && 'Editor'"

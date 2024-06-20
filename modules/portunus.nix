@@ -54,6 +54,12 @@ in
       default = false;
       description = "Wether to seed groups configured in services as not member managed groups.";
     };
+
+    webDomain = lib.mkOption {
+      type = lib.types.str;
+      example = "auth.example.com";
+      description = "The domain name to connect to, to visit the ldap server web interface and to which to issue cookies to.";
+    };
   };
 
   config = {
@@ -70,6 +76,10 @@ in
         message = "Portunus 2.0.0 is required for this module!";
       }
     ];
+
+    warnings = lib.optional cfg.addToHosts "services.portunus.addToHosts is deprecated! Please use security.ldap.webDomain instead."
+      ++ lib.optional (cfg.internalIp4 != null) "services.portunus.internalIp4 is deprecated! Please use security.ldap.webDomain instead."
+      ++ lib.optional (cfg.internalIp4 != null) "services.portunus.internalIp6 is deprecated! Please use security.ldap.webDomain instead.";
 
     networking.hosts = lib.mkIf cfg.addToHosts {
       ${cfg.internalIp4} = [ cfg.domain ];
@@ -118,7 +128,7 @@ in
     ];
 
     services = let
-      callbackURL = "https://${cfg.domain}/oauth2/callback";
+      callbackURL = "https://${cfg.webDomain}/oauth2/callback";
       clientID = "oauth2_proxy"; # - is not allowed in environment variables
     in {
       # the user has no other option to accept this and all clients are internal anyway
@@ -127,7 +137,7 @@ in
       oauth2-proxy = lib.mkIf cfg.configureOAuth2Proxy {
         enable = true;
         inherit clientID;
-        nginx = lib.optionalAttrs (options.services.oauth2-proxy.nginx.domain or null != null) {
+        nginx = lib.optionalAttrs (options.services.oauth2-proxy.nginx.webDomain or null != null) {
           inherit (config.services.portunus) domain;
         };
         provider = "oidc";
@@ -151,6 +161,7 @@ in
 
     security.ldap = lib.mkIf cfg.ldapPreset {
       domainName = cfg.domain;
+      webDomainName = cfg.webDomain;
       givenNameField = "givenName";
       groupFilter = group: "(&(objectclass=person)(isMemberOf=cn=${group},${ldap.roleBaseDN}))";
       mailField = "mail";
