@@ -131,8 +131,11 @@ in
       callbackURL = "https://${cfg.webDomain}/oauth2/callback";
       clientID = "oauth2_proxy"; # - is not allowed in environment variables
     in {
-      # the user has no other option to accept this and all clients are internal anyway
-      dex.settings.oauth2.skipApprovalScreen = true;
+      dex.settings = {
+        issuer = lib.mkForce "https://${cfg.webDomain}/dex";
+        # the user has no other option to accept this and all clients are internal anyway
+        oauth2.skipApprovalScreen = true;
+      };
 
       oauth2-proxy = lib.mkIf cfg.configureOAuth2Proxy {
         enable = true;
