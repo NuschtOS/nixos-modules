@@ -90,9 +90,9 @@ in
       }
     ];
 
-    warnings = lib.optional cfg.addToHosts "services.portunus.addToHosts is deprecated! Please use security.ldap.webDomain instead."
-      ++ lib.optional (cfg.internalIp4 != null) "services.portunus.internalIp4 is deprecated! Please use security.ldap.webDomain instead."
-      ++ lib.optional (cfg.internalIp4 != null) "services.portunus.internalIp6 is deprecated! Please use security.ldap.webDomain instead.";
+    warnings = lib.optional cfg.addToHosts "services.portunus.addToHosts is deprecated! Please use security.ldap.domain instead."
+      ++ lib.optional (cfg.internalIp4 != null) "services.portunus.internalIp4 is deprecated! Please use security.ldap.domain instead."
+      ++ lib.optional (cfg.internalIp4 != null) "services.portunus.internalIp6 is deprecated! Please use security.ldap.domain instead.";
 
     networking.hosts = lib.mkIf cfg.addToHosts {
       ${cfg.internalIp4} = [ cfg.domain ];
