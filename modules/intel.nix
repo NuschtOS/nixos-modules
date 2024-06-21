@@ -1,7 +1,8 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, options, pkgs, ... }:
 
 let
   cfg = config.hardware;
+  hardwareOpengl = if options.hardware?graphics then "graphics" else "opengl";
 in
 {
   options.hardware = {
@@ -17,7 +18,7 @@ in
       VK_DRIVER_FILES = "/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json";
     };
 
-    hardware.opengl = {
+    hardware.${hardwareOpengl} = {
       extraPackages = with pkgs; [
         intel-compute-runtime # OpenCL library for iGPU
         # video encoding/decoding hardware acceleration
