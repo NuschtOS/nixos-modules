@@ -55,8 +55,13 @@ in
       description = "Wether to seed groups configured in services as not member managed groups.";
     };
 
+    domain = lib.mkOption {
+      default = "";
+    };
+
     webDomain = lib.mkOption {
       type = lib.types.str;
+      default = "";
       example = "auth.example.com";
       description = "The domain name to connect to, to visit the ldap server web interface and to which to issue cookies to.";
     };
@@ -75,11 +80,19 @@ in
         assertion = cfg.enable -> lib.versionAtLeast config.services.portunus.package.version "2.0.0";
         message = "Portunus 2.0.0 is required for this module!";
       }
+      {
+        assertion = cfg.enable -> cfg.domain != "";
+        message = "services.portunus.domain must be set to the domain name under which you can reach the *internal* Portunus ldaps port.";
+      }
+      {
+        assertion = cfg.enable -> cfg.webDomain != "";
+        message = "services.portunus.webDomain must be set to the domain name under which you can reach the Portunus Web UI.";
+      }
     ];
 
-    warnings = lib.optional cfg.addToHosts "services.portunus.addToHosts is deprecated! Please use security.ldap.webDomain instead."
-      ++ lib.optional (cfg.internalIp4 != null) "services.portunus.internalIp4 is deprecated! Please use security.ldap.webDomain instead."
-      ++ lib.optional (cfg.internalIp4 != null) "services.portunus.internalIp6 is deprecated! Please use security.ldap.webDomain instead.";
+    warnings = lib.optional cfg.addToHosts "services.portunus.addToHosts is deprecated! Please use security.ldap.domain instead."
+      ++ lib.optional (cfg.internalIp4 != null) "services.portunus.internalIp4 is deprecated! Please use security.ldap.domain instead."
+      ++ lib.optional (cfg.internalIp4 != null) "services.portunus.internalIp6 is deprecated! Please use security.ldap.domain instead.";
 
     networking.hosts = lib.mkIf cfg.addToHosts {
       ${cfg.internalIp4} = [ cfg.domain ];
@@ -140,9 +153,7 @@ in
       oauth2-proxy = lib.mkIf cfg.configureOAuth2Proxy {
         enable = true;
         inherit clientID;
-        nginx = lib.optionalAttrs (options.services.oauth2-proxy.nginx.webDomain or null != null) {
-          inherit (config.services.portunus) domain;
-        };
+        nginx.domain = config.services.portunus.webDomain;
         provider = "oidc";
         redirectURL = callbackURL;
         reverseProxy = true;
