@@ -26,7 +26,7 @@
         lib' = importDirToKey "lib" args;
       in lib' // {
         # some functions get promoted to be directly under libS
-        inherit (lib'.doc) mkModuleDoc mkMdBook;
+        inherit (lib'.doc) mkOptionsJSON mkModuleDoc mkMdBook;
         inherit (lib'.modules) mkOpinionatedOption mkRecursiveDefault;
         inherit (lib'.ssh) mkPubKey;
       };
@@ -55,6 +55,13 @@
       libS = self.lib { config = { }; inherit lib; pkgs = nixpkgs.legacyPackages.${system}; };
     in {
       packages = rec {
+        options-json = (libS.mkOptionsJSON [
+          ({ config, lib, ... }: {
+            _module.args.libS = self.lib { inherit config lib; };
+          })
+          self.nixosModule
+        ]).optionsJSON;
+
         options-doc-md = libS.mkModuleDoc {
           modules = [
             ({ config, lib, ... }: {

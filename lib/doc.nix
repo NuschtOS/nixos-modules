@@ -1,22 +1,24 @@
 { lib, pkgs, ... }:
 
-{
-  # based on https://github.com/j-brn/nixos-vfio/blob/master/lib/mkModuleDoc.nix
-  mkModuleDoc = { modules, urlPrefix }: let
+rec {
+  mkOptionsJSON = modules: let
     inherit (lib.evalModules {
       modules = lib.singleton {
         config._module.check = false;
       } ++ modules;
     }) options;
     filteredOptions = lib.filterAttrs (key: _: key != "_module") options;
-    docs = pkgs.nixosOptionsDoc {
-      options = filteredOptions;
-      warningsAreErrors = false;
-    };
+  in pkgs.nixosOptionsDoc {
+    options = filteredOptions;
+    warningsAreErrors = false;
+  };
+
+  # based on https://github.com/j-brn/nixos-vfio/blob/master/lib/mkModuleDoc.nix
+  mkModuleDoc = { modules, urlPrefix }: let
     url = lib.escape [ ":" "." "-" ] urlPrefix;
   in pkgs.runCommand "options.md" { } /* bash */ ''
     mkdir $out
-    cat ${docs.optionsCommonMark} \
+    cat ${(mkOptionsJSON modules).optionsCommonMark} \
       | sed -r -e 's|\[/nix/store/.+\-source/(.+\.nix)\]|[\1]|g' \
         -e 's|\[/nix/store/.+\-source/(.+)\]|[\1/default\.nix]|g' \
         -e 's|\[flake\\.nix\\#nixosModules\\.(\w+)\/default\.nix\]|\[modules\/\1\/default\.nix\]|g' \
