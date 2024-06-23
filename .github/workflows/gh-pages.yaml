@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build docs
+    name: Build search
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -27,7 +27,7 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@V27
 
-      - name: Build docs
+      - name: Build search
         run: nix build .#search-page
 
       - name: Prepare assets for upload
