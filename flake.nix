@@ -4,9 +4,16 @@
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    search = {
+      url = "github:nuschtos/search";
+      inputs = {
+        flake-utils.follows = "flake-utils";
+        nixpkgs.follows = "nixpkgs";
+      };
+    };
   };
 
-  outputs = { self, flake-utils, nixpkgs, ... }:
+  outputs = { self, flake-utils, nixpkgs, search, ... }:
     let
       inherit (nixpkgs) lib;
       src = builtins.filterSource (path: type: type == "directory" || lib.hasSuffix ".nix" (baseNameOf path)) ./.;
@@ -26,7 +33,6 @@
         lib' = importDirToKey "lib" args;
       in lib' // {
         # some functions get promoted to be directly under libS
-        inherit (lib'.doc) mkOptionsJSON mkModuleDoc mkMdBook;
         inherit (lib'.modules) mkOpinionatedOption mkRecursiveDefault;
         inherit (lib'.ssh) mkPubKey;
       };
@@ -51,30 +57,16 @@
         _module.args.libS = lib.mkOverride 1000 (self.lib { inherit lib config; });
         imports = fileList "modules";
       };
-    } // flake-utils.lib.eachDefaultSystem (system: let
-      libS = self.lib { config = { }; inherit lib; pkgs = nixpkgs.legacyPackages.${system}; };
-    in {
-      packages = rec {
-        options-json = (libS.mkOptionsJSON [
-          ({ config, lib, ... }: {
-            _module.args.libS = self.lib { inherit config lib; };
-          })
-          self.nixosModule
-        ]).optionsJSON;
-
-        options-doc-md = libS.mkModuleDoc {
+    } // flake-utils.lib.eachDefaultSystem (system: {
+      packages = {
+        search-page = search.packages.${system}.mkSearch {
           modules = [
             ({ config, lib, ... }: {
               _module.args.libS = self.lib { inherit config lib; };
             })
             self.nixosModule
           ];
-          urlPrefix = "https://github.com/SuperSandro2000/nixos-modules/tree/master/";
-        };
-
-        options-doc = libS.mkMdBook {
-          projectName = "nixos-modules";
-          moduleDoc = options-doc-md;
+          urlPrefix = "https://github.com/NuschtOS/nixos-modules/tree/main/";
         };
       };
     });
