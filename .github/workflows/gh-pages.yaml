@@ -2,7 +2,8 @@ name: "pages"
 on:
   push:
     branches:
-      - master
+      - main
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -27,7 +28,7 @@ jobs:
         uses: cachix/install-nix-action@V27
 
       - name: Build docs
-        run: nix build .#options-doc
+        run: nix build .#search-page
 
       - name: Prepare assets for upload
         run: cp -r --dereference --no-preserve=mode,ownership result/ public/
@@ -45,3 +46,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        if: github.event_name == 'push'
