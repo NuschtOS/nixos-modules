@@ -13,6 +13,9 @@ end_of_line = unset
 insert_final_newline = unset
 trim_trailing_whitespace = unset
 
+[*.ts]
+quote_type = single
+
 [Makefile]
 indent_size = 1
 indent_style = tab
