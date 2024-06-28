@@ -57,14 +57,23 @@
         _module.args.libS = lib.mkOverride 1000 (self.lib { inherit lib config; });
         imports = fileList "modules";
       };
-    } // flake-utils.lib.eachDefaultSystem (system: {
+    } // flake-utils.lib.eachDefaultSystem (system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+    in {
       packages = {
+        default = self.packages.${system}.debugging;
+
+        debugging = pkgs.symlinkJoin {
+          name = "debugging-tools";
+          paths = import ./lib/debug-pkgs.nix pkgs;
+        };
+
         search-page = search.packages.${system}.mkSearch {
           modules = [
             ({ config, lib, ... }: {
               _module.args = {
                 libS = self.lib { inherit config lib; };
-                pkgs = nixpkgs.legacyPackages.${system};
+                inherit pkgs;
               };
             })
             self.nixosModule
