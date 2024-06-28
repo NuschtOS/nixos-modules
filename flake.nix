@@ -62,7 +62,10 @@
         search-page = search.packages.${system}.mkSearch {
           modules = [
             ({ config, lib, ... }: {
-              _module.args.libS = self.lib { inherit config lib; };
+              _module.args = {
+                libS = self.lib { inherit config lib; };
+                pkgs = nixpkgs.legacyPackages.${system};
+              };
             })
             self.nixosModule
           ];
