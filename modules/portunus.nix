@@ -189,7 +189,7 @@ in
       searchUID = "search";
       surnameField = "sn";
       userField = "uid";
-      userFilter = replaceStr: "(&(objectclass=person)(|(uid=${replaceStr})(mail=${replaceStr})))";
+      userFilter = replaceStr: "(|(uid=${replaceStr})(mail=${replaceStr}))";
       userBaseDN = "ou=users";
     };
   };
