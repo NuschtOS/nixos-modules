@@ -142,6 +142,9 @@ in
                 ''}
               fi
             }
+
+            # to receive less confusing errors
+            on_auth_failure() { false; }
           '')
         ];
         meta = true;
