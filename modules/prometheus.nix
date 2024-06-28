@@ -3,6 +3,8 @@
 let
   cfg = config.services.prometheus;
   cfgb = cfg.exporters.blackbox;
+
+  yamlFormat = pkgs.formats.yaml { };
 in
 {
   options.services.prometheus = {
@@ -15,7 +17,7 @@ in
 
       # TODO: upstream
       config = lib.mkOption {
-        inherit (pkgs.formats.yaml {}) type;
+        inherit (yamlFormat) type;
         default = { };
         description = ''
           Structured configuration that is being written into blackbox' configFile option.
@@ -56,6 +58,18 @@ in
         '';
       };
     };
+
+    # TODO: upstream
+    rulesConfig = lib.mkOption {
+      type = lib.types.listOf yamlFormat.type;
+      default = [ ];
+      description = ''
+        Structured configuration that is being written into prometheus' rules option.
+
+        See <https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/> and
+        <https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/> for upstream documentation.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -90,8 +104,10 @@ in
           })) cfgb.httpProbe);
         };
 
-        configFile = lib.mkIf (cfgb.config != { }) ((pkgs.formats.yaml { }).generate "blackbox-exporter.yaml" cfgb.config);
+        configFile = lib.mkIf (cfgb.config != { }) (yamlFormat.generate "blackbox-exporter.yaml" cfgb.config);
       };
+
+      ruleFiles = map (rule: yamlFormat.generate "prometheus-rule" rule) cfg.rulesConfig;
 
       scrapeConfigs = let
         genHttpProbeScrapeConfig = { name, opts }: {
