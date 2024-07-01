@@ -32,7 +32,7 @@ in
         description = "Extra arguments to pass to pg_upgrade. See https://www.postgresql.org/docs/current/pgupgrade.html for doc.";
       };
 
-      newPackage = (lib.mkPackageOptionMD pkgs "postgresql" {
+      newPackage = (lib.mkPackageOption pkgs "postgresql" {
         default = [ "postgresql_16" ];
       }) // {
         description = ''
