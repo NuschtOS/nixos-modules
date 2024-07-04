@@ -12,8 +12,6 @@ in
         description = "Wether to configure Nginx.";
       };
 
-      configureRedis = libS.mkOpinionatedOption "configure redis as a remote_cache";
-
       oauth = {
         enable = lib.mkEnableOption "login only via OAuth2";
         enableViewerRole = lib.mkOption {
@@ -28,6 +26,12 @@ in
       recommendedDefaults = libS.mkOpinionatedOption "set recommended and secure default settings";
     };
   };
+
+  imports = [
+    (lib.mkRemovedOptionModule [ "services" "grafana" "configureRedis" ] ''
+      The configureRedis option has been removed, as it only caches session which is normally not required for a small to medium sized instance.
+    '')
+  ];
 
   config = {
     # the default values are hardcoded instead of using options. because I couldn't figure out how to extract them from the freeform type
@@ -65,13 +69,6 @@ in
         server = {
           enable_gzip = true;
           root_url = "https://${cfg.settings.server.domain}";
-        };
-      }))
-
-      (lib.mkIf (cfg.enable && cfg.configureRedis) (libS.modules.mkRecursiveDefault {
-        remote_cache = {
-          type = "redis";
-          connstr = "addr=${config.services.redis.servers.grafana.bind}:${toString config.services.redis.servers.grafana.port},pool_size=100,db=0,ssl=false";
         };
       }))
 
@@ -132,13 +129,6 @@ in
       long_name = "Grafana Users";
       name = cfg.oauth.userGroup;
       permissions = { };
-    };
-  };
-
-  config.services.redis.servers = lib.mkIf (cfg.enable && cfg.configureRedis) {
-    grafana = {
-      enable = true;
-      port = lib.mkDefault 6379;
     };
   };
 }
