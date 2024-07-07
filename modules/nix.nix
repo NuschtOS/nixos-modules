@@ -47,6 +47,8 @@ in
       systemd-boot.extraInstallCommands = lib.mkIf cfg.diffSystem diffBoot;
     };
 
+    environment.systemPackages = lib.mkIf cfg.recommendedDefaults (with pkgs; lib.mkBefore [ git ]);
+
     # based on https://github.com/numtide/srvos/blob/main/nixos/roles/nix-remote-builder.nix
     # and https://discourse.nixos.org/t/wrapper-to-restrict-builder-access-through-ssh-worth-upstreaming/25834
     nix.settings = {
