@@ -51,11 +51,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1720380085,
-        "narHash": "sha256-vdcvN/7ASo9ie3Y5FUHj6NYlZTZX7eHpCx6yymQ3leM=",
+        "lastModified": 1720381634,
+        "narHash": "sha256-ThybPrCiGjcgisIwwLTkjSp8Ac+EHMSX5bDjcBb9bL0=",
         "owner": "nuschtos",
         "repo": "search",
-        "rev": "34e61b5172876ed26737012862fd021d9335f18e",
+        "rev": "d81aa80cbb06078d74b7cadfe0bbc25d487573f0",
         "type": "github"
       },
       "original": {
