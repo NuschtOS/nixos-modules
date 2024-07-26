@@ -55,17 +55,13 @@ in
         }
         (lib.mkIf cfg.recommendedDefaults {
           DATA_FOLDER = "/var/lib/vaultwarden"; # changes data directory
-          # TODO: change with 1.31.0 update
-          # ENABLE_WEBSOCKET = true;
+          ENABLE_WEBSOCKET = true;
           LOG_LEVEL = "warn";
           PASSWORD_ITERATIONS = 600000;
           ROCKET_ADDRESS = "127.0.0.1";
           ROCKET_PORT = lib.mkDefault 8222;
           SIGNUPS_VERIFY = true;
           TRASH_AUTO_DELETE_DAYS = 30;
-          WEBSOCKET_ADDRESS = "127.0.0.1";
-          WEBSOCKET_ENABLED = true;
-          WEBSOCKET_PORT = lib.mkDefault 8223;
         })
       ];
     };
