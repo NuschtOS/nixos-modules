@@ -75,7 +75,12 @@ in
   config.services.home-assistant = lib.mkMerge [
     (lib.mkIf (cfg.enable && cfg.recommendedDefaults) {
       config = {
+        # load imperative config done via the web ui
+        # https://wiki.nixos.org/wiki/Home_Assistant#Automations,_Scenes,_and_Scripts_from_the_UI
         "automation ui" = "!include automations.yaml";
+        "scene ui" = "!include scenes.yaml";
+        "script ui" = "!include scripts.yaml";
+
         default_config = { }; # yes, this is required...
         homeassistant = {
           # required for https://github.com/home-assistant/core/pull/107419 to allow new users
@@ -185,5 +190,7 @@ in
 
   config.systemd.tmpfiles.rules = lib.mkIf (cfg.enable && cfg.recommendedDefaults) [
     "f ${cfg.configDir}/automations.yaml 0444 hass hass"
+    "f ${cfg.configDir}/scenes.yaml 0444 hass hass"
+    "f ${cfg.configDir}/scripts.yaml 0444 hass hass"
   ];
 }
