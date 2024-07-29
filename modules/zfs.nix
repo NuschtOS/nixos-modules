@@ -7,7 +7,7 @@ in
   options = {
     boot.zfs = {
       recommendedDefaults = libS.mkOpinionatedOption "enable recommended ZFS settings";
-      latestCompatibleKernel = libS.mkOpinionatedOption "use the latest ZFS compatible kernel";
+      latestCompatibleKernel = lib.mkEnableOption "use the latest ZFS compatible kernel";
     };
   };
 
