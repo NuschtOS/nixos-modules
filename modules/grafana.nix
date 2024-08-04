@@ -9,7 +9,7 @@ in
       configureNginx = lib.mkOption {
         type = lib.types.bool;
         default = false;
-        description = "Wether to configure Nginx.";
+        description = "Whether to configure Nginx.";
       };
 
       oauth = {
@@ -17,7 +17,7 @@ in
         enableViewerRole = lib.mkOption {
           type = lib.types.bool;
           default = false;
-          description = "Wether to enable the fallback Viewer role when users do not have the user- or adminGroup.";
+          description = "Whether to enable the fallback Viewer role when users do not have the user- or adminGroup.";
         };
         adminGroup = libS.ldap.mkUserGroupOption;
         userGroup = libS.ldap.mkUserGroupOption;

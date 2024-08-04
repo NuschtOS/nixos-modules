@@ -146,7 +146,7 @@ in
     };
 
     oidc.options = lib.mkIf cfgo.enable {
-      name = "dex";
+      name = config.services.portunus.webDomain;
       provider = "openidConnect";
       key = "gitea";
       secret = "$(cat ${cfgo.clientSecretFile})";
