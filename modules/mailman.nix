@@ -42,7 +42,7 @@ in
   config.services.mailman = lib.mkIf (cfg.enable && cfg.enablePostgres) {
     settings.database = {
       class = "mailman.database.postgresql.PostgreSQLDatabase";
-      url = "postgres://mailman@/mailman?host=/run/postgresql";
+      url = "postgresql://mailman@/mailman?host=/run/postgresql";
     };
     webSettings = {
       DATABASES.default = {
