@@ -18,7 +18,7 @@ in
     };
   };
 
-  config.environment.etc = lib.mkIf cfg.openidConnect.enable {
+  config.environment.etc = lib.mkIf (cfg.enable && cfg.openidConnect.enable) {
     "mailman3/settings.py".text = lib.mkAfter /* python */ ''
       INSTALLED_APPS.append('allauth.socialaccount.providers.openid_connect')
 
@@ -39,7 +39,7 @@ in
     '';
   };
 
-  config.services.mailman = lib.mkIf cfg.enablePostgres {
+  config.services.mailman = lib.mkIf (cfg.enable && cfg.enablePostgres) {
     settings.database = {
       class = "mailman.database.postgresql.PostgreSQLDatabase";
       url = "postgres://mailman@/mailman?host=/run/postgresql";
@@ -53,7 +53,7 @@ in
     };
   };
 
-  config.services.postgresql = lib.mkIf cfg.enablePostgres {
+  config.services.postgresql = lib.mkIf (cfg.enable && cfg.enablePostgres) {
     ensureDatabases = [ "mailman" "mailman_web" ];
     ensureUsers = [ {
       name = "mailman";
