@@ -47,19 +47,19 @@ in
     webSettings = {
       DATABASES.default = {
         ENGINE = "django.db.backends.postgresql";
-        NAME = "mailman_web";
-        USER = "mailman_web";
+        NAME = "mailman-web";
+        USER = "mailman-web";
       };
     };
   };
 
   config.services.postgresql = lib.mkIf (cfg.enable && cfg.enablePostgres) {
-    ensureDatabases = [ "mailman" "mailman_web" ];
+    ensureDatabases = [ "mailman" "mailman-web" ];
     ensureUsers = [ {
       name = "mailman";
       ensureDBOwnership = true;
     } {
-      name = "mailman_web";
+      name = "mailman-web";
       ensureDBOwnership = true;
     } ];
   };
