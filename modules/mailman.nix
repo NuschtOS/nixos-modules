@@ -67,7 +67,7 @@ in
   config.services.portunus.dex = lib.mkIf cfg.openidConnect.enable {
     enable = true;
     oidcClients = [{
-      callbackURL = "https://${lib.elemAt cfg.webHosts 0}";
+      callbackURL = "https://${lib.elemAt cfg.webHosts 0}/accounts/oidc/dex/login/callback/";
       id = "mailman";
     }];
   };
