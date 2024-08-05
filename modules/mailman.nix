@@ -42,24 +42,24 @@ in
   config.services.mailman = lib.mkIf (cfg.enable && cfg.enablePostgres) {
     settings.database = {
       class = "mailman.database.postgresql.PostgreSQLDatabase";
-      url = "postgres://mailman@/mailman?host=/run/postgresql";
+      url = "postgresql://mailman@/mailman?host=/run/postgresql";
     };
     webSettings = {
       DATABASES.default = {
         ENGINE = "django.db.backends.postgresql";
-        NAME = "mailman_web";
-        USER = "mailman_web";
+        NAME = "mailman-web";
+        USER = "mailman-web";
       };
     };
   };
 
   config.services.postgresql = lib.mkIf (cfg.enable && cfg.enablePostgres) {
-    ensureDatabases = [ "mailman" "mailman_web" ];
+    ensureDatabases = [ "mailman" "mailman-web" ];
     ensureUsers = [ {
       name = "mailman";
       ensureDBOwnership = true;
     } {
-      name = "mailman_web";
+      name = "mailman-web";
       ensureDBOwnership = true;
     } ];
   };
