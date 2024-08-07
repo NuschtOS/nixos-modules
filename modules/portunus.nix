@@ -52,7 +52,7 @@ in
     seedGroups = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = "Wether to seed groups configured in services as not member managed groups.";
+      description = "Whether to seed groups configured in services as not member managed groups.";
     };
 
     domain = lib.mkOption {
