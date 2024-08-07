@@ -153,7 +153,8 @@ in
       oauth2-proxy = lib.mkIf cfg.configureOAuth2Proxy {
         enable = true;
         inherit clientID;
-        nginx.domain = config.services.portunus.webDomain;
+        # if Portunus is not enabled locally, its domain is most likely wrong
+        nginx.domain = lib.mkIf cfg.enable config.services.portunus.webDomain;
         provider = "oidc";
         redirectURL = callbackURL;
         reverseProxy = true;
