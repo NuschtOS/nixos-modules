@@ -160,6 +160,7 @@ in
         reverseProxy = true;
         upstream = "http://127.0.0.1:4181";
         extraConfig = {
+          exclude-logging-path = "/oauth2/static/css/all.min.css,/oauth2/static/css/bulma.min.css";
           oidc-issuer-url = config.services.dex.settings.issuer;
           provider-display-name = "Portunus";
         };
