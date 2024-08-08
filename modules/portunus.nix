@@ -85,7 +85,7 @@ in
   config = {
     assertions = [
       {
-        assertion = cfg.configureOAuth2Proxy -> config.services.oauth2-proxy.keyFile != null;
+        assertion = cfg.oauth2-proxy.configure -> config.services.oauth2-proxy.keyFile != null;
         message = ''
           Setting services.portunus.configureOAuth2Proxy to true requires to set service.oauth2-proxy.keyFile
           to a file that contains `OAUTH2_PROXY_CLIENT_SECRET` and `OAUTH2_PROXY_COOKIE_SECRET`.
