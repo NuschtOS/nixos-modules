@@ -1,4 +1,4 @@
-{ config, lib, options, ... }:
+{ config, lib, ... }:
 
 let
   cfg = config.services.portunus;
@@ -13,16 +13,8 @@ in
       description = "Whether to add a hosts entry for the portunus domain pointing to externalIp";
     };
 
-    configureOAuth2Proxy = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = ''
-        Wether to configure OAuth2 Proxy with Portunus' Dex.
-
-        Use `services.oauth2-proxy.nginx.virtualHosts` to configure the nginx virtual hosts that should require authentication.
-
-        To properly function this requires the services.oauth2-proxy.nginx.domain option from <https://github.com/NixOS/nixpkgs/pull/273234>.
-      '';
+    domain = lib.mkOption {
+      default = "";
     };
 
     internalIp4 = lib.mkOption {
@@ -43,6 +35,29 @@ in
       description = "Whether to set config.security.ldap to portunus specific settings.";
     };
 
+    oauth2-proxy = {
+      configure = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          Whether to configure oauth2-proxy to work together with Dex and Portunus as a backend.
+
+          If Portunus is enabled locally, the oidc client is configured in Dex, otherwise it must be done manually via `services.portunus.dex.oidcClients`.
+
+          Use `services.oauth2-proxy.nginx.virtualHosts` to configure the nginx virtual hosts that should require authentication.
+        '';
+      };
+
+      clientID = lib.mkOption {
+        type = lib.types.str;
+        default = "oauth2_proxy";
+        description = ''
+          The client ID oauth2-proxy will be using.
+          `-` is not allowed here, as it makes it impossible to configure the secret securely via an environment variable.
+        '';
+      };
+    };
+
     removeAddGroup = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -52,11 +67,7 @@ in
     seedGroups = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = "Wether to seed groups configured in services as not member managed groups.";
-    };
-
-    domain = lib.mkOption {
-      default = "";
+      description = "Whether to seed groups configured in services as not member managed groups.";
     };
 
     webDomain = lib.mkOption {
@@ -66,6 +77,10 @@ in
       description = "The domain name to connect to, to visit the ldap server web interface and to which to issue cookies to.";
     };
   };
+
+  imports = [
+    (lib.mkRenamedOptionModule ["services" "portunus" "configureOAuth2Proxy"] ["services" "portunus" "oauth2-proxy" "configure"])
+  ];
 
   config = {
     assertions = [
@@ -77,7 +92,7 @@ in
         '';
       }
       {
-        assertion = cfg.enable -> lib.versionAtLeast config.services.portunus.package.version "2.0.0";
+        assertion = cfg.enable -> lib.versionAtLeast cfg.package.version "2.0.0";
         message = "Portunus 2.0.0 is required for this module!";
       }
       {
@@ -140,35 +155,34 @@ in
       })
     ];
 
-    services = let
-      callbackURL = "https://${cfg.webDomain}/oauth2/callback";
-      clientID = "oauth2_proxy"; # - is not allowed in environment variables
-    in {
+    services = {
       dex.settings = {
         issuer = lib.mkForce "https://${cfg.webDomain}/dex";
         # the user has no other option to accept this and all clients are internal anyway
         oauth2.skipApprovalScreen = true;
       };
 
-      oauth2-proxy = lib.mkIf cfg.configureOAuth2Proxy {
+      oauth2-proxy = lib.mkIf cfg.oauth2-proxy.configure {
         enable = true;
-        inherit clientID;
-        nginx.domain = config.services.portunus.webDomain;
+        inherit (cfg.oauth2-proxy) clientID;
+        # if Portunus is not enabled locally, its domain is most likely wrong
+        nginx.domain = lib.mkIf cfg.enable cfg.webDomain;
         provider = "oidc";
-        redirectURL = callbackURL;
+        redirectURL = "https://${config.services.oauth2-proxy.nginx.domain}/oauth2/callback";
         reverseProxy = true;
         upstream = "http://127.0.0.1:4181";
         extraConfig = {
+          exclude-logging-path = "/oauth2/static/css/all.min.css,/oauth2/static/css/bulma.min.css";
           oidc-issuer-url = config.services.dex.settings.issuer;
           provider-display-name = "Portunus";
         };
       };
 
-      portunus.dex = lib.mkIf cfg.configureOAuth2Proxy {
+      portunus.dex = lib.mkIf (cfg.enable && cfg.oauth2-proxy.configure) {
         enable = true;
         oidcClients = [{
-          inherit callbackURL;
-          id = clientID;
+          inherit (cfg.dex) callbackURL;
+          id = cfg.oauth2-proxy.clientID;
         }];
       };
     };
