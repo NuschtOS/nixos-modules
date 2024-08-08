@@ -1,6 +1,6 @@
 # NixOS Modules
 
-Shared and opinionated NixOS modules
+Opinionated, integrated and shared NixOS modules
 
 ## Usage
 
