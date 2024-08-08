@@ -181,7 +181,7 @@ in
       portunus.dex = lib.mkIf (cfg.enable && cfg.oauth2-proxy.configure) {
         enable = true;
         oidcClients = [{
-          inherit (cfg.dex) callbackURL;
+          callbackURL = config.services.oauth2-proxy.redirectURL;
           id = cfg.oauth2-proxy.clientID;
         }];
       };
