@@ -151,7 +151,7 @@ in
       key = "gitea";
       secret = "$(cat ${cfgo.clientSecretFile})";
       icon-url = "${config.services.dex.settings.issuer}/theme/favicon.png";
-      auto-discover-url = "${config.services.dex.settings.issuer}/.well-known/openid-configuration";
+      auto-discover-url = config.services.dex.discoveryEndpoint;
       scopes = "groups";
       required-claim-name = "groups";
       required-claim-value = cfgo.userGroup;

@@ -5,76 +5,87 @@ let
   inherit (config.security) ldap;
 in
 {
-  options.services.portunus = {
-    # maybe based on $service.ldap.enable && services.portunus.enable?
-    addToHosts = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Whether to add a hosts entry for the portunus domain pointing to externalIp";
+  options.services = {
+    dex = {
+      discoveryEndpoint = lib.mkOption {
+        type = lib.types.str;
+        default = "${config.services.dex.settings.issuer}/.well-known/openid-configuration";
+        defaultText = "$''{config.services.dex.settings.issuer}/.well-known/openid-configuration";
+        description = "The discover endpoint of dex";
+      };
     };
 
-    domain = lib.mkOption {
-      default = "";
-    };
-
-    internalIp4 = lib.mkOption {
-      type = with lib.types; nullOr str;
-      default = null;
-      description = "Internal IPv4 of portunus instance. This is used in the addToHosts option.";
-    };
-
-    internalIp6 = lib.mkOption {
-      type = with lib.types; nullOr str;
-      default = null;
-      description = "Internal IPv6 of portunus instance. This is used in the addToHosts option.";
-    };
-
-    ldapPreset = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Whether to set config.security.ldap to portunus specific settings.";
-    };
-
-    oauth2-proxy = {
-      configure = lib.mkOption {
+    portunus = {
+      # maybe based on $service.ldap.enable && services.portunus.enable?
+      addToHosts = lib.mkOption {
         type = lib.types.bool;
         default = false;
-        description = ''
-          Whether to configure oauth2-proxy to work together with Dex and Portunus as a backend.
-
-          If Portunus is enabled locally, the oidc client is configured in Dex, otherwise it must be done manually via `services.portunus.dex.oidcClients`.
-
-          Use `services.oauth2-proxy.nginx.virtualHosts` to configure the nginx virtual hosts that should require authentication.
-        '';
+        description = "Whether to add a hosts entry for the portunus domain pointing to externalIp";
       };
 
-      clientID = lib.mkOption {
+      domain = lib.mkOption {
+        default = "";
+      };
+
+      internalIp4 = lib.mkOption {
+        type = with lib.types; nullOr str;
+        default = null;
+        description = "Internal IPv4 of portunus instance. This is used in the addToHosts option.";
+      };
+
+      internalIp6 = lib.mkOption {
+        type = with lib.types; nullOr str;
+        default = null;
+        description = "Internal IPv6 of portunus instance. This is used in the addToHosts option.";
+      };
+
+      ldapPreset = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Whether to set config.security.ldap to portunus specific settings.";
+      };
+
+      oauth2-proxy = {
+        configure = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+          description = ''
+            Whether to configure oauth2-proxy to work together with Dex and Portunus as a backend.
+
+            If Portunus is enabled locally, the oidc client is configured in Dex, otherwise it must be done manually via `services.portunus.dex.oidcClients`.
+
+            Use `services.oauth2-proxy.nginx.virtualHosts` to configure the nginx virtual hosts that should require authentication.
+          '';
+        };
+
+        clientID = lib.mkOption {
+          type = lib.types.str;
+          default = "oauth2_proxy";
+          description = ''
+            The client ID oauth2-proxy will be using.
+            `-` is not allowed here, as it makes it impossible to configure the secret securely via an environment variable.
+          '';
+        };
+      };
+
+      removeAddGroup = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "When enabled, remove the function to add new Groups via the web ui, to enforce seeding usage.";
+      };
+
+      seedGroups = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Whether to seed groups configured in services as not member managed groups.";
+      };
+
+      webDomain = lib.mkOption {
         type = lib.types.str;
-        default = "oauth2_proxy";
-        description = ''
-          The client ID oauth2-proxy will be using.
-          `-` is not allowed here, as it makes it impossible to configure the secret securely via an environment variable.
-        '';
+        default = "";
+        example = "auth.example.com";
+        description = "The domain name to connect to, to visit the ldap server web interface and to which to issue cookies to.";
       };
-    };
-
-    removeAddGroup = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "When enabled, remove the function to add new Groups via the web ui, to enforce seeding usage.";
-    };
-
-    seedGroups = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Whether to seed groups configured in services as not member managed groups.";
-    };
-
-    webDomain = lib.mkOption {
-      type = lib.types.str;
-      default = "";
-      example = "auth.example.com";
-      description = "The domain name to connect to, to visit the ldap server web interface and to which to issue cookies to.";
     };
   };
 
