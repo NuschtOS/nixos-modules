@@ -10,6 +10,7 @@ in
       discoveryEndpoint = lib.mkOption {
         type = lib.types.str;
         default = "${config.services.dex.settings.issuer}/.well-known/openid-configuration";
+        defaultText = "$''{config.services.dex.settings.issuer}/.well-known/openid-configuration";
         description = "The discover endpoint of dex";
       };
     };
