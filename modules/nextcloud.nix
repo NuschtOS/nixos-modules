@@ -50,8 +50,7 @@ in
           "opcache.jit_buffer_size" = "128M";
         };
 
-        # TODO: drop when 23.11 support is not longer required
-        ${if options.services.nextcloud?settings then "settings" else "extraOptions"} = lib.mkMerge [
+        settings = lib.mkMerge [
           (lib.mkIf cfg.recommendedDefaults {
             # otherwise the Logging App does not function
             log_type = "file";
