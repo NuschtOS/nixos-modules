@@ -50,8 +50,7 @@ in
           "opcache.jit_buffer_size" = "128M";
         };
 
-        # TODO: drop when 23.11 support is not longer required
-        ${if options.services.nextcloud?settings then "settings" else "extraOptions"} = lib.mkMerge [
+        settings = lib.mkMerge [
           (lib.mkIf cfg.recommendedDefaults {
             # otherwise the Logging App does not function
             log_type = "file";
@@ -211,7 +210,8 @@ in
         ++ lib.optionals cfg.configureRecognize [
           gnumake # installation requirement
           nodejs_20 # runtime and installation requirement
-          nodejs_20.pkgs.node-pre-gyp # installation requirement
+          # TODO: drop with 23.11
+          (pkgs.node-pre-gyp or nodejs_20.pkgs.node-pre-gyp) # installation requirement
           python3 # requirement for node-pre-gyp otherwise fails with exit code 236
           util-linux # runtime requirement for taskset
         ];
