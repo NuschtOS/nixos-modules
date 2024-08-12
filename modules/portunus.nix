@@ -131,7 +131,9 @@ in
           buildGoModule = args: buildGoModule (args // {
             patches = args.patches or [ ] ++ [
               # remember session
-              (if (lib.versionAtLeast prev.dex-oidc.version "2.40") then
+              (if (lib.versionAtLeast prev.dex-oidc.version "2.41") then
+                ./dex-session-cookie-password-connector-2.41.patch
+              else if (lib.versionAtLeast prev.dex-oidc.version "2.40") then
                 ./dex-session-cookie-password-connector-2.40.patch
               else if (lib.versionAtLeast prev.dex-oidc.version "2.39") then
                 ./dex-session-cookie-password-connector-2.39.patch
@@ -148,7 +150,9 @@ in
               })
             ];
 
-            vendorHash = if lib.versionAtLeast prev.dex-oidc.version "2.40" then
+            vendorHash = if lib.versionAtLeast prev.dex-oidc.version "2.41" then
+              "sha256-a0F4itrposTBeI1XB0Ru3wBkw2zMBlsMhZUW8PuM1NA="
+            else if lib.versionAtLeast prev.dex-oidc.version "2.40" then
               "sha256-oxu3eNsjUGo6Mh6QybeGggsCZsZOGYo7nBD5ZU8MSy8="
             else if lib.versionAtLeast prev.dex-oidc.version "2.39" then
               "sha256-NgKZb2Oi4BInO/dSLzSUK722L/3pWQFWSNynjSj5sEE="
