@@ -39,7 +39,7 @@ in
               type = lib.types.enum [ "both" "ip4" "ip6" ];
               default = "both";
               example = "ip6";
-              description = "Wether to check the given URLs with ip4, ip6 or both.";
+              description = "Whether to check the given URLs with ip4, ip6 or both.";
             };
 
             statusCode = lib.mkOption {

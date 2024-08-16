@@ -20,7 +20,7 @@ in
         type = lib.types.bool;
         default = false;
         description = ''
-          Wether to add a default server which always responds with 404.
+          Whether to add a default server which always responds with 404.
           This is useful when using a wildcard cname with a wildcard certitificate to not return the first server entry in the config on unknown subdomains
           or to do the same for an old and not fully removed domain.
           The addresses to listen on are derived from services.nginx.defaultListenAddresses.
