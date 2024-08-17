@@ -56,7 +56,6 @@ in
         ];
       })).overrideAttrs ({ patches ? [ ], ... }: {
         patches = patches ++ lib.optionals cfg.recommendedDefaults [
-          ./home-assistant-increase-local_temperature_calibration.diff
           ./home-assistant-no-cloud.diff
         ] ++ lib.optionals cfg.ldap.enable [
           # expand command_line authentication provider
