@@ -171,6 +171,11 @@ in
       };
       "cron.delete_old_actions".ENABLED = true;
       "cron.delete_old_system_notices".ENABLED = true;
+      # TODO: upstream?
+      "cron.resync_all_sshkeys" = {
+        ENABLED = true;
+        RUN_AT_START = true;
+      };
       other.SHOW_FOOTER_VERSION = false;
       repository.ACCESS_CONTROL_ALLOW_ORIGIN = cfg.settings.server.DOMAIN;
       "repository.signing".DEFAULT_TRUST_MODEL = "committer";
