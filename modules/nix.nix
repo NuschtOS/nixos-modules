@@ -47,8 +47,6 @@ in
       systemd-boot.extraInstallCommands = lib.mkIf cfg.diffSystem diffBoot;
     };
 
-    # based on https://github.com/numtide/srvos/blob/main/nixos/roles/nix-remote-builder.nix
-    # and https://discourse.nixos.org/t/wrapper-to-restrict-builder-access-through-ssh-worth-upstreaming/25834
     nix.settings = {
       builders-use-substitutes = lib.mkIf cfg.recommendedDefaults true;
       connect-timeout = lib.mkIf cfg.recommendedDefaults 20;
@@ -59,6 +57,8 @@ in
     # flakes require a git in PATH
     programs.git.enable = lib.mkIf cfg.recommendedDefaults true;
 
+    # based on https://github.com/numtide/srvos/blob/main/nixos/roles/nix-remote-builder.nix
+    # and https://discourse.nixos.org/t/wrapper-to-restrict-builder-access-through-ssh-worth-upstreaming/25834
     users.users.${cfg.remoteBuilder.name} = lib.mkIf cfg.remoteBuilder.enable {
       group = "nogroup";
       isNormalUser = true;
