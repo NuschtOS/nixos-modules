@@ -47,8 +47,6 @@ in
       systemd-boot.extraInstallCommands = lib.mkIf cfg.diffSystem diffBoot;
     };
 
-    environment.systemPackages = lib.mkIf cfg.recommendedDefaults (with pkgs; lib.mkBefore [ git ]);
-
     # based on https://github.com/numtide/srvos/blob/main/nixos/roles/nix-remote-builder.nix
     # and https://discourse.nixos.org/t/wrapper-to-restrict-builder-access-through-ssh-worth-upstreaming/25834
     nix.settings = {
@@ -57,6 +55,9 @@ in
       experimental-features = lib.mkIf cfg.recommendedDefaults [ "nix-command" "flakes" ];
       trusted-users = lib.mkIf cfg.remoteBuilder.enable (lib.mkOptionDefault [ cfg.remoteBuilder.name ]);
     };
+
+    # flakes require a git in PATH
+    programs.git.enable = lib.mkIf cfg.recommendedDefaults true;
 
     users.users.${cfg.remoteBuilder.name} = lib.mkIf cfg.remoteBuilder.enable {
       group = "nogroup";
