@@ -1,4 +1,4 @@
-{ config, lib, libS, ... }:
+{ config, lib, libS, options, ... }:
 
 let
   cfg = config.slim;
@@ -20,8 +20,9 @@ in
     # durring testing only 550K-650K of the tmpfs where used
     security.wrapperDirSize = "10M";
 
-    services = {
+    services = lib.optionalAttrs (options.services?orca) {
       orca.enable = false; # requires speechd
+    } // lib.optionalAttrs (options.services?speechd) {
       speechd.enable = false; # voice files are big and fat
     };
   };
