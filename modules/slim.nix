@@ -23,6 +23,6 @@ in
     services = {
       orca.enable = false; # requires speechd
       speechd.enable = false; # voice files are big and fat
-    }:
+    };
   };
 }
