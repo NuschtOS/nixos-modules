@@ -19,5 +19,10 @@ in
 
     # durring testing only 550K-650K of the tmpfs where used
     security.wrapperDirSize = "10M";
+
+    services = {
+      orca.enable = false; # requires speechd
+      speechd.enable = false; # voice files are big and fat
+    };
   };
 }
