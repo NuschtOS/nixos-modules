@@ -82,6 +82,8 @@
       libva = super.libva-minimal;
       limesuite = super.limesuite.override { withGui = false; };
       mc = super.mc.override { x11Support = false; };
+      # TODO: upstream as toggle
+      mesa = super.mesa.override { wayland = null; wayland-protocols = null; };
       mpv-unwrapped = super.mpv-unwrapped.override { drmSupport = false; screenSaverSupport = false; sdl2Support = false; vulkanSupport = false; waylandSupport = false; x11Support = false; };
       msmtp = super.msmtp.override { withKeyring = false; };
       mupdf = super.mupdf.override { enableGL = false; enableX11 = false; };
@@ -113,6 +115,8 @@
       util-linux = super.util-linux.override { translateManpages = false; };
       vim-full = super.vim-full.override { guiSupport = false; };
       vte = super.vte.override { gtkVersion = null; };
+      # TODO: upstream as toggle
+      vulkan-loader = super.vulkan-loader.override { wayland = null; };
       zbar = super.zbar.override { enableVideo = false; withXorg = false; };
     }));
   };
