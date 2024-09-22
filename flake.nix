@@ -37,6 +37,16 @@
         inherit (lib'.ssh) mkPubKey;
       };
 
+      nixosConfigurations.test = lib.nixosSystem {
+        modules = [
+          self.nixosModule
+          ({ modulesPath, ... }: {
+            imports = lib.singleton "${modulesPath}/installer/cd-dvd/installation-cd-minimal.nix";
+          })
+        ];
+        system = "x86_64-linux";
+      };
+
       # NOTE: requires libS to be imported once which can be done like:
       # _module.args.libS = lib.mkOverride 1001 (nixos-modules.lib { inherit lib config; });
       nixosModules = lib.foldr (a: b: a // b) { } (map
