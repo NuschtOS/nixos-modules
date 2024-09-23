@@ -117,6 +117,7 @@
       vte = prev.vte.override { gtkVersion = null; };
       # TODO: upstream as toggle
       vulkan-loader = prev.vulkan-loader.override { wayland = null; };
+      wayland = prev.wayland.override { withDocumentation = false; };
       zbar = prev.zbar.override { enableVideo = false; withXorg = false; };
     }));
   };
