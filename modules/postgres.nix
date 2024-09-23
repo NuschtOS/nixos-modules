@@ -13,7 +13,7 @@ in
       description = ''
         List of all databases.
 
-        This option is used eg. when intalling extensions like pg_stat_stements in all databases.
+        This option is used eg. when installing extensions like pg_stat_stements in all databases.
 
         ::: {.note}
         `services.postgresql.ensureDatabases` and `postgres` are automatically added.
@@ -120,7 +120,7 @@ in
         '') (lib.splitString "," cfg.settings.shared_preload_libraries)))
         cfg.databases));
 
-      # reduce downtime for dependend services
+      # reduce downtime for dependent services
       stopIfChanged = lib.mkIf cfg.recommendedDefaults false;
     };
   };
