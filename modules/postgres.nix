@@ -21,6 +21,18 @@ in
       '';
     };
 
+    ensureUsers = lib.mkOption {
+      type = lib.types.listOf (lib.types.submodule {
+        options = {
+          ensurePasswordFile = lib.mkOption {
+            type = lib.types.nullOr lib.types.path;
+            default = null;
+            description = "Path to a file containing the password of the user.";
+          };
+        };
+      });
+    };
+
     recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
 
     refreshCollation = libS.mkOpinionatedOption "refresh collation on startup. This prevents errors when initializing new DBs after a glibc upgrade";
@@ -126,6 +138,17 @@ in
 
           $PSQL -tAc 'ALTER DATABASE template1 REFRESH COLLATION VERSION'
         ''))
+
+        (lib.concatMapStrings (user: lib.optionalString (user.ensurePasswordFile != null) /* psql */ ''
+          $PSQL -tA <<'EOF'
+            DO $$
+            DECLARE password TEXT;
+            BEGIN
+              password := trim(both from replace(pg_read_file('${user.ensurePasswordFile}'), E'\n', '''));
+              EXECUTE format('ALTER ROLE ${user.name} WITH PASSWORD '''%s''';', password);
+            END $$;
+          EOF
+        '') cfg.ensureUsers)
 
         # install/update pg_stat_statements extension in all databases
         # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
