@@ -2,6 +2,7 @@
 
 let
   cfg = config.services.hound;
+  settingsAvailable = lib.versionAtLeast lib.version "24.11";
 in
 {
   options = {
@@ -18,12 +19,19 @@ in
   };
 
   config = lib.mkIf (cfg.enable && cfg.repos != [ ]) {
-    services.hound.settings = {
-      vcs-config.git.detect-ref = true;
-      repos = lib.listToAttrs (map (url: lib.nameValuePair
-        (lib.removeSuffix ".git" (builtins.baseNameOf url))
-        { inherit url; }
-      ) cfg.repos);
+    assertions = [ {
+      assertion = settingsAvailable;
+      message = "services.hound.repo only works with NixOS 24.11 and up. Please unset the option.";
+    } ];
+
+    services.hound = lib.optionalAttrs settingsAvailable {
+      settings = {
+        vcs-config.git.detect-ref = true;
+        repos = lib.listToAttrs (map (url: lib.nameValuePair
+          (lib.removeSuffix ".git" (builtins.baseNameOf url))
+          { inherit url; }
+        ) cfg.repos);
+      };
     };
   };
 }
