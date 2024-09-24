@@ -25,16 +25,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: cachix/install-nix-action@V28
 
       - name: eval ${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
-        if: matrix.targets.branch != 'nixos-unstable'
+        if: matrix.targets.repo != 'NuschtOS/nuschtpkgs' && matrix.targets.branch != 'nixos-unstable'
         run: |
           nix eval -L .#nixosConfigurations.test.config.system.build.toplevel \
             --override-input nixpkgs github:${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
 
       - name: eval flake lock
-        if: matrix.targets.branch == 'nixos-unstable'
+        if: matrix.targets.repo == 'NuschtOS/nuschtpkgs' && matrix.targets.branch == 'nixos-unstable'
         run: |
           nix eval -L .#nixosConfigurations.test.config.system.build.toplevel
