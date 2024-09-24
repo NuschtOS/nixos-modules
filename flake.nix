@@ -3,6 +3,7 @@
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
+    # if changed, also update .github/workflows/flake-eval.yaml
     nixpkgs.url = "github:NuschtOS/nuschtpkgs/nixos-unstable";
     search = {
       url = "github:nuschtos/search";
