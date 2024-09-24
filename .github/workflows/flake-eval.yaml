@@ -18,9 +18,15 @@ jobs:
             branch: nixos-24.05
           - repo: NixOS/nixpkgs
             branch: nixos-unstable
+
           - repo: NuschtOS/nuschtpkgs
             branch: nixos-24.05
           - repo: NuschtOS/nuschtpkgs
+            branch: backports-24.05
+          - repo: NuschtOS/nuschtpkgs
+            branch: nixos-unstable
+
+          - repo: SuperSandro2000/nixpkgs
             branch: nixos-unstable
 
     steps:
