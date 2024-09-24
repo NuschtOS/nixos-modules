@@ -1,4 +1,4 @@
-{ config, lib, libS, options, ... }:
+{ config, lib, libS, options, pkgs, ... }:
 
 let
   cfg = config.slim;
@@ -17,7 +17,17 @@ in
 
     environment.defaultPackages = lib.mkForce [ ];
 
-    # durring testing only 550K-650K of the tmpfs where used
+    nixpkgs.overlays = lib.mkIf (!config.programs.thunderbird.enable or true) [
+      (_final: prev: {
+        thunderbird = prev.thunderbird.override { cfg.speechSynthesisSupport = false; };
+      })
+    ];
+
+  } // lib.optionalAttrs (lib.versionAtLeast lib.version "24.11") {
+    programs.thunderbird.package = pkgs.thunderbird.override { cfg.speechSynthesisSupport = false; };
+  } // {
+
+    # during testing only 550K-650K of the tmpfs where used
     security.wrapperDirSize = "10M";
 
     services = lib.optionalAttrs (options.services?orca) {
