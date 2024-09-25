@@ -13,7 +13,7 @@ in
       description = ''
         List of all databases.
 
-        This option is used eg. when intalling extensions like pg_stat_stements in all databases.
+        This option is used eg. when installing extensions like pg_stat_stements in all databases.
 
         ::: {.note}
         `services.postgresql.ensureDatabases` and `postgres` are automatically added.
@@ -21,7 +21,21 @@ in
       '';
     };
 
+    ensureUsers = lib.mkOption {
+      type = lib.types.listOf (lib.types.submodule {
+        options = {
+          ensurePasswordFile = lib.mkOption {
+            type = lib.types.nullOr lib.types.path;
+            default = null;
+            description = "Path to a file containing the password of the user.";
+          };
+        };
+      });
+    };
+
     recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
+
+    refreshCollation = libS.mkOpinionatedOption "refresh collation on startup. This prevents errors when initializing new DBs after a glibc upgrade";
 
     upgrade = {
       enable = libS.mkOpinionatedOption "install the upgrade-pg-cluster script to update postgres";
@@ -111,16 +125,43 @@ in
     };
 
     systemd.services.postgresql = {
-      # install/update pg_stat_statements extension in all databases
-      # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
-      postStart = lib.mkIf cfg.configurePgStatStatements (lib.concatStrings (map (db:
-        (lib.concatMapStringsSep "\n" (ext: /* bash */ ''
-          $PSQL -tAd "${db}" -c "CREATE EXTENSION IF NOT EXISTS ${ext}"
-          $PSQL -tAd "${db}" -c "ALTER EXTENSION ${ext} UPDATE"
-        '') (lib.splitString "," cfg.settings.shared_preload_libraries)))
-        cfg.databases));
+      postStart = lib.mkMerge [
+        (lib.mkIf cfg.refreshCollation (lib.mkBefore /* bash */ ''
+          # copied from upstream due to the lack of extensibility
+          # TODO: improve this upstream?
+          PSQL="psql --port=${toString cfg.settings.port}"
 
-      # reduce downtime for dependend services
+          while ! $PSQL -d postgres -c "" 2> /dev/null; do
+            if ! kill -0 "$MAINPID"; then exit 1; fi
+            sleep 0.1
+          done
+
+          $PSQL -tAc 'ALTER DATABASE template1 REFRESH COLLATION VERSION'
+        ''))
+
+        (lib.concatMapStrings (user: lib.optionalString (user.ensurePasswordFile != null) /* psql */ ''
+          $PSQL -tA <<'EOF'
+            DO $$
+            DECLARE password TEXT;
+            BEGIN
+              password := trim(both from replace(pg_read_file('${user.ensurePasswordFile}'), E'\n', '''));
+              EXECUTE format('ALTER ROLE ${user.name} WITH PASSWORD '''%s''';', password);
+            END $$;
+          EOF
+        '') cfg.ensureUsers)
+
+        # install/update pg_stat_statements extension in all databases
+        # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
+        (lib.mkIf cfg.configurePgStatStatements (lib.concatStrings (map (db:
+          (lib.concatMapStringsSep "\n" (ext: /* bash */ ''
+            $PSQL -tAd "${db}" -c "CREATE EXTENSION IF NOT EXISTS ${ext}"
+            $PSQL -tAd "${db}" -c "ALTER EXTENSION ${ext} UPDATE"
+          '') (lib.splitString "," cfg.settings.shared_preload_libraries)))
+          cfg.databases))
+        )
+      ];
+
+      # reduce downtime for dependent services
       stopIfChanged = lib.mkIf cfg.recommendedDefaults false;
     };
   };
