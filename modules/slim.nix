@@ -8,7 +8,7 @@ in
     enable = libS.mkOpinionatedOption "disable some usual rarely used things to slim down the system";
   };
 
-  config = lib.mkIf cfg.enable {
+  config = lib.mkIf cfg.enable ({
     documentation = {
       # html docs and info are not required, man pages are enough
       doc.enable = false;
@@ -35,5 +35,5 @@ in
     } // lib.optionalAttrs (options.services?speechd) {
       speechd.enable = false; # voice files are big and fat
     };
-  };
+  });
 }
