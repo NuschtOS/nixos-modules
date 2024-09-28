@@ -65,6 +65,11 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [ {
+      assertion = cfg.refreshCollation -> lib.versionAtLeast cfg.package.version "15";
+      message = "services.postgresql.refreshCollation requires at least PostgreSQL version 15";
+    } ];
+
     environment.systemPackages = lib.optional cfgu.enable (
       let
         # conditions copied from nixos/modules/services/databases/postgresql.nix
@@ -104,8 +109,9 @@ in
 
           Run the following commands after setting:
           services.postgresql.package = pkgs.postgresql_${lib.versions.major cfgu.newPackage.version}
-              sudo -u postgres vacuumdb --all --analyze-in-stages
-              ${newData}/delete_old_cluster.sh
+
+          sudo -u postgres vacuumdb --all --analyze-in-stages
+          ${newData}/delete_old_cluster.sh
         "
       ''
     );
