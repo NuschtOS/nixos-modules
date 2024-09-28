@@ -3,6 +3,7 @@
 let
   cfg = config.services.postgresql;
   cfgu = config.services.postgresql.upgrade;
+  latestVersion = "16";
 in
 {
   options.services.postgresql = {
@@ -47,7 +48,7 @@ in
       };
 
       newPackage = (lib.mkPackageOption pkgs "postgresql" {
-        default = [ "postgresql_16" ];
+        default = [ "postgresql_${latestVersion}" ];
       }) // {
         description = ''
           The postgres package to which should be updated.
@@ -69,6 +70,9 @@ in
       assertion = cfg.refreshCollation -> lib.versionAtLeast cfg.package.version "15";
       message = "services.postgresql.refreshCollation requires at least PostgreSQL version 15";
     } ];
+
+    warnings = lib.optional (lib.versionOlder cfg.package.version latestVersion)
+      "You are are running PostgreSQL version ${cfg.package.version} but the latest version is ${latestVersion}. Consider upgrading :)";
 
     environment.systemPackages = lib.optional cfgu.enable (
       let
