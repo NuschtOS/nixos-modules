@@ -43,7 +43,11 @@ in
 
     rotateLogsFaster = libS.mkOpinionatedOption "keep logs only for 7 days and rotate them daily";
 
-    setHSTSHeader = libS.mkOpinionatedOption "add the HSTS header to all virtual hosts";
+    hstsHeader = {
+      enable = libS.mkOpinionatedOption "add the `Strict-Transport-Security` (HSTS) header to all virtual hosts";
+
+      includeSubDomains = lib.mkEnableOption "add `includeSubDomains` to the `Strict-Transport-Security` header";
+    };
 
     tcpFastOpen = libS.mkOpinionatedOption "enable tcp fast open";
 
@@ -68,8 +72,8 @@ in
           locations = lib.mkOption {
             type = with lib.types; attrsOf (submodule {
               options.extraConfig = lib.mkOption { };
-              config.extraConfig = lib.mkIf cfg.setHSTSHeader (/* nginx */ ''
-                more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
+              config.extraConfig = lib.mkIf cfg.hstsHeader.enable (/* nginx */ ''
+                more_set_headers "Strict-Transport-Security: max-age=63072000; ${lib.optionalString cfg.hstsHeader.includeSubDomains "includeSubDomains; "}preload";
               '' + cfg.commonServerConfig + cfgv.commonLocationsConfig);
             });
           };
@@ -82,6 +86,7 @@ in
     (lib.mkRenamedOptionModule [ "services" "nginx" "allCompression" ] [ "services" "nginx" "allRecommendOptions" ])
     (lib.mkRenamedOptionModule [ "services" "nginx" "quic" "bpf" ] [ "services" "nginx" "enableQuicBPF" ])
     (lib.mkRenamedOptionModule [ "services" "nginx" "quic" "enable" ] [ "services" "nginx" "configureQuic" ])
+    (lib.mkRenamedOptionModule [ "services" "nginx" "setHSTSHeader" ] [ "services" "nginx" "hstsHeader" "enable" ])
   ];
 
   config = lib.mkIf cfg.enable {
