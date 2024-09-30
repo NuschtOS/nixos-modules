@@ -90,11 +90,11 @@ in
   ];
 
   config = lib.mkIf cfg.enable {
-    assertions = lib.mkIf cfg.setHSTSHeader (lib.attrValues (lib.mapAttrs (host: hostConfig: {
+    assertions = lib.mkIf cfg.hstsHeader.enable (lib.attrValues (lib.mapAttrs (host: hostConfig: {
       assertion = (lib.length (lib.attrNames hostConfig.locations)) == 0 -> hostConfig.root == null;
       message = let
         name = ''services.nginx.virtualHosts."${host}"'';
-      in "Use ${name}.locations./.root instead of ${name}.root to properly apply .locations.*.extraConfig set by services.nginx.setHSTSHeader";
+      in "Use ${name}.locations./.root instead of ${name}.root to properly apply .locations.*.extraConfig set by services.nginx.hstsHeader.enable";
     }) cfg.virtualHosts));
 
     boot.kernel.sysctl = lib.mkIf cfg.tcpFastOpen {
