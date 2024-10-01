@@ -146,7 +146,7 @@ in
             sleep 0.1
           done
 
-          $PSQL -tAc 'ALTER DATABASE template1 REFRESH COLLATION VERSION'
+          $PSQL -tAc 'ALTER DATABASE "template1" REFRESH COLLATION VERSION'
         ''))
 
         (lib.concatMapStrings (user: lib.optionalString (user.ensurePasswordFile != null) /* psql */ ''
@@ -166,9 +166,12 @@ in
           (lib.concatMapStringsSep "\n" (ext: /* bash */ ''
             $PSQL -tAd "${db}" -c "CREATE EXTENSION IF NOT EXISTS ${ext}"
             $PSQL -tAd "${db}" -c "ALTER EXTENSION ${ext} UPDATE"
-          '') (lib.splitString "," cfg.settings.shared_preload_libraries)))
-          cfg.databases))
-        )
+          '') (lib.splitString "," cfg.settings.shared_preload_libraries))
+        ) cfg.databases)))
+
+        (lib.mkIf cfg.refreshCollation (lib.concatStrings (map (db: ''
+          $PSQL -tAc 'ALTER DATABASE "${db}" REFRESH COLLATION VERSION'
+        '') cfg.databases)))
       ];
 
       # reduce downtime for dependent services
