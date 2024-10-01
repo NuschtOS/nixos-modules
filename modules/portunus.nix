@@ -2,6 +2,8 @@
 
 let
   cfg = config.services.portunus;
+  cfgd = config.services.dex;
+  cfgo = config.services.oauth2-proxy;
   inherit (config.security) ldap;
 in
 {
@@ -9,7 +11,7 @@ in
     dex = {
       discoveryEndpoint = lib.mkOption {
         type = lib.types.str;
-        default = "${config.services.dex.settings.issuer}/.well-known/openid-configuration";
+        default = "${cfgd.settings.issuer}/.well-known/openid-configuration";
         defaultText = "$''{config.services.dex.settings.issuer}/.well-known/openid-configuration";
         description = "The discover endpoint of dex";
       };
@@ -96,7 +98,7 @@ in
   config = {
     assertions = [
       {
-        assertion = cfg.oauth2-proxy.configure -> config.services.oauth2-proxy.keyFile != null;
+        assertion = cfg.oauth2-proxy.configure -> cfgo.keyFile != null;
         message = ''
           Setting services.portunus.configureOAuth2Proxy to true requires to set service.oauth2-proxy.keyFile
           to a file that contains `OAUTH2_PROXY_CLIENT_SECRET` and `OAUTH2_PROXY_COOKIE_SECRET`.
@@ -183,12 +185,12 @@ in
         # if Portunus is not enabled locally, its domain is most likely wrong
         nginx.domain = lib.mkIf cfg.enable cfg.webDomain;
         provider = "oidc";
-        redirectURL = "https://${config.services.oauth2-proxy.nginx.domain}/oauth2/callback";
+        redirectURL = "https://${cfgo.nginx.domain}/oauth2/callback";
         reverseProxy = true;
         upstream = "http://127.0.0.1:4181";
         extraConfig = {
           exclude-logging-path = "/oauth2/static/css/all.min.css,/oauth2/static/css/bulma.min.css";
-          oidc-issuer-url = config.services.dex.settings.issuer;
+          oidc-issuer-url = cfgd.settings.issuer;
           provider-display-name = "Portunus";
         };
       };
@@ -196,7 +198,7 @@ in
       portunus.dex = lib.mkIf (cfg.enable && cfg.oauth2-proxy.configure) {
         enable = true;
         oidcClients = [{
-          callbackURL = config.services.oauth2-proxy.redirectURL;
+          callbackURL = cfgo.redirectURL;
           id = cfg.oauth2-proxy.clientID;
         }];
       };
