@@ -192,6 +192,8 @@ in
           exclude-logging-path = "/oauth2/static/css/all.min.css,/oauth2/static/css/bulma.min.css";
           oidc-issuer-url = cfgd.settings.issuer;
           provider-display-name = "Portunus";
+          # checking for groups requires next to the default scopes also the `groups` scope, otherwise all authentication tries fail
+          scope = lib.mkIf (lib.any (x: x.allowed_groups != null) (lib.attrValues cfgo.nginx.virtualHosts)) "openid email profile groups";
         };
       };
 
