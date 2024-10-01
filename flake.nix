@@ -86,6 +86,9 @@
                 libS = self.lib { inherit config lib; };
                 inherit pkgs;
               };
+              imports = [
+                (pkgs.path + "/nixos/modules/misc/extra-arguments.nix")
+              ];
             })
             self.nixosModule
           ];
