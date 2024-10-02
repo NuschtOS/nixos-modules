@@ -1,4 +1,4 @@
-{ config, lib, libS, pkgs, ... }:
+{ config, lib, libS, pkgs, utils, ... }:
 
 let
   cfg = config.services.postgresql;
@@ -61,6 +61,28 @@ in
         default = [ ];
         example = [ "hedgedoc" "hydra" "nginx" ];
         description = "Systemd services to stop when upgrade is started.";
+      };
+    };
+
+    vacuumAnalyzeTimer = {
+      enable = libS.mkOpinionatedOption "timer to run VACUUM ANALYZE on all DBs";
+
+      timerConfig = lib.mkOption {
+        type = lib.types.nullOr (lib.types.attrsOf utils.systemdUtils.unitOptions.unitOption);
+        default = {
+          OnCalendar = "03:00";
+          Persistent = true;
+          RandomizedDelaySec = "30m";
+        };
+        example = {
+          OnCalendar = "06:00";
+          Persistent = true;
+          RandomizedDelaySec = "5h";
+        };
+        description = ''
+          When to run the VACUUM ANALYZE.
+          See {manpage}`systemd.timer(5)` for details.
+        '';
       };
     };
   };
@@ -134,48 +156,68 @@ in
       };
     };
 
-    systemd.services.postgresql = {
-      postStart = lib.mkMerge [
-        (lib.mkIf cfg.refreshCollation (lib.mkBefore /* bash */ ''
-          # copied from upstream due to the lack of extensibility
-          # TODO: improve this upstream?
-          PSQL="psql --port=${toString cfg.settings.port}"
+    systemd = {
+      services = {
+        postgresql = {
+          postStart = lib.mkMerge [
+            (lib.mkIf cfg.refreshCollation (lib.mkBefore /* bash */ ''
+              # copied from upstream due to the lack of extensibility
+              # TODO: improve this upstream?
+              PSQL="psql --port=${toString cfg.settings.port}"
 
-          while ! $PSQL -d postgres -c "" 2> /dev/null; do
-            if ! kill -0 "$MAINPID"; then exit 1; fi
-            sleep 0.1
-          done
+              while ! $PSQL -d postgres -c "" 2> /dev/null; do
+                if ! kill -0 "$MAINPID"; then exit 1; fi
+                sleep 0.1
+              done
 
-          $PSQL -tAc 'ALTER DATABASE "template1" REFRESH COLLATION VERSION'
-        ''))
+              $PSQL -tAc 'ALTER DATABASE "template1" REFRESH COLLATION VERSION'
+            ''))
 
-        (lib.concatMapStrings (user: lib.optionalString (user.ensurePasswordFile != null) /* psql */ ''
-          $PSQL -tA <<'EOF'
-            DO $$
-            DECLARE password TEXT;
-            BEGIN
-              password := trim(both from replace(pg_read_file('${user.ensurePasswordFile}'), E'\n', '''));
-              EXECUTE format('ALTER ROLE ${user.name} WITH PASSWORD '''%s''';', password);
-            END $$;
-          EOF
-        '') cfg.ensureUsers)
+            (lib.concatMapStrings (user: lib.optionalString (user.ensurePasswordFile != null) /* psql */ ''
+              $PSQL -tA <<'EOF'
+                DO $$
+                DECLARE password TEXT;
+                BEGIN
+                  password := trim(both from replace(pg_read_file('${user.ensurePasswordFile}'), E'\n', '''));
+                  EXECUTE format('ALTER ROLE ${user.name} WITH PASSWORD '''%s''';', password);
+                END $$;
+              EOF
+            '') cfg.ensureUsers)
 
-        # install/update pg_stat_statements extension in all databases
-        # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
-        (lib.mkIf cfg.configurePgStatStatements (lib.concatStrings (map (db:
-          (lib.concatMapStringsSep "\n" (ext: /* bash */ ''
-            $PSQL -tAd "${db}" -c "CREATE EXTENSION IF NOT EXISTS ${ext}"
-            $PSQL -tAd "${db}" -c "ALTER EXTENSION ${ext} UPDATE"
-          '') (lib.splitString "," cfg.settings.shared_preload_libraries))
-        ) cfg.databases)))
+            # install/update pg_stat_statements extension in all databases
+            # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
+            (lib.mkIf cfg.configurePgStatStatements (lib.concatStrings (map (db:
+              (lib.concatMapStringsSep "\n" (ext: /* bash */ ''
+                $PSQL -tAd "${db}" -c "CREATE EXTENSION IF NOT EXISTS ${ext}"
+                $PSQL -tAd "${db}" -c "ALTER EXTENSION ${ext} UPDATE"
+              '') (lib.splitString "," cfg.settings.shared_preload_libraries))
+            ) cfg.databases)))
 
-        (lib.mkIf cfg.refreshCollation (lib.concatStrings (map (db: ''
-          $PSQL -tAc 'ALTER DATABASE "${db}" REFRESH COLLATION VERSION'
-        '') cfg.databases)))
-      ];
+            (lib.mkIf cfg.refreshCollation (lib.concatStrings (map (db: ''
+              $PSQL -tAc 'ALTER DATABASE "${db}" REFRESH COLLATION VERSION'
+            '') cfg.databases)))
+          ];
 
-      # reduce downtime for dependent services
-      stopIfChanged = lib.mkIf cfg.recommendedDefaults false;
+          # reduce downtime for dependent services
+          stopIfChanged = lib.mkIf cfg.recommendedDefaults false;
+        };
+
+        postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
+          description = "Vacuum and analyze all PostgreSQL databases";
+          after = [ "postgresql.service" ];
+          requires = [ "postgresql.service" ];
+          serviceConfig = {
+            ExecStart = "${lib.getExe' cfg.package "psql"} --port=${builtins.toString cfg.settings.port} -tAc 'VACUUM ANALYZE'";
+            User = "postgres";
+          };
+          wantedBy = [ "timers.target" ];
+        };
+      };
+
+       timers.postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
+         inherit (cfg.vacuumAnalyzeTimer) timerConfig;
+         wantedBy = [ "timers.target" ];
+       };
     };
   };
 }
