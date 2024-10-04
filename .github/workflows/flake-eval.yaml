@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v29
+      - uses: cachix/install-nix-action@v30
 
       - name: eval ${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
         if: matrix.targets.repo != 'NuschtOS/nuschtpkgs' && matrix.targets.branch != 'nixos-unstable'
