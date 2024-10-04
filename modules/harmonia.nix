@@ -6,7 +6,7 @@ in
 {
   options = {
     services.harmonia = {
-      configureNginx = libS.mkOpinionatedOption "configure nginx";
+      configureNginx = lib.mkEnableOption "configure nginx for harmonia";
 
       domain = lib.mkOption {
         type = lib.types.str;
