@@ -17,7 +17,7 @@ in
   };
 
   config.services.hedgedoc.settings.ldap = lib.mkIf cfg.enable {
-    url = "ldaps://${ldap.domainName}:${toString ldap.port}";
+    url = ldap.serverURI;
     bindDn = ldap.bindDN;
     bindCredentials = "$bindCredentials";
     searchBase = ldap.userBaseDN;

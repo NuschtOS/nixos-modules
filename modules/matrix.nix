@@ -117,7 +117,7 @@ in
         config = {
           enabled = true;
           mode = "search";
-          uri = "ldaps://${ldap.domainName}:${toString ldap.port}";
+          uri = ldap.serverURI;
           base = ldap.userBaseDN;
           attributes = {
             uid = ldap.userField;
