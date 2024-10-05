@@ -112,6 +112,14 @@ in
           '';
         };
 
+        serverURI = lib.mkOption {
+          type = lib.types.str;
+          default = "ldaps://${cfg.domainName}:${toString cfg.port}";
+          defaultText = "ldaps://$''{config.security.ldap.domainName}:$''{config.security.ldap.port}";
+          example = "ldap://$''{config.security.ldap.domainName}";
+          description = "The ldap server URI";
+        };
+
         sshPublicKeyField = lib.mkOption {
           type = lib.types.str;
           example = "sshPublicKey";

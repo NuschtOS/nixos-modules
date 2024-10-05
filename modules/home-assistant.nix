@@ -129,7 +129,7 @@ in
             FILTER="${ldap.groupFilter cfg.ldap.userGroup}"
             NAME_ATTR="${ldap.userField}"
             SCOPE="base"
-            SERVER="ldaps://${ldap.domainName}"
+            SERVER="${ldap.serverURI}"
             USERDN="uid=$(ldap_dn_escape "$username"),${ldap.userBaseDN}"
             BASEDN="$USERDN"
 
