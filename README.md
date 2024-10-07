@@ -1,6 +1,27 @@
 # NixOS Modules
 
-Opinionated, integrated and shared NixOS modules
+Collection of opinionated, integrated and shared NixOS modules.
+
+This includes features like:
+- Backend independent LDAP/OAuth2 abstraction with service integration
+- A continuation of environment.noXLibs named environment.noGraphicsPackages
+- Easy Postgres upgrades between major versions and installation of `pg_stat_statements` extension in all databases
+- Easy integration of Matrix Synapse, Element Web, Sliding Sync Proxy and extra oembed providers
+- Configure extra dependencies in Nextcloud for the Recognize and Memories Apps and properly setup preview generation
+- Restricted nix remote builders which can only execute remote builds
+- More opinionated integrations on top of Portunus (Simple LDAP frontend), dex and oauth2-proxy
+
+and many smaller integrations like:
+
+- git-delta
+- Harmonia Nginx
+- Intel hardware acceleration
+- Mailman PostgreSQL
+- Nginx TCP fast open
+- Nix diff system on activation and dry-activation
+- easy configuration of HTTP/HTTPS targets in Prometheus blackbox exporter
+- Vaultwarden Nginx and Postgres
+- ... and much more!
 
 ## Usage
 
@@ -31,10 +52,18 @@ By using `nixos-modules.nixosModule`, all available modules are imported.
 It is also possible to only import a subset of modules.
 Under `nixos-modules.nixosModules.<name>` we expose all modules available in the modules directory.
 
-> [!NOTE]
-> Sometimes we use options from yet-to-be-merged Nixpkgs pull requests.
-> We offer a nixpkgs fork named [nüschtpkgs](https://github.com/NuschtOS/nuschtpkgs) to close that gap.
-> We offer the latest stable branch and unstable and it is daily rebased.
+## Available options
+
+Please use our [options search site](https://modules.nüschtos.de/) to find and browse all available options. It supports searching for option names, wildcards and can be [self hosted](https://github.com/NuschtOS/search), too.
+
+## Compatibility note
+
+Sometimes we use options from yet-to-be-merged Nixpkgs pull requests.
+Normally that fails evaluation because lib.mkIf also checks the types if the condition is false.
+This can be hacked around by using `lib.optional*` or `if ... then ... else ...` but then the option does not work.
+To close that gap we offer a nixpkgs fork named [nüschtpkgs](https://github.com/NuschtOS/nuschtpkgs).
+It contains the latest stable branch and unstable and it is daily rebased.
+We use CI checks to ensure that the modules evaluate on the current stable and unstable branch and some selected forks.
 
 ## Design
 
@@ -44,5 +73,5 @@ Under `nixos-modules.nixosModules.<name>` we expose all modules available in the
 
 ## Similar projects
 
-* <https://github.com/numtide/srvos>
+* <https://github.com/nix-community/srvos>
 * <https://gitea.c3d2.de/C3D2/nix-user-module>
