@@ -82,8 +82,14 @@
       libva = prev.libva-minimal;
       limesuite = prev.limesuite.override { withGui = false; };
       mc = prev.mc.override { x11Support = false; };
-      # TODO: upstream as toggle
-      mesa = prev.mesa.override { wayland = null; wayland-protocols = null; };
+      # TODO: remove when https://github.com/NixOS/nixpkgs/pull/344318 is merged
+      mesa = (prev.mesa.override { eglPlatforms = [ ]; }).overrideAttrs ({ mesonFlags, ... }:{
+        mesonFlags = mesonFlags ++ [
+          (lib.mesonEnable "gallium-vdpau" false)
+          (lib.mesonEnable "glx" false)
+          (lib.mesonEnable "xlib-lease" false)
+        ];
+      });
       mpv-unwrapped = prev.mpv-unwrapped.override { drmSupport = false; screenSaverSupport = false; sdl2Support = false; vulkanSupport = false; waylandSupport = false; x11Support = false; };
       msmtp = prev.msmtp.override { withKeyring = false; };
       mupdf = prev.mupdf.override { enableGL = false; enableX11 = false; };
