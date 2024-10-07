@@ -178,7 +178,7 @@ in
           '';
         };
 
-        phpfpm-nextcloud.serviceConfig = lib.mkIf cfg.configureMemoriesVaapi {
+        phpfpm-nextcloud.serviceConfig = lib.mkIf (cfg.configureMemories && cfg.configureMemoriesVaapi) {
           DeviceAllow = [ "/dev/dri/renderD128 rwm" ];
           PrivateDevices = lib.mkForce false;
         };
@@ -194,7 +194,7 @@ in
     };
 
     users.users.nextcloud = {
-      extraGroups = lib.mkIf cfg.configureMemoriesVaapi [
+      extraGroups = lib.mkIf (cfg.configureMemories && cfg.configureMemoriesVaapi) [
         "render" # access /dev/dri/renderD128
       ];
       packages = with pkgs;
