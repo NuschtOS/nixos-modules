@@ -101,12 +101,14 @@ in
           supportsDryActivation = true;
           text = /* bash */ ''
             if [[ -e /run/current-system && -e $systemConfig ]]; then
-              echo System package diff:
+              echo
+              echo nix diff new system against /run/current-system
               (
                 unset PS4
                 set -x
                 ${lib.getExe cfg.package} --extra-experimental-features nix-command store diff-closures /run/current-system $systemConfig || true
               )
+              echo
             fi
           '';
         };
