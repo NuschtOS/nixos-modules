@@ -34,7 +34,6 @@ in
 
       name = lib.mkOption {
         type = lib.types.str;
-        readOnly = true;
         default = "nix-remote-builder";
         description = "Name of the user used for remote building.";
       };
