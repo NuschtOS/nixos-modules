@@ -21,7 +21,14 @@ in
   ];
 
   config = {
-    virtualisation = {
+    virtualisation = let
+      autoPruneFlags = [
+        "--all"
+        "--external"
+        "--force"
+        "--volumes"
+      ];
+    in {
       containers.registries.search = lib.mkIf cfgp.recommendedDefaults [
         "docker.io"
         "quay.io"
@@ -43,17 +50,15 @@ in
 
         autoPrune = lib.mkIf cfgd.aggressiveAutoPrune {
           enable = true;
-          flags = [
-            "--all"
-            "--external"
-            "--force"
-            "--volumes"
-          ];
+          flags = autoPruneFlags;
         };
       };
 
       podman = {
-        autoPrune.enable = lib.mkIf cfgp.recommendedDefaults true;
+        autoPrune = {
+          enable = lib.mkIf cfgp.recommendedDefaults true;
+          flags = autoPruneFlags;
+        };
         defaultNetwork.settings.dns_enabled = lib.mkIf cfgp.recommendedDefaults true;
       };
     };
