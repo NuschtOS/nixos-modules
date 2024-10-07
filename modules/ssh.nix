@@ -4,7 +4,7 @@ let
   cfgP = config.programs.ssh;
   cfgS = config.services.openssh;
 
-  sshKeygen = "${config.programs.ssh.package}/bin/ssh-keygen";
+  sshKeygen = lib.getExe' cfgP.package "ssh-keygen";
 in
 {
   options = {
@@ -65,7 +65,7 @@ in
     };
 
     system.activationScripts.regenerateWeakRSAHostKey = lib.mkIf cfgS.regenerateWeakRSAHostKey /* bash */ ''
-      if [[ -e /etc/ssh/ssh_host_rsa_key && $(${sshKeygen} -l -f /etc/ssh/ssh_host_rsa_key | ${pkgs.gawk}/bin/awk '{print $1}') != 4096 ]]; then
+      if [[ -e /etc/ssh/ssh_host_rsa_key && $(${sshKeygen} -l -f /etc/ssh/ssh_host_rsa_key | ${lib.getExe pkgs.gawk} '{print $1}') != 4096 ]]; then
         echo "Regenerating OpenSSH RSA hostkey that had less than 4096 bits..."
         rm -f /etc/ssh/ssh_host_rsa_key /etc/ssh/ssh_host_rsa_key.pub
         ${sshKeygen} -t rsa -b 4096 -N "" -f /etc/ssh/ssh_host_rsa_key

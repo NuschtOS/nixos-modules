@@ -108,7 +108,7 @@ in
     })
 
     (lib.mkIf cfgl.enable {
-      plugins = with config.services.matrix-synapse.package.plugins; [
+      plugins = with cfg.package.plugins; [
         matrix-synapse-ldap3
       ];
 

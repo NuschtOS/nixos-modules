@@ -1,4 +1,4 @@
-{ config, lib, libS, options, pkgs, ... }:
+{ config, lib, libS, pkgs, ... }:
 
 let
   cfg = config.boot.zfs;
@@ -12,7 +12,7 @@ in
   };
 
   config = lib.mkIf cfg.enabled {
-    boot.kernelPackages = lib.mkIf cfg.latestCompatibleKernel (lib.mkDefault config.boot.zfs.package.latestCompatibleLinuxPackages);
+    boot.kernelPackages = lib.mkIf cfg.latestCompatibleKernel (lib.mkDefault cfg.package.latestCompatibleLinuxPackages);
 
     services.zfs = lib.mkIf cfg.recommendedDefaults {
       autoScrub.enable = true;

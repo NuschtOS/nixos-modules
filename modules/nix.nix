@@ -9,7 +9,7 @@ let
       (
         unset PS4
         set -x
-        ${lib.getExe config.nix.package} --extra-experimental-features nix-command store diff-closures /run/current-system "''${1-}"
+        ${lib.getExe cfg.package} --extra-experimental-features nix-command store diff-closures /run/current-system "''${1-}"
       )
     fi
   '';
@@ -68,10 +68,10 @@ in
             wrapper-dispatch-ssh-nix = pkgs.writeShellScriptBin "wrapper-dispatch-ssh-nix" /* bash */ ''
               case $SSH_ORIGINAL_COMMAND in
                 "nix-daemon --stdio")
-                  exec ${config.nix.package}/bin/nix-daemon --stdio
+                  exec ${lib.getExe' cfg.package "nix-daemon"} --stdio
                   ;;
                 "nix-store --serve --write")
-                  exec ${config.nix.package}/bin/nix-store --serve --write
+                  exec ${lib.getExe' cfg.package "nix-store"} --serve --write
                   ;;
                 *)
                   echo "Access is only allowed for nix remote building, not running command \"$SSH_ORIGINAL_COMMAND\"" 1>&2
@@ -82,7 +82,7 @@ in
           in
           "restrict,pty,command=\"${lib.getExe wrapper-dispatch-ssh-nix}\" ${key}"
         )
-        config.nix.remoteBuilder.sshPublicKeys;
+        cfg.remoteBuilder.sshPublicKeys;
     };
 
     system = {
@@ -105,7 +105,7 @@ in
               (
                 unset PS4
                 set -x
-                ${lib.getExe config.nix.package} --extra-experimental-features nix-command store diff-closures /run/current-system $systemConfig || true
+                ${lib.getExe cfg.package} --extra-experimental-features nix-command store diff-closures /run/current-system $systemConfig || true
               )
             fi
           '';

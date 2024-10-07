@@ -104,7 +104,7 @@ in
           OIDC_SCOPE = "openid,profile,email";
           OIDC_UID_FIELD = "preferred_username";
           OIDC_CLIENT_ID = cfgo.clientId;
-          OIDC_REDIRECT_URI = "https://${config.services.mastodon.localDomain}/auth/auth/openid_connect/callback";
+          OIDC_REDIRECT_URI = "https://${cfg.localDomain}/auth/auth/openid_connect/callback";
           OIDC_SECURITY_ASSUME_EMAIL_IS_VERIFIED = "true";
         })
       ];

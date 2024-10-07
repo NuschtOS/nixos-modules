@@ -44,7 +44,7 @@ in
       ldapPreset = lib.mkOption {
         type = lib.types.bool;
         default = false;
-        description = "Whether to set config.security.ldap to portunus specific settings.";
+        description = "Whether to set security.ldap to portunus specific settings.";
       };
 
       oauth2-proxy = {
