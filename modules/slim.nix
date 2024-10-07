@@ -5,7 +5,7 @@ let
 in
 {
   options.slim = {
-    enable = libS.mkOpinionatedOption "disable some usual rarely used things to slim down the system";
+    enable = libS.mkOpinionatedOption "disable some normally rarely used things to slim down the system";
   };
 
   config = lib.mkIf cfg.enable ({

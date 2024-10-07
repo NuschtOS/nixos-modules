@@ -16,27 +16,27 @@ let
 in
 {
   options.nix = {
-    deleteChannels = lib.mkEnableOption "" // { description = "Whether to delete all channels on a system switch."; };
+    deleteChannels = lib.mkEnableOption "" // { description = "Whether to delete all channels on a system activation and switch."; };
 
-    deleteUserProfiles = lib.mkEnableOption "" // { description = "Whether to delete all user profiles on a system switch."; };
+    deleteUserProfiles = lib.mkEnableOption "" // { description = "Whether to delete all user profiles on a system activation and switch."; };
 
-    diffSystem = libS.mkOpinionatedOption "system closure diffing on updates";
+    diffSystem = libS.mkOpinionatedOption "diff system closure on activation and switch";
 
     recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
 
     remoteBuilder = {
-      enable = lib.mkEnableOption "restricted nix remote builder";
+      enable = lib.mkEnableOption "" // { description = "Whether to configure restricted nix remote builder"; };
 
       sshPublicKeys = lib.mkOption {
-        description = "SSH public keys accepted by the remote build user.";
         type = lib.types.listOf lib.types.str;
+        description = "SSH public keys accepted by the remote build user.";
       };
 
       name = lib.mkOption {
-        description = "Name of the user used for remote building.";
         type = lib.types.str;
         readOnly = true;
         default = "nix-remote-builder";
+        description = "Name of the user used for remote building.";
       };
     };
   };

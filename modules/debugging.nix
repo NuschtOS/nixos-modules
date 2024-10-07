@@ -5,7 +5,7 @@ let
 in
 {
   options = {
-    debugging.enable = lib.mkEnableOption "debugging tools";
+    debugging.enable = lib.mkEnableOption "common debugging tools";
   };
 
   config = lib.mkIf cfg.enable {

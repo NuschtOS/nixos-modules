@@ -10,15 +10,13 @@ in
 
       configureImaginary = libS.mkOpinionatedOption "configure and use Imaginary for preview generation";
 
-      configureMemories = libS.mkOpinionatedOption "configure dependencies for Memories App";
+      configureMemories = lib.mkEnableOption "" // { description = "Whether to configure dependencies for Memories App."; };
 
       configureMemoriesVaapi = lib.mkOption {
         type = lib.types.bool;
         default = config.hardware.intelGPU;
         defaultText = "config.hardware.intelGPU";
-        description = ''
-          Whether to configure Memories App to use an Intel iGPU for hardware acceleration.
-        '';
+        description = "Whether to configure Memories App to use an Intel iGPU for hardware acceleration.";
       };
 
       configurePreviewSettings = lib.mkOption {
@@ -31,7 +29,7 @@ in
         '';
       };
 
-      configureRecognize = libS.mkOpinionatedOption "configure dependencies for Recognize App";
+      configureRecognize = lib.mkEnableOption "" // { description = "Whether to configure dependencies for Recognize App."; };
     };
   };
 

@@ -8,7 +8,7 @@ in
 {
   options.virtualisation = {
     docker = {
-      aggressiveAutoPrune = libS.mkOpinionatedOption "configure aggresive auto prune which removes everything unreferenced by running containers. This includes named volumes and mounts should be used instead";
+      aggressiveAutoPrune = libS.mkOpinionatedOption "configure aggressive auto pruning which removes everything unreferenced by running containers. This includes named volumes and mounts should be used instead";
 
       recommendedDefaults = libS.mkOpinionatedOption "set recommended and maintenance reducing default settings";
     };
@@ -37,9 +37,10 @@ in
           iptables = useIPTables;
           ip6tables = useIPTables;
           ipv6 = true;
-          # userland proxy is slow, does not give back ports and if iptables/nftables is avaible just worsefgd.aggresiveAutoPrune
+          # userland proxy is slow, does not give back ports and if iptables/nftables is available it is just worse
           userland-proxy = false;
         };
+
         autoPrune = lib.mkIf cfgd.aggressiveAutoPrune {
           enable = true;
           flags = [

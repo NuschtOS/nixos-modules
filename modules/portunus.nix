@@ -25,6 +25,7 @@ in
         description = "Whether to add a hosts entry for the portunus domain pointing to externalIp";
       };
 
+      # only here to fix manual creation
       domain = lib.mkOption {
         default = "";
       };
