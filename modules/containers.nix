@@ -8,13 +8,17 @@ in
 {
   options.virtualisation = {
     docker = {
-      aggresiveAutoPrune = libS.mkOpinionatedOption "configure aggresive auto prune which removes everything unreferenced by running containers. This includes named volumes and mounts should be used instead";
+      aggressiveAutoPrune = libS.mkOpinionatedOption "configure aggresive auto prune which removes everything unreferenced by running containers. This includes named volumes and mounts should be used instead";
 
       recommendedDefaults = libS.mkOpinionatedOption "set recommended and maintenance reducing default settings";
     };
 
     podman.recommendedDefaults = libS.mkOpinionatedOption "set recommended and maintenance reducing default settings";
   };
+
+  imports = [
+    (lib.mkRenamedOptionModule ["virtualisation" "docker" "aggresiveAutoPrune"] ["virtualisation" "docker" "aggressiveAutoPrune"])
+  ];
 
   config = {
     virtualisation = {
@@ -36,7 +40,7 @@ in
           # userland proxy is slow, does not give back ports and if iptables/nftables is avaible just worsefgd.aggresiveAutoPrune
           userland-proxy = false;
         };
-        autoPrune = lib.mkIf cfgd.aggresiveAutoPrune {
+        autoPrune = lib.mkIf cfgd.aggressiveAutoPrune {
           enable = true;
           flags = [
             "--all"

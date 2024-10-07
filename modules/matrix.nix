@@ -143,7 +143,7 @@ in
           port = null;
           tls = null;
         })
-     ];
+      ];
     })
   ];
 
@@ -212,7 +212,7 @@ in
   };
 
   config.systemd = lib.mkIf cfgs.enable {
-    # don't hazzle with postgres socket auth and DynamicUser
+    # don't hassle with postgres socket auth and DynamicUser
     services.matrix-sliding-sync.serviceConfig = {
       DynamicUser = lib.mkForce false;
       Group = "matrix-sliding-sync";
