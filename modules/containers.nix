@@ -8,7 +8,7 @@ in
 {
   options.virtualisation = {
     docker = {
-      aggresiveAutoPrune = libS.mkOpinionatedOption "configure aggresive auto prune which removes everything unreferenced by running containers. This includes named volumes and mounts should be used instead";
+      aggressiveAutoPrune = libS.mkOpinionatedOption "configure aggressive auto pruning which removes everything unreferenced by running containers. This includes named volumes and mounts should be used instead";
 
       recommendedDefaults = libS.mkOpinionatedOption "set recommended and maintenance reducing default settings";
     };
@@ -16,8 +16,19 @@ in
     podman.recommendedDefaults = libS.mkOpinionatedOption "set recommended and maintenance reducing default settings";
   };
 
+  imports = [
+    (lib.mkRenamedOptionModule ["virtualisation" "docker" "aggresiveAutoPrune"] ["virtualisation" "docker" "aggressiveAutoPrune"])
+  ];
+
   config = {
-    virtualisation = {
+    virtualisation = let
+      autoPruneFlags = [
+        "--all"
+        "--external"
+        "--force"
+        "--volumes"
+      ];
+    in {
       containers.registries.search = lib.mkIf cfgp.recommendedDefaults [
         "docker.io"
         "quay.io"
@@ -33,22 +44,21 @@ in
           iptables = useIPTables;
           ip6tables = useIPTables;
           ipv6 = true;
-          # userland proxy is slow, does not give back ports and if iptables/nftables is avaible just worsefgd.aggresiveAutoPrune
+          # userland proxy is slow, does not give back ports and if iptables/nftables is available it is just worse
           userland-proxy = false;
         };
-        autoPrune = lib.mkIf cfgd.aggresiveAutoPrune {
+
+        autoPrune = lib.mkIf cfgd.aggressiveAutoPrune {
           enable = true;
-          flags = [
-            "--all"
-            "--external"
-            "--force"
-            "--volumes"
-          ];
+          flags = autoPruneFlags;
         };
       };
 
       podman = {
-        autoPrune.enable = lib.mkIf cfgp.recommendedDefaults true;
+        autoPrune = {
+          enable = lib.mkIf cfgp.recommendedDefaults true;
+          flags = autoPruneFlags;
+        };
         defaultNetwork.settings.dns_enabled = lib.mkIf cfgp.recommendedDefaults true;
       };
     };

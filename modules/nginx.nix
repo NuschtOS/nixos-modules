@@ -46,7 +46,7 @@ in
     hstsHeader = {
       enable = libS.mkOpinionatedOption "add the `Strict-Transport-Security` (HSTS) header to all virtual hosts";
 
-      includeSubDomains = lib.mkEnableOption "add `includeSubDomains` to the `Strict-Transport-Security` header";
+      includeSubDomains = lib.mkEnableOption "" // { description = "Whether to add `includeSubDomains` to the `Strict-Transport-Security` header"; };
     };
 
     tcpFastOpen = libS.mkOpinionatedOption "enable tcp fast open";

@@ -19,7 +19,7 @@ in
       };
 
       element-web = {
-        enable = lib.mkEnableOption "the element-web client";
+        enable = lib.mkEnableOption "" // { description = "Whether to configure the element-web client under Matrix' domain."; };
 
         domain = lib.mkOption {
           type = lib.types.str;
@@ -47,7 +47,7 @@ in
       recommendedDefaults = libS.mkOpinionatedOption "set recommended and secure default settings";
 
       matrix-sliding-sync = {
-        enable = lib.mkEnableOption "the extra sliding-sync service. Make sure to also configure the services.matrix-sliding-sync.environmentFile setting";
+        enable = lib.mkEnableOption "the sliding-sync service. Make sure to also configure the `services.matrix-sliding-sync.environmentFile` setting";
 
         domain = lib.mkOption {
           type = lib.types.str;
@@ -108,7 +108,7 @@ in
     })
 
     (lib.mkIf cfgl.enable {
-      plugins = with config.services.matrix-synapse.package.plugins; [
+      plugins = with cfg.package.plugins; [
         matrix-synapse-ldap3
       ];
 
@@ -143,7 +143,7 @@ in
           port = null;
           tls = null;
         })
-     ];
+      ];
     })
   ];
 
@@ -212,7 +212,7 @@ in
   };
 
   config.systemd = lib.mkIf cfgs.enable {
-    # don't hazzle with postgres socket auth and DynamicUser
+    # don't hassle with postgres socket auth and DynamicUser
     services.matrix-sliding-sync.serviceConfig = {
       DynamicUser = lib.mkForce false;
       Group = "matrix-sliding-sync";

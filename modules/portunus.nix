@@ -25,6 +25,7 @@ in
         description = "Whether to add a hosts entry for the portunus domain pointing to externalIp";
       };
 
+      # only here to fix manual creation
       domain = lib.mkOption {
         default = "";
       };
@@ -44,7 +45,7 @@ in
       ldapPreset = lib.mkOption {
         type = lib.types.bool;
         default = false;
-        description = "Whether to set config.security.ldap to portunus specific settings.";
+        description = "Whether to set security.ldap to portunus specific settings.";
       };
 
       oauth2-proxy = {

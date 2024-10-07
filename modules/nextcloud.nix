@@ -1,4 +1,4 @@
-{ config, lib, libS, options, pkgs, ... }:
+{ config, lib, libS, pkgs, ... }:
 
 let
   cfg = config.services.nextcloud;
@@ -10,15 +10,13 @@ in
 
       configureImaginary = libS.mkOpinionatedOption "configure and use Imaginary for preview generation";
 
-      configureMemories = libS.mkOpinionatedOption "configure dependencies for Memories App";
+      configureMemories = lib.mkEnableOption "" // { description = "Whether to configure dependencies for Memories App."; };
 
       configureMemoriesVaapi = lib.mkOption {
         type = lib.types.bool;
         default = config.hardware.intelGPU;
         defaultText = "config.hardware.intelGPU";
-        description = ''
-          Whether to configure Memories App to use an Intel iGPU for hardware acceleration.
-        '';
+        description = "Whether to configure Memories App to use an Intel iGPU for hardware acceleration.";
       };
 
       configurePreviewSettings = lib.mkOption {
@@ -31,7 +29,7 @@ in
         '';
       };
 
-      configureRecognize = libS.mkOpinionatedOption "configure dependencies for Recognize App";
+      configureRecognize = lib.mkEnableOption "" // { description = "Whether to configure dependencies for Recognize App."; };
     };
   };
 
@@ -86,7 +84,7 @@ in
             "memories.exiftool" = lib.getExe pkgs.exiftool;
             "memories.vod.vaapi" = lib.mkIf cfg.configureMemoriesVaapi true;
             "memories.vod.ffmpeg" = lib.getExe pkgs.ffmpeg-headless;
-            "memories.vod.ffprobe" = "${pkgs.ffmpeg-headless}/bin/ffprobe";
+            "memories.vod.ffprobe" = lib.getExe' pkgs.ffmpeg-headless "ffprobe";
           })
 
           (lib.mkIf cfg.configurePreviewSettings {
@@ -115,20 +113,22 @@ in
     };
 
     systemd = {
-      services = {
+      services = let
+        occ = "/run/current-system/sw/bin/nextcloud-occ";
+      in {
         nextcloud-cron = lib.mkIf cfg.configureMemories {
           # required for memories
           # see https://github.com/pulsejet/memories/blob/master/docs/troubleshooting.md#issues-with-nixos
           path = with pkgs; [ perl ];
           # fix memories app being unpacked without the x-bit on binaries
           # could be done in nextcloud-update-plugins but then manually updates would be broken until the next auto update
-          preStart = "${pkgs.coreutils}/bin/chmod +x ${cfg.home}/store-apps/memories/bin-ext/*";
+          preStart = "${lib.getExe' pkgs.coreutils "chmod"} +x ${cfg.home}/store-apps/memories/bin-ext/*";
         };
 
         nextcloud-cron-preview-generator = lib.mkIf cfg.configurePreviewSettings {
-          environment.NEXTCLOUD_CONFIG_DIR = "${config.services.nextcloud.datadir}/config";
+          environment.NEXTCLOUD_CONFIG_DIR = "${cfg.datadir}/config";
           serviceConfig = {
-            ExecStart = "/run/current-system/sw/bin/nextcloud-occ preview:pre-generate";
+            ExecStart = "${occ} preview:pre-generate";
             Type = "oneshot";
             User = "nextcloud";
           };
@@ -138,31 +138,27 @@ in
           wantedBy = [ "multi-user.target" ];
           requires = [ "phpfpm-nextcloud.service" ];
           after = [ "phpfpm-nextcloud.service" ];
-          environment.NEXTCLOUD_CONFIG_DIR = "${config.services.nextcloud.datadir}/config";
-          script =
-            let
-              occ = "/run/current-system/sw/bin/nextcloud-occ";
-            in
-              /* bash */ ''
-              # check with:
-              # for size in squareSizes widthSizes heightSizes; do echo -n "$size: "; nextcloud-occ config:app:get previewgenerator $size; done
+          environment.NEXTCLOUD_CONFIG_DIR = "${cfg.datadir}/config";
+          script = /* bash */ ''
+            # check with:
+            # for size in squareSizes widthSizes heightSizes; do echo -n "$size: "; nextcloud-occ config:app:get previewgenerator $size; done
 
-              # extra commands run for preview generator:
-              # 32   icon file list
-              # 64   icon file list android app, photos app
-              # 96   nextcloud client VFS windows file preview
-              # 256  file app grid view, many requests
-              # 512  photos app tags
-              ${occ} config:app:set --value="32 64 96 256 512" previewgenerator squareSizes
+            # extra commands run for preview generator:
+            # 32   icon file list
+            # 64   icon file list android app, photos app
+            # 96   nextcloud client VFS windows file preview
+            # 256  file app grid view, many requests
+            # 512  photos app tags
+            ${occ} config:app:set --value="32 64 96 256 512" previewgenerator squareSizes
 
-              # 341 hover in maps app
-              # 1920 files/photos app when viewing picture
-              ${occ} config:app:set --value="341 1920" previewgenerator widthSizes
+            # 341 hover in maps app
+            # 1920 files/photos app when viewing picture
+            ${occ} config:app:set --value="341 1920" previewgenerator widthSizes
 
-              # 256 hover in maps app
-              # 1080 files/photos app when viewing picture
-              ${occ} config:app:set --value="256 1080" previewgenerator heightSizes
-            '';
+            # 256 hover in maps app
+            # 1080 files/photos app when viewing picture
+            ${occ} config:app:set --value="256 1080" previewgenerator heightSizes
+          '';
           serviceConfig = {
             Type = "oneshot";
             User = "nextcloud";
@@ -182,7 +178,7 @@ in
           '';
         };
 
-        phpfpm-nextcloud.serviceConfig = lib.mkIf cfg.configureMemoriesVaapi {
+        phpfpm-nextcloud.serviceConfig = lib.mkIf (cfg.configureMemories && cfg.configureMemoriesVaapi) {
           DeviceAllow = [ "/dev/dri/renderD128 rwm" ];
           PrivateDevices = lib.mkForce false;
         };
@@ -198,7 +194,7 @@ in
     };
 
     users.users.nextcloud = {
-      extraGroups = lib.mkIf cfg.configureMemoriesVaapi [
+      extraGroups = lib.mkIf (cfg.configureMemories && cfg.configureMemoriesVaapi) [
         "render" # access /dev/dri/renderD128
       ];
       packages = with pkgs;

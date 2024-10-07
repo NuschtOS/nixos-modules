@@ -9,34 +9,33 @@ let
       (
         unset PS4
         set -x
-        ${lib.getExe config.nix.package} --extra-experimental-features nix-command store diff-closures /run/current-system "''${1-}"
+        ${lib.getExe cfg.package} --extra-experimental-features nix-command store diff-closures /run/current-system "''${1-}"
       )
     fi
   '';
 in
 {
   options.nix = {
-    deleteChannels = lib.mkEnableOption "" // { description = "Whether to delete all channels on a system switch."; };
+    deleteChannels = lib.mkEnableOption "" // { description = "Whether to delete all channels on a system activation and switch."; };
 
-    deleteUserProfiles = lib.mkEnableOption "" // { description = "Whether to delete all user profiles on a system switch."; };
+    deleteUserProfiles = lib.mkEnableOption "" // { description = "Whether to delete all user profiles on a system activation and switch."; };
 
-    diffSystem = libS.mkOpinionatedOption "system closure diffing on updates";
+    diffSystem = libS.mkOpinionatedOption "diff system closure on activation and switch";
 
     recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
 
     remoteBuilder = {
-      enable = lib.mkEnableOption "restricted nix remote builder";
+      enable = lib.mkEnableOption "" // { description = "Whether to configure restricted nix remote builder"; };
 
       sshPublicKeys = lib.mkOption {
-        description = "SSH public keys accepted by the remote build user.";
         type = lib.types.listOf lib.types.str;
+        description = "SSH public keys accepted by the remote build user.";
       };
 
       name = lib.mkOption {
-        description = "Name of the user used for remote building.";
         type = lib.types.str;
-        readOnly = true;
         default = "nix-remote-builder";
+        description = "Name of the user used for remote building.";
       };
     };
   };
@@ -68,10 +67,10 @@ in
             wrapper-dispatch-ssh-nix = pkgs.writeShellScriptBin "wrapper-dispatch-ssh-nix" /* bash */ ''
               case $SSH_ORIGINAL_COMMAND in
                 "nix-daemon --stdio")
-                  exec ${config.nix.package}/bin/nix-daemon --stdio
+                  exec ${lib.getExe' cfg.package "nix-daemon"} --stdio
                   ;;
                 "nix-store --serve --write")
-                  exec ${config.nix.package}/bin/nix-store --serve --write
+                  exec ${lib.getExe' cfg.package "nix-store"} --serve --write
                   ;;
                 *)
                   echo "Access is only allowed for nix remote building, not running command \"$SSH_ORIGINAL_COMMAND\"" 1>&2
@@ -82,7 +81,7 @@ in
           in
           "restrict,pty,command=\"${lib.getExe wrapper-dispatch-ssh-nix}\" ${key}"
         )
-        config.nix.remoteBuilder.sshPublicKeys;
+        cfg.remoteBuilder.sshPublicKeys;
     };
 
     system = {
@@ -101,12 +100,14 @@ in
           supportsDryActivation = true;
           text = /* bash */ ''
             if [[ -e /run/current-system && -e $systemConfig ]]; then
-              echo System package diff:
+              echo
+              echo nix diff new system against /run/current-system
               (
                 unset PS4
                 set -x
-                ${lib.getExe config.nix.package} --extra-experimental-features nix-command store diff-closures /run/current-system $systemConfig || true
+                ${lib.getExe cfg.package} --extra-experimental-features nix-command store diff-closures /run/current-system $systemConfig || true
               )
+              echo
             fi
           '';
         };

@@ -6,10 +6,11 @@ in
 {
   options = {
     services.mailman = {
-      enablePostgres = lib.mkEnableOption "configure postgres as a database backend";
+      enablePostgres = lib.mkEnableOption "" // { description = "Whether to configure postgres as a database backend."; };
 
       openidConnect = {
         enable = lib.mkEnableOption "login only via OpenID Connect";
+
         clientSecretFile = lib.mkOption {
           type = lib.types.str;
           description = "Path of the file containing the client id";

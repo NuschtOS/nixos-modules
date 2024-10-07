@@ -16,14 +16,14 @@ in
     };
   };
 
-  config = lib.mkIf config.boot.initrd.network.ssh.enable {
+  config = lib.mkIf cfg.enable {
     boot.initrd.network.ssh.hostKeys = lib.mkIf cfg.configureHostKeys [
       initrdEd25519Key
       initrdRsaKey
     ];
 
     system.activationScripts.generateInitrdOpensshHostKeys = let
-      sshKeygen = "${config.programs.ssh.package}/bin/ssh-keygen";
+      sshKeygen = lib.getExe' config.programs.ssh.package "ssh-keygen";
     in lib.optionalString cfg.generateHostKeys /* bash */ ''
       if [[ ! -e ${initrdEd25519Key} || ! -e ${initrdRsaKey} ]]; then
         echo "Generating OpenSSH initrd hostkeys..."
@@ -32,7 +32,7 @@ in
         ${sshKeygen} -t rsa -b 4096 -N "" -f ${initrdRsaKey}
       fi
     '' + lib.optionalString cfg.regenerateWeakRSAHostKey /* bash */ ''
-      if [[ -e ${initrdRsaKey} && $(${sshKeygen} -l -f ${initrdRsaKey} | ${pkgs.gawk}/bin/awk '{print $1}') != 4096 ]]; then
+      if [[ -e ${initrdRsaKey} && $(${sshKeygen} -l -f ${initrdRsaKey} | ${lib.getExe pkgs.gawk} '{print $1}') != 4096 ]]; then
         echo "Regenerating OpenSSH initrd RSA hostkey which had less than 4096 bits..."
         rm -f ${initrdRsaKey} ${initrdRsaKey}.pub
         ${sshKeygen} -t rsa -b 4096 -N "" -f ${initrdRsaKey}

@@ -25,6 +25,7 @@ in
             })
           ]
         '';
+        description = "List of blueprints to declerative install.";
       };
 
       ldap = {

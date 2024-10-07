@@ -29,7 +29,7 @@ in
 
     services = {
       nginx = lib.mkIf cfg.configureNginx {
-        upstreams.vaultwarden.servers."127.0.0.1:${toString config.services.vaultwarden.config.ROCKET_PORT}" = { };
+        upstreams.vaultwarden.servers."127.0.0.1:${toString cfg.config.ROCKET_PORT}" = { };
         virtualHosts.${cfg.domain}.locations = {
           "/".proxyPass = "http://vaultwarden";
           "/notifications/hub" = {
