@@ -1,7 +1,9 @@
-{ config, lib, ... }:
+{ config, lib, options, ... }:
 
 let
   cfg = config.hardware;
+  # TODO: remove with 24.11
+  hardwareOpengl = if options.hardware?graphics then "graphics" else "opengl";
 in
 {
   options.hardware = {
@@ -14,9 +16,12 @@ in
       LIBVA_DRIVER_NAME = "nvidia";
     };
 
-    hardware.nvidia = {
-      modesetting.enable = true;
-      nvidiaSettings = true;
+    hardware = {
+      "${hardwareOpengl}".enable = true;
+      nvidia = {
+        modesetting.enable = true;
+        nvidiaSettings = true;
+      };
     };
 
     programs.firefox.hardwareAcceleration = true;
