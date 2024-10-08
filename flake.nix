@@ -92,6 +92,7 @@
             })
             self.nixosModule
           ];
+          title = "NixOS Modules Search";
           urlPrefix = "https://github.com/NuschtOS/nixos-modules/tree/main/";
         };
       };
