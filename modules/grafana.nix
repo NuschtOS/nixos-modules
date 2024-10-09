@@ -48,7 +48,7 @@ in
         message = "services.grafana.settings.security.secret_key must be changed from it's insecure, default value!";
       }
       {
-        assertion = cfg.settings.security.admin_password != "admin";
+        assertion = cfg.settings.security.disable_initial_admin_creation || cfg.settings.security.admin_password != "admin";
         message = "services.grafana.settings.security.admin_password must be changed from it's insecure, default value!";
       }
     ];
