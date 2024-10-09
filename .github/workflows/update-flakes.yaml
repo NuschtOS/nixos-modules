@@ -8,7 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: cachix/install-nix-action@v30
+
       - uses: DeterminateSystems/update-flake-lock@v24
         if: ${{ hashFiles('flake.nix') != '' }}
         with:
