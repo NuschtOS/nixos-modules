@@ -3,7 +3,7 @@
 let
   cfg = config.hardware;
   # TODO: remove with 24.11
-  hardwareOpengl = if options.hardware?graphics then "graphics" else "opengl";
+  hardwareOpengl = if options.hardware.graphics?enable then "graphics" else "opengl";
 in
 {
   options.hardware = {
