@@ -132,7 +132,7 @@ in
       host = ldap.domainName;
       inherit (ldap) port;
       bind-dn = ldap.bindDN;
-      bind-password = "$(cat ${cfgl.searchUserPasswordFile})";
+      bind-password = ''"$(cat ${cfgl.searchUserPasswordFile})"'';
       user-search-base = ldap.userBaseDN;
       user-filter = ldap.searchFilterWithGroupFilter cfgl.userGroup (ldap.userFilter "%[1]s");
       admin-filter = ldap.groupFilter cfgl.adminGroup;
@@ -149,7 +149,7 @@ in
       name = config.services.portunus.webDomain;
       provider = "openidConnect";
       key = "gitea";
-      secret = "$(cat ${cfgo.clientSecretFile})";
+      secret = ''"$(cat ${cfgo.clientSecretFile})"'';
       icon-url = "${config.services.dex.settings.issuer}/theme/favicon.png";
       auto-discover-url = config.services.dex.discoveryEndpoint;
       scopes = "groups";
