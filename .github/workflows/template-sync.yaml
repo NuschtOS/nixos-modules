@@ -16,7 +16,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN_FOR_UPDATES }}
-
       - uses: AndreasAugustin/actions-template-sync@v2
         with:
           # required to update github workflow files
