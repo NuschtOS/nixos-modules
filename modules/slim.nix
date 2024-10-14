@@ -30,10 +30,19 @@ in
     # during testing only 550K-650K of the tmpfs where used
     security.wrapperDirSize = "10M";
 
-    services = lib.optionalAttrs (options.services?orca) {
-      orca.enable = false; # requires speechd
-    } // lib.optionalAttrs (options.services?speechd) {
-      speechd.enable = false; # voice files are big and fat
-    };
+    services = lib.mkMerge [
+      {
+        lvm.enable = lib.mkIf (lib.all (x: !x) (with config.services.lvm; [
+          # basically all sub options under services.lvm.*
+          dmeventd.enable boot.vdo.enable boot.thin.enable config.boot.initrd.services.lvm.enable
+        ])) true;
+      }
+
+      (lib.optionalAttrs (options.services?orca) {
+        orca.enable = false; # requires speechd
+      } // lib.optionalAttrs (options.services?speechd) {
+        speechd.enable = false; # voice files are big and fat
+      })
+    ];
   });
 }
