@@ -1,4 +1,4 @@
-name: "flake check"
+name: "Run flake eval"
 
 on:
   push:
