@@ -50,7 +50,7 @@ in
       builders-use-substitutes = lib.mkIf cfg.recommendedDefaults true;
       connect-timeout = lib.mkIf cfg.recommendedDefaults 20;
       experimental-features = lib.mkIf cfg.recommendedDefaults [ "nix-command" "flakes" ];
-      trusted-users = lib.mkIf cfg.remoteBuilder.enable (lib.mkOptionDefault [ cfg.remoteBuilder.name ]);
+      trusted-users = lib.mkIf cfg.remoteBuilder.enable [ cfg.remoteBuilder.name ];
     };
 
     # flakes require a git in PATH
