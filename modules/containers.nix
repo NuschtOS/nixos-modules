@@ -24,7 +24,6 @@ in
     virtualisation = let
       autoPruneFlags = [
         "--all"
-        "--external"
         "--force"
         "--volumes"
       ];
