@@ -46,9 +46,6 @@
       }
     ];
 
-    programs.ssh.setXAuthLocation = false;
-    security.pam.services.su.forwardXAuth = lib.mkForce false;
-
     fonts.fontconfig.enable = false;
 
     nixpkgs.overlays = lib.singleton (lib.const (prev: {
@@ -127,5 +124,9 @@
       wayland = prev.wayland.override { withDocumentation = false; };
       zbar = prev.zbar.override { enableVideo = false; withXorg = false; };
     }));
+
+    programs.ssh.setXAuthLocation = false;
+
+    security.pam.services.su.forwardXAuth = lib.mkForce false;
   };
 }
