@@ -29,7 +29,13 @@ in
         '';
       };
 
-      configureRecognize = lib.mkEnableOption "" // { description = "Whether to configure dependencies for Recognize App."; };
+      configureRecognize = lib.mkEnableOption "" // { description = ''
+        Whether to configure dependencies for Recognize App.
+
+        ::: {.note}
+        This currently does not work with declerataive installed apps.
+        :::
+      ''; };
     };
   };
 
