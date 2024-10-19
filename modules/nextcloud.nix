@@ -48,12 +48,14 @@ in
       };
 
       nextcloud = {
-        extraApps = lib.mkMerge [
+        extraApps = let
+          inherit (pkgs."nextcloud${lib.versions.major cfg.package.version}Packages") apps;
+        in lib.mkMerge [
           (lib.mkIf cfg.configureMemories {
-            inherit (config.services.nextcloud.package.packages.apps) memories;
+            inherit (apps) memories;
           })
           (lib.mkIf cfg.configurePreviewSettings {
-            inherit (config.services.nextcloud.package.packages.apps) previewgenerator;
+            inherit (apps) previewgenerator;
           })
         ];
 
