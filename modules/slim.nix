@@ -32,7 +32,7 @@ in
 
     services = lib.mkMerge [
       {
-        lvm.enable = true;
+        lvm.enable = false;
       }
 
       (lib.optionalAttrs (options.services?orca) {
