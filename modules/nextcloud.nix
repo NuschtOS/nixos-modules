@@ -188,6 +188,7 @@ in
       };
 
       timers.nextcloud-cron-preview-generator = lib.mkIf cfg.configurePreviewSettings {
+        after = [ "nextcloud-setup.service" ];
         timerConfig = {
           OnCalendar = "*:0/15";
           OnUnitActiveSec = "10m";
