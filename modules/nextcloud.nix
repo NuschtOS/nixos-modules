@@ -186,7 +186,10 @@ in
 
       timers.nextcloud-cron-preview-generator = lib.mkIf cfg.configurePreviewSettings {
         timerConfig = {
-          OnUnitActiveSec = "5m";
+          OnCalendar = "*:0/15";
+          OnUnitActiveSec = "10m";
+          Persistent = true;
+          RandomizedDelaySec = 60;
           Unit = "nextcloud-cron-preview-generator.service";
         };
         wantedBy = [ "timers.target" ];
