@@ -29,7 +29,13 @@ in
         '';
       };
 
-      configureRecognize = lib.mkEnableOption "" // { description = "Whether to configure dependencies for Recognize App."; };
+      configureRecognize = lib.mkEnableOption "" // { description = ''
+        Whether to configure dependencies for Recognize App.
+
+        ::: {.note}
+        This currently does not work with declerataive installed apps.
+        :::
+      ''; };
     };
   };
 
@@ -42,6 +48,17 @@ in
       };
 
       nextcloud = {
+        extraApps = let
+          inherit (pkgs."nextcloud${lib.versions.major cfg.package.version}Packages") apps;
+        in lib.mkMerge [
+          (lib.mkIf cfg.configureMemories {
+            inherit (apps) memories;
+          })
+          (lib.mkIf cfg.configurePreviewSettings {
+            inherit (apps) previewgenerator;
+          })
+        ];
+
         phpOptions = lib.mkIf cfg.recommendedDefaults {
           # https://docs.nextcloud.com/server/latest/admin_manual/installation/server_tuning.html#:~:text=opcache.jit%20%3D%201255%20opcache.jit_buffer_size%20%3D%20128m
           "opcache.jit" = 1255;
@@ -70,6 +87,8 @@ in
               # https://docs.nextcloud.com/server/24/admin_manual/installation/server_tuning.html#previews
               ''OC\Preview\Imaginary''
             ];
+
+            preview_imaginary_url = "http://127.0.0.1:${toString config.services.imaginary.port}/";
           })
 
           (lib.mkIf cfg.configureMemories {
@@ -96,6 +115,7 @@ in
               ''OC\Preview\WebP''
             ];
 
+            enable_previews = true;
             jpeg_quality = 60;
             preview_max_filesize_image = 128; # MB
             preview_max_memory = 512; # MB
@@ -185,8 +205,12 @@ in
       };
 
       timers.nextcloud-cron-preview-generator = lib.mkIf cfg.configurePreviewSettings {
+        after = [ "nextcloud-setup.service" ];
         timerConfig = {
-          OnUnitActiveSec = "5m";
+          OnCalendar = "*:0/10";
+          OnUnitActiveSec = "9m";
+          Persistent = true;
+          RandomizedDelaySec = 60;
           Unit = "nextcloud-cron-preview-generator.service";
         };
         wantedBy = [ "timers.target" ];
