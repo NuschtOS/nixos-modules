@@ -42,6 +42,15 @@ in
       };
 
       nextcloud = {
+        extraApps = lib.mkMerge [
+          (lib.mkIf cfg.configureMemories {
+            inherit (config.services.nextcloud.package.packages.apps) memories;
+          })
+          (lib.mkIf cfg.configurePreviewSettings {
+            inherit (config.services.nextcloud.package.packages.apps) previewgenerator;
+          })
+        ];
+
         phpOptions = lib.mkIf cfg.recommendedDefaults {
           # https://docs.nextcloud.com/server/latest/admin_manual/installation/server_tuning.html#:~:text=opcache.jit%20%3D%201255%20opcache.jit_buffer_size%20%3D%20128m
           "opcache.jit" = 1255;
@@ -71,7 +80,6 @@ in
               ''OC\Preview\Imaginary''
             ];
 
-            enable_previews = true;
             preview_imaginary_url = "http://127.0.0.1:${toString config.services.imaginary.port}/";
           })
 
@@ -99,6 +107,7 @@ in
               ''OC\Preview\WebP''
             ];
 
+            enable_previews = true;
             jpeg_quality = 60;
             preview_max_filesize_image = 128; # MB
             preview_max_memory = 512; # MB
