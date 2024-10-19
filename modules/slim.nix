@@ -32,10 +32,7 @@ in
 
     services = lib.mkMerge [
       {
-        lvm.enable = lib.mkIf (lib.all (x: !x) (with config.services.lvm; [
-          # basically all sub options under services.lvm.*
-          dmeventd.enable boot.vdo.enable boot.thin.enable config.boot.initrd.services.lvm.enable
-        ])) true;
+        lvm.enable = false;
       }
 
       (lib.optionalAttrs (options.services?orca) {
