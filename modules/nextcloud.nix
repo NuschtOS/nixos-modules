@@ -190,8 +190,8 @@ in
       timers.nextcloud-cron-preview-generator = lib.mkIf cfg.configurePreviewSettings {
         after = [ "nextcloud-setup.service" ];
         timerConfig = {
-          OnCalendar = "*:0/15";
-          OnUnitActiveSec = "10m";
+          OnCalendar = "*:0/10";
+          OnUnitActiveSec = "9m";
           Persistent = true;
           RandomizedDelaySec = 60;
           Unit = "nextcloud-cron-preview-generator.service";
