@@ -71,6 +71,7 @@ in
               ''OC\Preview\Imaginary''
             ];
 
+            enable_previews = true;
             preview_imaginary_url = "http://127.0.0.1:${toString config.services.imaginary.port}/";
           })
 
