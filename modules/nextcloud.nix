@@ -70,6 +70,8 @@ in
               # https://docs.nextcloud.com/server/24/admin_manual/installation/server_tuning.html#previews
               ''OC\Preview\Imaginary''
             ];
+
+            preview_imaginary_url = "http://127.0.0.1:${toString config.services.imaginary.port}/";
           })
 
           (lib.mkIf cfg.configureMemories {
