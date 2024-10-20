@@ -4,7 +4,6 @@ let
   cfg = config.services.matrix-synapse;
   cfge = cfg.element-web;
   cfgl = cfg.ldap;
-  cfgs = cfg.matrix-sliding-sync;
   inherit (config.security) ldap;
 in
 {
@@ -45,24 +44,14 @@ in
       };
 
       recommendedDefaults = libS.mkOpinionatedOption "set recommended and secure default settings";
-
-      matrix-sliding-sync = {
-        enable = lib.mkEnableOption "the sliding-sync service. Make sure to also configure the `services.matrix-sliding-sync.environmentFile` setting";
-
-        domain = lib.mkOption {
-          type = lib.types.str;
-          example = "matrix-sliding-sync.example.com";
-          description = "The domain that matrix-sliding-sync will use.";
-        };
-      };
     };
   };
 
   imports = [
     (lib.mkRenamedOptionModule [ "services" "matrix-synapse" "ldap" "bindPasswordFile" ] [ "services" "matrix-synapse" "ldap" "searchUserPasswordFile" ])
+    (lib.mkRemovedOptionModule [ "services" "matrix-synapse" "matrix-sliding-sync" ] "matrix-sliding-sync has been removed as matrix-synapse 114.0 and later covers its functionality")
   ];
 
-  # NOTE: mkMerge cannot be used on config otherwise services.matrix-sliding-sync.enable causes an infinite recursion
   config.environment.etc = lib.mkIf cfg.enable {
     "matrix-synapse/config.yaml".source = cfg.configFile;
   };
@@ -133,7 +122,7 @@ in
       }];
     })
 
-    (lib.mkIf cfgs.enable {
+    (lib.mkIf cfg.enable {
       enableRegistrationScript = false; # required for listenging on unix socket
 
       settings.listeners = lib.mkForce [
@@ -147,20 +136,11 @@ in
     })
   ];
 
-  config.services.matrix-sliding-sync = lib.mkIf cfgs.enable {
-    enable = true;
-    settings = {
-      SYNCV3_BINDADDR = "/run/matrix-sliding-sync/matrix-sliding-sync.sock";
-      SYNCV3_SERVER = "/run/matrix-synapse/matrix-synapse.sock";
-    };
-  };
-
   config.services.nginx = {
-    upstreams = lib.mkIf cfgs.enable {
-      matrix-sliding-sync.servers."unix:${config.services.matrix-sliding-sync.settings.SYNCV3_BINDADDR}" = { };
-      matrix-synapse.servers."unix:${config.services.matrix-sliding-sync.settings.SYNCV3_SERVER}" = { };
+    upstreams = lib.mkIf cfge.enable {
+      matrix-synapse.servers."unix:/run/matrix-synapse/matrix-synapse.sock" = { };
     };
-    virtualHosts = lib.mkIf (cfge.enable || cfgs.enable) {
+    virtualHosts = lib.mkIf cfg.enable {
       "${cfge.domain}" = lib.mkIf cfge.enable {
         forceSSL = true;
         locations."/".root = (cfge.package.override {
@@ -193,14 +173,9 @@ in
         });
       };
 
-      "${cfg.domain}" = lib.mkIf cfgs.enable {
+      "${cfg.domain}" = lib.mkIf cfg.enable {
         forceSSL = true;
         locations."/".proxyPass = "http://matrix-synapse";
-      };
-
-      "${cfgs.domain}" = lib.mkIf cfgs.enable {
-        forceSSL = true;
-        locations."/".proxyPass = "http://matrix-sliding-sync";
       };
     };
   };
@@ -209,27 +184,5 @@ in
     long_name = "Matrix Users";
     name = cfgl.userGroup;
     permissions = { };
-  };
-
-  config.systemd = lib.mkIf cfgs.enable {
-    # don't hassle with postgres socket auth and DynamicUser
-    services.matrix-sliding-sync.serviceConfig = {
-      DynamicUser = lib.mkForce false;
-      Group = "matrix-sliding-sync";
-      RuntimeDirectory = "matrix-sliding-sync";
-      User = "matrix-sliding-sync";
-    };
-  };
-
-  config.users = lib.mkIf cfgs.enable {
-    groups.matrix-sliding-sync = { };
-    users = {
-      matrix-sliding-sync = {
-        extraGroups = [ "matrix-synapse" ];
-        group = "matrix-sliding-sync";
-        isSystemUser = true;
-      };
-      nginx.extraGroups = [ "matrix-synapse" ];
-    };
   };
 }
