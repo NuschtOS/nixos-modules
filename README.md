@@ -6,7 +6,7 @@ This includes features like:
 - Backend independent LDAP/OAuth2 abstraction with service integration
 - A continuation of environment.noXLibs named environment.noGraphicsPackages
 - Easy Postgres upgrades between major versions and installation of `pg_stat_statements` extension in all databases
-- Easy integration of Matrix Synapse, Element Web, Sliding Sync Proxy and extra oembed providers
+- Easy integration of Matrix Synapse, Element Web and extra oembed providers
 - Configure extra dependencies in Nextcloud for the Recognize and Memories Apps and properly setup preview generation
 - Restricted nix remote builders which can only execute remote builds
 - More opinionated integrations on top of Portunus (Simple LDAP frontend), dex and oauth2-proxy
