@@ -187,5 +187,7 @@ in
       name = cfgl.userGroup;
       permissions = { };
     } ];
+
+    users.users.nginx.extraGroups = lib.mkIf cfg.listenOnSocket [ "matrix-synapse" ];
   };
 }
