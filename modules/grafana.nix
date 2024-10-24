@@ -131,4 +131,8 @@ in
       permissions = { };
     };
   };
+
+  config.users.users = lib.mkIf (cfg.enable && cfg.configureNginx) {
+    grafana.extraGroups = [ "nginx" ];
+  };
 }
