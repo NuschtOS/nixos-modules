@@ -22,6 +22,7 @@ in
   };
 
   config = {
+    # TODO: there is no programs.ssh.enable, what to use instead?
     programs.ssh = {
       extraConfig = lib.mkIf cfgP.recommendedDefaults /* sshconfig */ ''
         # hard complain about wrong knownHosts
