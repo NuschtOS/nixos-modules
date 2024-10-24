@@ -10,6 +10,7 @@ in
   options = {
     programs.ssh = {
       addPopularKnownHosts = libS.mkOpinionatedOption "add ssh public keys of popular websites to known_hosts";
+      addHelpOnHostkeyMismatch = libS.mkOpinionatedOption "show a ssh-keygen command to remove mismatching ssh knownhosts entries";
       recommendedDefaults = libS.mkOpinionatedOption "set recommend and secure default settings";
     };
 
@@ -44,6 +45,23 @@ in
         (libS.mkPubKey "git.sr.ht" "ecdsa-sha2-nistp256" "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCj6y+cJlqK3BHZRLZuM+KP2zGPrh4H66DacfliU1E2DHAd1GGwF4g1jwu3L8gOZUTIvUptqWTkmglpYhFp4Iy4=")
         (libS.mkPubKey "git.sr.ht" "ssh-ed25519" "AAAAC3NzaC1lZDI1NTE5AAAAIMZvRd4EtM7R+IHVMWmDkVU3VLQTSwQDSAvW0t2Tkj60")
       ]);
+      package = lib.mkIf cfgP.addHelpOnHostkeyMismatch (pkgs.openssh.overrideAttrs ({ patches, ... }: {
+        patches = patches ++ [
+          (pkgs.fetchpatch {
+            urls =
+              let
+                version = "1%259.9p1-1";
+              in
+              [
+                "https://salsa.debian.org/ssh-team/openssh/-/raw/debian/${version}/debian/patches/mention-ssh-keygen-on-keychange.patch"
+              ];
+            hash = "sha256-OZPOHwQkclUAjG3ShfYX66sbW2ahXPgsV6XNfzl9SIg=";
+          })
+        ];
+
+        # takes to long and unstable requires openssh to work to advance
+        doCheck = false;
+      }));
     };
 
     services.openssh = lib.mkIf cfgS.recommendedDefaults {
