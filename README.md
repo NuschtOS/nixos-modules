@@ -75,3 +75,9 @@ We use CI checks to ensure that the modules evaluate on the current stable and u
 
 * <https://github.com/nix-community/srvos>
 * <https://gitea.c3d2.de/C3D2/nix-user-module>
+
+## Contact
+
+For bugs and issues please open an issue in this repository.
+
+If you want to chat about things or have ideas, feel free to join the [Matrix chat](https://matrix.to/#/#nuschtos:c3d2.de).
