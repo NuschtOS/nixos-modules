@@ -5,16 +5,9 @@
     flake-utils.url = "github:numtide/flake-utils";
     # if changed, also update .github/workflows/flake-eval.yaml
     nixpkgs.url = "github:NuschtOS/nuschtpkgs/nixos-unstable";
-    search = {
-      url = "github:nuschtos/search";
-      inputs = {
-        flake-utils.follows = "flake-utils";
-        nixpkgs.follows = "nixpkgs";
-      };
-    };
   };
 
-  outputs = { self, flake-utils, nixpkgs, search, ... }:
+  outputs = { self, flake-utils, nixpkgs, ... }:
     let
       inherit (nixpkgs) lib;
       src = builtins.filterSource (path: type: type == "directory" || lib.hasSuffix ".nix" (baseNameOf path)) ./.;
@@ -77,23 +70,6 @@
         debugging = pkgs.symlinkJoin {
           name = "debugging-tools";
           paths = import ./lib/debug-pkgs.nix pkgs;
-        };
-
-        search-page = search.packages.${system}.mkSearch {
-          modules = [
-            ({ config, lib, ... }: {
-              _module.args = {
-                libS = self.lib { inherit config lib; };
-                inherit pkgs;
-              };
-              imports = [
-                (pkgs.path + "/nixos/modules/misc/extra-arguments.nix")
-              ];
-            })
-            self.nixosModule
-          ];
-          title = "NixOS Modules Search";
-          urlPrefix = "https://github.com/NuschtOS/nixos-modules/tree/main/";
         };
       };
     });
