@@ -3,7 +3,7 @@
 let
   cfg = config.services.postgresql;
   cfgu = config.services.postgresql.upgrade;
-  latestVersion = "16";
+  latestVersion = if pkgs?postgresql_17 then "17" else "16";
 in
 {
   options.services.postgresql = {
