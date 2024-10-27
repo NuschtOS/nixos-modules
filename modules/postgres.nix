@@ -39,7 +39,7 @@ in
     refreshCollation = libS.mkOpinionatedOption "refresh collation on startup. This prevents errors when initializing new DBs after a glibc upgrade";
 
     upgrade = {
-      enable = libS.mkOpinionatedOption "install the upgrade-pg-cluster script to update postgres";
+      enable = libS.mkOpinionatedOption "install the upgrade-postgres script to update postgres";
 
       extraArgs = lib.mkOption {
         type = with lib.types; listOf str;
@@ -52,7 +52,7 @@ in
       }) // {
         description = ''
           The postgres package to which should be updated.
-          After running upgrade-pg-cluster this must be set to services.postgresql.package to complete the update.
+          After running upgrade-postgres this must be set to services.postgresql.package to complete the update.
         '';
       };
 
@@ -107,7 +107,7 @@ in
         oldData = config.services.postgresql.dataDir;
         oldBin = "${if cfg.extraPlugins == [] then oldPackage else oldPackage.withPackages cfg.extraPlugins}/bin";
       in
-      pkgs.writeScriptBin "upgrade-pg-cluster" /* bash */ ''
+      pkgs.writeScriptBin "upgrade-postgres" /* bash */ ''
         set -eu
 
         echo "Current version: ${cfg.package.version}"
