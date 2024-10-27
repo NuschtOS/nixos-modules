@@ -118,7 +118,9 @@ in
           exit 2
         fi
 
-        systemctl stop postgresql ${lib.concatStringsSep " " cfgu.stopServices}
+        # don't fail when any unit cannot be stopped
+        systemctl stop ${lib.concatStringsSep " " cfgu.stopServices} || true
+        systemctl stop postgresql
 
         install -d -m 0700 -o postgres -g postgres "${newData}"
         cd "${newData}"
