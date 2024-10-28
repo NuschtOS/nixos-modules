@@ -25,10 +25,29 @@ in
     recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
 
     remoteBuilder = {
-      enable = lib.mkEnableOption "" // { description = "Whether to configure restricted nix remote builder"; };
+      enable = lib.mkEnableOption "" // {
+        description = ''
+          Whether to configure a restricted user for nix remote building on this host.
+
+          To use the remote builder on another NixOS machine, you need to configure the following there:
+          
+          ```nix
+          nix.buildMachines = {
+            hostName = "hostname.example.com";
+            maxJobs = 4;
+            protocol = "ssh-ng";
+            speedFactor = 2;
+            sshUser = "nix-remote-builder";
+            supportedFeatures = [ "big-parallel" ];
+            systems = [ "x86_64-linux" "i686-linux" ];
+          };
+          ```
+        '';
+      };
 
       sshPublicKeys = lib.mkOption {
         type = lib.types.listOf lib.types.str;
+        example = [ "ssh-ed25519 AAA....tGz user" ];
         description = "SSH public keys accepted by the remote build user.";
       };
 
