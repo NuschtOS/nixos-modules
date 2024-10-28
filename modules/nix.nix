@@ -47,7 +47,7 @@ in
 
       sshPublicKeys = lib.mkOption {
         type = lib.types.listOf lib.types.str;
-        default = [ "ssh-ed25519 AAA....tGz user" ];
+        example = [ "ssh-ed25519 AAA....tGz user" ];
         description = "SSH public keys accepted by the remote build user.";
       };
 
