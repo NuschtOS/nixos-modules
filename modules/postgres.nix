@@ -3,7 +3,7 @@
 let
   cfg = config.services.postgresql;
   cfgu = config.services.postgresql.upgrade;
-  latestVersion = "16";
+  latestVersion = if pkgs?postgresql_17 then "17" else "16";
 in
 {
   options.services.postgresql = {
@@ -39,7 +39,7 @@ in
     refreshCollation = libS.mkOpinionatedOption "refresh collation on startup. This prevents errors when initializing new DBs after a glibc upgrade";
 
     upgrade = {
-      enable = libS.mkOpinionatedOption "install the upgrade-pg-cluster script to update postgres";
+      enable = libS.mkOpinionatedOption "install the upgrade-postgres script to update postgres";
 
       extraArgs = lib.mkOption {
         type = with lib.types; listOf str;
@@ -52,7 +52,7 @@ in
       }) // {
         description = ''
           The postgres package to which should be updated.
-          After running upgrade-pg-cluster this must be set to services.postgresql.package to complete the update.
+          After running upgrade-postgres this must be set to services.postgresql.package to complete the update.
         '';
       };
 
@@ -107,7 +107,7 @@ in
         oldData = config.services.postgresql.dataDir;
         oldBin = "${if cfg.extraPlugins == [] then oldPackage else oldPackage.withPackages cfg.extraPlugins}/bin";
       in
-      pkgs.writeScriptBin "upgrade-pg-cluster" /* bash */ ''
+      pkgs.writeScriptBin "upgrade-postgres" /* bash */ ''
         set -eu
 
         echo "Current version: ${cfg.package.version}"
@@ -118,7 +118,9 @@ in
           exit 2
         fi
 
-        systemctl stop postgresql ${lib.concatStringsSep " " cfgu.stopServices}
+        # don't fail when any unit cannot be stopped
+        systemctl stop ${lib.concatStringsSep " " cfgu.stopServices} || true
+        systemctl stop postgresql
 
         install -d -m 0700 -o postgres -g postgres "${newData}"
         cd "${newData}"
