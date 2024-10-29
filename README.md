@@ -37,7 +37,7 @@ Add or merge the following settings to your `flake.nix`:
     };
   };
 
-  outputs = { nixos-modules }: {
+  outputs = { nixos-modules, ... }: {
     nixosConfigurations.HOSTNAME = {
       modules = [
        nixos-modules.nixosModule
@@ -54,7 +54,7 @@ Under `nixos-modules.nixosModules.<name>` we expose all modules available in the
 
 ## Available options
 
-Please use our [options search site](https://modules.nüschtos.de/) to find and browse all available options. It supports searching for option names, wildcards and can be [self hosted](https://github.com/NuschtOS/search), too.
+Please use our [options search site](https://search.xn--nschtos-n2a.de/?scope=NixOS%20Modules) to find and browse all available options. It supports searching for option names, wildcards and can be [self hosted](https://github.com/NuschtOS/search), too.
 
 ## Compatibility note
 
