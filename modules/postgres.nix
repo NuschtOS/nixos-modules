@@ -7,7 +7,7 @@ let
 in
 {
   options.services.postgresql = {
-    configurePgStatStatements = libS.mkOpinionatedOption "configure and enable pg_stat_statements";
+    configurePgStatStatements = libS.mkOpinionatedOption "configure and enable pg_stat_statements extension";
 
     databases = lib.mkOption {
       type = lib.types.listOf lib.types.str;
@@ -39,28 +39,50 @@ in
     refreshCollation = libS.mkOpinionatedOption "refresh collation on startup. This prevents errors when initializing new DBs after a glibc upgrade";
 
     upgrade = {
-      enable = libS.mkOpinionatedOption "install the upgrade-postgres script to update postgres";
+      enable = libS.mkOpinionatedOption ''
+        install the `upgrade-postgres` script.
+
+        The script can upgrade a local postgres server in a two step process.
+        Before the upgrade can be be started, `services.postgresql.upgrade.stopServices` must be configured!
+        After that is done and deploment, the upgrade can be started by running the script.
+
+        The script first stops all services configured in `stopServices` and the postgres server and then runs a `pg_upgrade` with the configured `newPackage`.
+        After that is complete, `services.postgresql.package` must be adjusted and deployed.
+        As a final step it is highly recommend to run the printed `vacuumdb` command to achieve the best performance.
+        If the upgrade is successful, the old data can be deleted by running the printed `delete_old_cluster.sh` script.
+
+        ::: {.warning}
+        It is recommended to do a backup before doing the upgrade in the form of an SQL dump of the databases.
+        :::
+      '';
 
       extraArgs = lib.mkOption {
         type = with lib.types; listOf str;
         default = [ "--link" "--jobs=$(nproc)" ];
-        description = "Extra arguments to pass to pg_upgrade. See https://www.postgresql.org/docs/current/pgupgrade.html for doc.";
+        description = "Extra arguments to pass to `pg_upgrade`. See <https://www.postgresql.org/docs/current/pgupgrade.html> for more information.";
       };
 
       newPackage = (lib.mkPackageOption pkgs "postgresql" {
         default = [ "postgresql_${latestVersion}" ];
       }) // {
         description = ''
-          The postgres package to which should be updated.
-          After running upgrade-postgres this must be set to services.postgresql.package to complete the update.
+          The postgres package that is being upgraded to.
+          After running `upgrade-postgres`, `service.postgresql.packages` must be set to this exact package to successfully complete the update.
         '';
       };
 
       stopServices = lib.mkOption {
         type = with lib.types; listOf str;
         default = [ ];
-        example = [ "hedgedoc" "hydra" "nginx" ];
-        description = "Systemd services to stop when upgrade is started.";
+        example = [ "hedgedoc" "phpfpm-nextcloud" "nextcloud-notify_push" ];
+        description = ''
+          Systemd service names which are stopped before an upgrade is started.
+          It is very important that all postgres clients are stopped before an upgrade is attempted as they are blocking operations on the databases.
+
+          ::: {.note}
+          These can match the service name but do not need to! For example services using phpfpm might have a `phpfpm-` prefix.
+          :::
+        '';
       };
     };
 
