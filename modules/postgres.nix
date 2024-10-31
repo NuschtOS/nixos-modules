@@ -79,6 +79,8 @@ in
           Systemd service names which are stopped before an upgrade is started.
           It is very important that all postgres clients are stopped before an upgrade is attempted as they are blocking operations on the databases.
 
+          The service files of some well known services are added by default. Check the source code of the module to discover which those are.
+
           ::: {.note}
           These can match the service name but do not need to! For example services using phpfpm might have a `phpfpm-` prefix.
           :::
@@ -171,6 +173,30 @@ in
         databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
         enableJIT = lib.mkIf cfg.recommendedDefaults true;
         settings.shared_preload_libraries = lib.mkIf cfg.configurePgStatStatements "pg_stat_statements";
+        upgrade.stopServices = with config.services; lib.mkMerge [
+          (lib.mkIf (atuin.enable && atuin.database.createLocally) [ "atuin" ])
+          (lib.mkIf (gitea.enable && gitea.database.socket == "/run/postgresql") [ "gitea" ])
+          (lib.mkIf (grafana.enable && grafana.settings.database.host == "/run/postgresql") [ "grafana" ])
+          (lib.mkIf (healthchecks.enable && healthchecks.settings.DB_HOST == "/run/postgresql") [ "healthchecks" ])
+          (lib.mkIf (hedgedoc.enable && hedgedoc.settings.db.host == "/run/postgresql") [ "hedgedoc" ])
+          # @ means to connect to localhost
+          (lib.mkIf (home-assistant.enable && (lib.hasPrefix "postgresql://@/" home-assistant.config.recorder.db_url)) [ "home-assistant" ])
+          # if host= is omitted, hydra defaults to connect to localhost
+          (lib.mkIf (hydra.enable && (!lib.hasInfix ";host=" hydra.dbi)) [
+            "hydra-evaluator" "hydra-notify" "hydra-send-stats" "hydra-update-gc-roots" "hydra-queue-runner" "hydra-server"
+          ])
+          (lib.mkIf (mastodon.enable && mastodon.database.host == "/run/postgresql") [ "mastodon-sidekiq-all" "mastodon-streaming" "mastodon-web"])
+          # assume that when host is set, which is not the default, the database is none local
+          (lib.mkIf (matrix-synapse.enable && (!lib.hasAttr "host" matrix-synapse.settings.database.args)) [ "matrix-synapse" ])
+          (lib.mkIf (mediawiki.enable && mediawiki.database.socket ==  "/run/postgresql") [ "phpfpm-mediawiki" ])
+          (lib.mkIf (miniflux.enable && miniflux.createDatabaseLocally) [ "miniflux" ])
+          # TODO: simplify after https://github.com/NixOS/nixpkgs/pull/352508 got merged
+          (lib.mkIf (mobilizon.enable && lib.hasSuffix "/run/postgresql" mobilizon.settings.":mobilizon"."Mobilizon.Storage.Repo".socket_dir) [ "mobilizon" ])
+          (lib.mkIf (nextcloud.notify_push.enable && nextcloud.notify_push.dbhost == "/run/postgresql") [ "nextcloud-notify_push" ])
+          (lib.mkIf (nextcloud.enable && nextcloud.config.dbhost == "/run/postgresql") [ "phpfpm-nextcloud" ])
+          (lib.mkIf (pretalx.enable && pretalx.settings.database.host == "/run/postgresql") [ "pretalx-web" "pretalx-worker" ])
+          (lib.mkIf (vaultwarden.enable && (lib.hasInfix "?host=/run/postgresql" vaultwarden.config.DATABASE_URL)) [ "vaultwarden" ])
+        ];
       };
 
       postgresqlBackup = lib.mkIf cfg.recommendedDefaults {
@@ -217,7 +243,7 @@ in
               '') (lib.splitString "," cfg.settings.shared_preload_libraries))
             ) cfg.databases)))
 
-            (lib.mkIf cfg.refreshCollation (lib.concatStrings (map (db: ''
+            (lib.mkIf cfg.refreshCollation (lib.concatStrings (map (db: /* bash */ ''
               $PSQL -tAc 'ALTER DATABASE "${db}" REFRESH COLLATION VERSION'
             '') cfg.databases)))
           ];
@@ -238,10 +264,10 @@ in
         };
       };
 
-       timers.postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
-         inherit (cfg.vacuumAnalyzeTimer) timerConfig;
-         wantedBy = [ "timers.target" ];
-       };
+      timers.postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
+        inherit (cfg.vacuumAnalyzeTimer) timerConfig;
+        wantedBy = [ "timers.target" ];
+      };
     };
   };
 }
