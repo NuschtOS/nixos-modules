@@ -14,12 +14,6 @@
     "enabled": true
   },
   "osvVulnerabilityAlerts": true,
-  "packageRules": [
-    {
-      "matchManagers": ["nix"],
-      "groupName": "flake inputs"
-    }
-  ],
   "prHourlyLimit": 0,
   "schedule": [
     "before 12am on sunday"
