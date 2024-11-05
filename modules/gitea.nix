@@ -191,6 +191,15 @@ in
           ENABLED = true;
           RUN_AT_START = true;
         };
+        log = {
+          "logger.router.MODE" = "console-warn";
+          "logger.xorm.MODE" = "console-warn";
+        };
+        "log.console-warn" = {
+          FLAGS = "stdflags";
+          LEVEL = "Warn";
+          MODE = "console";
+        };
         other.SHOW_FOOTER_VERSION = false;
         repository.ACCESS_CONTROL_ALLOW_ORIGIN = cfg.settings.server.DOMAIN;
         "repository.signing".DEFAULT_TRUST_MODEL = "committer";
