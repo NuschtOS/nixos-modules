@@ -159,49 +159,65 @@ in
       admin-group = cfgo.adminGroup;
     };
 
-    settings = lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
-      cors = {
-        ALLOW_DOMAIN = cfg.settings.server.DOMAIN;
-        ENABLED = true;
-      };
-      cron.ENABLED = true;
-      "cron.archive_cleanup" = {
-        SCHEDULE = "@every 3h";
-        OLDER_THAN = "6h";
-      };
-      "cron.delete_old_actions".ENABLED = true;
-      "cron.delete_old_system_notices".ENABLED = true;
-      # TODO: upstream?
-      "cron.resync_all_sshkeys" = {
-        ENABLED = true;
-        RUN_AT_START = true;
-      };
-      other.SHOW_FOOTER_VERSION = false;
-      repository.ACCESS_CONTROL_ALLOW_ORIGIN = cfg.settings.server.DOMAIN;
-      "repository.signing".DEFAULT_TRUST_MODEL = "committer";
-      security.DISABLE_GIT_HOOKS = true;
-      server = {
-        ENABLE_GZIP = true;
-        # The description of this setting is wrong and it doesn't control any CDN functionality but acts just as an override to the avatar federation.
-        # see https://github.com/go-gitea/gitea/issues/31112
-        OFFLINE_MODE = false;
-        ROOT_URL = "https://${cfg.settings.server.DOMAIN}/";
-        SSH_SERVER_CIPHERS = "chacha20-poly1305@openssh.com, aes256-gcm@openssh.com, aes128-gcm@openssh.com";
-        SSH_SERVER_KEY_EXCHANGES = "curve25519-sha256@libssh.org, ecdh-sha2-nistp521, ecdh-sha2-nistp384, ecdh-sha2-nistp256, diffie-hellman-group14-sha1";
-        SSH_SERVER_MACS = "hmac-sha2-256-etm@openssh.com, hmac-sha2-256, hmac-sha1";
-      };
-      session = {
-        COOKIE_SECURE = true;
-        PROVIDER = "db";
-        SAME_SITE = "strict";
-        SESSION_LIFE_TIME = 28 * 86400; # 28 days
-      };
-      "ssh.minimum_key_sizes" = {
-        ECDSA = -1;
-        RSA = 4095;
-      };
-      time.DEFAULT_UI_LOCATION = config.time.timeZone;
-    });
+    settings = lib.mkMerge [
+      (lib.mkIf cfg.oidc.enable {
+        oauth2_client = {
+          # only fully trust oidc when we also use LDAP login
+          ACCOUNT_LINKING = lib.mkIf cfg.ldap.enable "auto";
+          ENABLE_AUTO_REGISTRATION = true;
+          # email is required for auto registration
+          # profile is required for preferred_username
+          # groups are checked in authentication source but somehow still required here?! If missing, users get a signin prohbited
+          OPENID_CONNECT_SCOPES = "email profile groups";
+          UPDATE_AVATAR = true;
+          USERNAME = "preferred_username";
+        };
+      })
+
+      (lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
+        cors = {
+          ALLOW_DOMAIN = cfg.settings.server.DOMAIN;
+          ENABLED = true;
+        };
+        cron.ENABLED = true;
+        "cron.archive_cleanup" = {
+          SCHEDULE = "@every 3h";
+          OLDER_THAN = "6h";
+        };
+        "cron.delete_old_actions".ENABLED = true;
+        "cron.delete_old_system_notices".ENABLED = true;
+        # TODO: upstream?
+        "cron.resync_all_sshkeys" = {
+          ENABLED = true;
+          RUN_AT_START = true;
+        };
+        other.SHOW_FOOTER_VERSION = false;
+        repository.ACCESS_CONTROL_ALLOW_ORIGIN = cfg.settings.server.DOMAIN;
+        "repository.signing".DEFAULT_TRUST_MODEL = "committer";
+        security.DISABLE_GIT_HOOKS = true;
+        server = {
+          ENABLE_GZIP = true;
+          # The description of this setting is wrong and it doesn't control any CDN functionality but acts just as an override to the avatar federation.
+          # see https://github.com/go-gitea/gitea/issues/31112
+          OFFLINE_MODE = false;
+          ROOT_URL = "https://${cfg.settings.server.DOMAIN}/";
+          SSH_SERVER_CIPHERS = "chacha20-poly1305@openssh.com, aes256-gcm@openssh.com, aes128-gcm@openssh.com";
+          SSH_SERVER_KEY_EXCHANGES = "curve25519-sha256@libssh.org, ecdh-sha2-nistp521, ecdh-sha2-nistp384, ecdh-sha2-nistp256, diffie-hellman-group14-sha1";
+          SSH_SERVER_MACS = "hmac-sha2-256-etm@openssh.com, hmac-sha2-256, hmac-sha1";
+        };
+        session = {
+          COOKIE_SECURE = true;
+          PROVIDER = "db";
+          SAME_SITE = "strict";
+          SESSION_LIFE_TIME = 28 * 86400; # 28 days
+        };
+        "ssh.minimum_key_sizes" = {
+          ECDSA = -1;
+          RSA = 4095;
+        };
+        time.DEFAULT_UI_LOCATION = config.time.timeZone;
+      }))
+    ];
   };
 
   config.services.portunus.dex = lib.mkIf cfg.oidc.enable {
