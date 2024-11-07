@@ -147,7 +147,7 @@ in
 
       virtualHosts = lib.mkMerge [ {
         "${cfge.domain}" = lib.mkIf cfge.enable {
-          forceSSL = true;
+          forceSSL = lib.mkIf cfg.recommendedDefaults true;
           locations."/".root = (cfge.package.override {
             conf = with config.services.matrix-synapse.settings; {
               default_server_config."m.homeserver" = {
