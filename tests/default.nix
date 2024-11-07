@@ -33,7 +33,25 @@ lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
     };
   };
 
-  matrix-synapse-no-nginx = mkTest {
+  matrix-synapse-nginx-with-socket = mkTest {
+    module = {
+      services = {
+        matrix-synapse = {
+          enable = true;
+          domain = "example.org";
+          listenOnSocket = true;
+          element-web = {
+            enable = true;
+            domain = "example.org";
+          };
+        };
+
+        nginx.enable = true;
+      };
+    };
+  };
+
+  matrix-no-nginx = mkTest {
     module = {
       services.matrix-synapse = {
         enable = true;
