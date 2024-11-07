@@ -23,6 +23,16 @@ lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
     };
   };
 
+  # https://github.com/NuschtOS/nixos-modules/issues/39
+  hound-repos = mkTest {
+    module = {
+      services.hound = {
+        enable = true;
+        repos = [ "https://github.com/NuschtOS/nixos-modules.git" ];
+      };
+    };
+  };
+
   matrix-synapse-no-nginx = mkTest {
     module = {
       services.matrix-synapse = {
