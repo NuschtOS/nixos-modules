@@ -16,6 +16,13 @@ in
 lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
   no-config = mkTest { };
 
+  # https://github.com/NuschtOS/nixos-modules/issues/2
+  acme-staging = mkTest {
+    module = {
+      security.acme.staging = true;
+    };
+  };
+
   matrix-synapse-no-nginx = mkTest {
     module = {
       services.matrix-synapse = {
