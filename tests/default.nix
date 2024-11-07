@@ -63,4 +63,13 @@ lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
       };
     };
   };
-}
+
+  # https://github.com/NuschtOS/nixos-modules/issues/156
+  renovate-plain = mkTest {
+    module = {
+      services.renovate = {
+        enable = true;
+      };
+    };
+  };
+})
