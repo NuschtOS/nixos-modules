@@ -145,7 +145,7 @@ in
         matrix-synapse.servers."unix:/run/matrix-synapse/matrix-synapse.sock" = { };
       };
 
-      virtualHosts = {
+      virtualHosts = lib.mkMerge [ {
         "${cfge.domain}" = lib.mkIf cfge.enable {
           forceSSL = true;
           locations."/".root = (cfge.package.override {
@@ -177,14 +177,14 @@ in
             '';
           });
         };
-
+      } {
         "${cfg.domain}" = {
           forceSSL = lib.mkIf cfg.recommendedDefaults true;
           locations."/" = lib.mkIf cfg.listenOnSocket {
             proxyPass = "http://matrix-synapse";
           };
         };
-      };
+      } ];
     };
 
     services.portunus.seedSettings.groups = lib.mkIf (cfgl.userGroup != null) [ {
