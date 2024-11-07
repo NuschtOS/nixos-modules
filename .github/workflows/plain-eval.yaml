@@ -1,4 +1,4 @@
-name: "Run flake eval"
+name: "Run eval tests"
 
 on:
   push:
@@ -38,13 +38,13 @@ jobs:
 
       - uses: cachix/install-nix-action@v30
 
-      - name: eval ${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
+      - name: eval plain config with ${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
         if: matrix.targets.repo != 'NuschtOS/nuschtpkgs' && matrix.targets.branch != 'nixos-unstable'
         run: |
-          nix eval -L .#nixosConfigurations.test.config.system.build.toplevel \
+          nix eval -L .#checks.x86_64-linux.no-config \
             --override-input nixpkgs github:${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
 
-      - name: eval flake lock
+      - name: eval plain config with flake.lock
         if: matrix.targets.repo == 'NuschtOS/nuschtpkgs' && matrix.targets.branch == 'nixos-unstable'
         run: |
-          nix eval -L .#nixosConfigurations.test.config.system.build.toplevel
+          nix eval -L .#checks.x86_64-linux.no-config
