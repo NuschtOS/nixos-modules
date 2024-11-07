@@ -55,6 +55,11 @@ in
   ];
 
   config = lib.mkIf cfg.enable {
+    assertions = [ {
+      assertion = cfg.listenOnSocket -> config.services.nginx.enable;
+      message = "Enabling services.matrix-synapse.listenOnSocket requires enabling services.nginx.enable";
+    } ];
+
     environment.etc."matrix-synapse/config.yaml".source = cfg.configFile;
 
     services.matrix-synapse = lib.mkMerge [
@@ -188,6 +193,8 @@ in
       permissions = { };
     } ];
 
-    users.users.nginx.extraGroups = lib.mkIf cfg.listenOnSocket [ "matrix-synapse" ];
+    users.users = lib.mkIf cfg.listenOnSocket {
+      nginx.extraGroups = [ "matrix-synapse" ];
+    };
   };
 }

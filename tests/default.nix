@@ -15,4 +15,17 @@ let
 in
 lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
   no-config = mkTest { };
+
+  matrix-synapse-no-nginx = mkTest {
+    module = {
+      services.matrix-synapse = {
+        enable = true;
+        domain = "example.org";
+        element-web = {
+          enable = true;
+          domain = "example.org";
+        };
+      };
+    };
+  };
 }
