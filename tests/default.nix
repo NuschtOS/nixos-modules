@@ -112,4 +112,13 @@ lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
       };
     };
   };
+
+  vaultwarden-no-nginx = mkTest {
+    module = {
+      services.vaultwarden = {
+        enable = true;
+        domain = "example.com";
+      };
+    };
+  };
 })
