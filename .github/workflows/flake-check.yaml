@@ -39,7 +39,7 @@ jobs:
       - uses: cachix/install-nix-action@v30
 
       - name: run nix flake check with ${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
-        if: matrix.targets.repo != 'NuschtOS/nuschtpkgs' && matrix.targets.branch != 'nixos-unstable'
+        if: matrix.targets.repo != 'NuschtOS/nuschtpkgs' || matrix.targets.branch != 'nixos-unstable'
         run: |
           nix flake check \
             --override-input nixpkgs github:${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
