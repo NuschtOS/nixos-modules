@@ -94,6 +94,16 @@ lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
     };
   };
 
+  nextcloud-plain = mkTest {
+    module = {
+      services.nextcloud = {
+        enable = true;
+        config.adminpassFile = "/password";
+        hostName = "example.com";
+      };
+    };
+  };
+
   # https://github.com/NuschtOS/nixos-modules/issues/156
   renovate-plain = mkTest {
     module = {
