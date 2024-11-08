@@ -33,7 +33,19 @@ lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
     };
   };
 } // {
-  matrix-synapse-nginx-with-socket = mkTest {
+  grafana-no-nginx = mkTest {
+    module = {
+      services.grafana = {
+        enable = true;
+        settings.security = {
+          admin_password = "secure";
+          secret_key = "secure";
+        };
+      };
+    };
+  };
+
+  matrix-nginx-with-socket = mkTest {
     module = {
       services = {
         matrix-synapse = {
