@@ -103,7 +103,7 @@ lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
       };
     };
   };
-
+} // lib.optionalAttrs (lib.versionAtLeast lib.version "24.11") {
   # https://github.com/NuschtOS/nixos-modules/issues/156
   renovate-plain = mkTest {
     module = {
@@ -112,7 +112,7 @@ lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
       };
     };
   };
-
+} // {
   vaultwarden-no-nginx = mkTest {
     module = {
       services.vaultwarden = {
