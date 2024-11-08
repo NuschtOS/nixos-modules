@@ -32,11 +32,15 @@ jobs:
 
           - repo: SuperSandro2000/nixpkgs
             branch: nixos-unstable
+            extraArgs: experimental-features = ca-derivations nix-command flakes
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: cachix/install-nix-action@v30
+        with:
+          extra_nix_config: |
+            ${{ matrix.targets.extraArgs }}
 
       - name: eval plain config with ${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
         if: matrix.targets.repo != 'NuschtOS/nuschtpkgs' || matrix.targets.branch != 'nixos-unstable'
