@@ -42,11 +42,22 @@ jobs:
           extra_nix_config: |
             ${{ matrix.targets.extraArgs }}
 
+      - name: eval plain config with ${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
+        if: matrix.targets.repo != 'NuschtOS/nuschtpkgs' || matrix.targets.branch != 'nixos-unstable'
+        run: |
+          nix eval -L .#checks.x86_64-linux.no-config \
+            --override-input nixpkgs github:${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
+
       - name: run nix flake check with ${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
         if: matrix.targets.repo != 'NuschtOS/nuschtpkgs' || matrix.targets.branch != 'nixos-unstable'
         run: |
           nix flake check \
             --override-input nixpkgs github:${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
+
+      - name: eval plain config with flake.lock
+        if: matrix.targets.repo == 'NuschtOS/nuschtpkgs' && matrix.targets.branch == 'nixos-unstable'
+        run: |
+          nix eval -L .#checks.x86_64-linux.no-config
 
       - name: run nix flake check with flake.lock
         if: matrix.targets.repo == 'NuschtOS/nuschtpkgs' && matrix.targets.branch == 'nixos-unstable'
