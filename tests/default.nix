@@ -76,6 +76,19 @@ lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
     };
   };
 
+  matrix-no-element = mkTest {
+    module = {
+      services = {
+        matrix-synapse = {
+          enable = true;
+          domain = "example.org";
+        };
+
+        nginx.enable = true;
+      };
+    };
+  };
+
   # https://github.com/NuschtOS/nixos-modules/issues/160
   matrix-element-same-domain = mkTest {
     module = {
