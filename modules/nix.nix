@@ -30,7 +30,7 @@ in
           Whether to configure a restricted user for nix remote building on this host.
 
           To use the remote builder on another NixOS machine, you need to configure the following there:
-          
+
           ```nix
           nix.buildMachines = {
             hostName = "hostname.example.com";
@@ -90,6 +90,10 @@ in
                   ;;
                 "nix-store --serve --write")
                   exec ${lib.getExe' cfg.package "nix-store"} --serve --write
+                  ;;
+                # used by nixos-rebuild --target-host ... --build-host ...
+                "nix-store -r")
+                  exec ${lib.getExe' cfg.package "nix-store"} "$@"
                   ;;
                 *)
                   echo "Access is only allowed for nix remote building, not running command \"$SSH_ORIGINAL_COMMAND\"" 1>&2
