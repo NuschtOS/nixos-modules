@@ -150,27 +150,34 @@ in
           "${cfge.domain}" = {
             forceSSL = lib.mkIf cfg.recommendedDefaults true;
             locations."/".root = (cfge.package.override {
-              conf = with config.services.matrix-synapse.settings; {
-                default_server_config."m.homeserver" = {
-                  "base_url" = public_baseurl;
-                  "server_name" = server_name;
-                };
-                default_theme = "dark";
-                room_directory.servers = [ server_name ];
-              } // lib.optionalAttrs cfge.enableConfigFeatures {
-                features = {
-                  # https://github.com/matrix-org/matrix-react-sdk/blob/develop/src/settings/Settings.tsx
-                  # https://github.com/vector-im/element-web/blob/develop/docs/labs.md
-                  feature_ask_to_join = true;
-                  feature_bridge_state = true;
-                  feature_jump_to_date = true;
-                  feature_mjolnir = true;
-                  feature_notifications = true;
-                  feature_pinning = true;
-                  feature_report_to_moderators = true;
-                };
-                show_labs_settings = true;
-              };
+              conf = lib.recursiveUpdate
+                (lib.recursiveUpdate
+                  (let
+                    inherit (config.services.matrix-synapse.settings) public_baseurl server_name;
+                  in {
+                    default_server_config."m.homeserver" = {
+                      "base_url" = public_baseurl;
+                      "server_name" = server_name;
+                    };
+                    default_theme = "dark";
+                    room_directory.servers = [ server_name ];
+                  })
+                  (lib.optionalAttrs cfge.enableConfigFeatures {
+                    features = {
+                      # https://github.com/matrix-org/matrix-react-sdk/blob/develop/src/settings/Settings.tsx
+                      # https://github.com/vector-im/element-web/blob/develop/docs/labs.md
+                      feature_ask_to_join = true;
+                      feature_bridge_state = true;
+                      feature_jump_to_date = true;
+                      feature_mjolnir = true;
+                      feature_notifications = true;
+                      feature_pinning = true;
+                      feature_report_to_moderators = true;
+                    };
+                    show_labs_settings = true;
+                  })
+                )
+                (cfge.package.conf or { });
             }).overrideAttrs ({ postInstall ? "", ... }: {
               # prevent 404 spam in nginx log
               postInstall = postInstall + ''
