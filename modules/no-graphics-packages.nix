@@ -88,7 +88,15 @@
           (lib.mesonEnable "xlib-lease" false)
         ];
       });
-      mpv-unwrapped = prev.mpv-unwrapped.override { drmSupport = false; screenSaverSupport = false; sdl2Support = false; vulkanSupport = false; waylandSupport = false; x11Support = false; };
+      mpv-unwrapped = prev.mpv-unwrapped.override ({
+        drmSupport = false;
+        sdl2Support = false;
+        vulkanSupport = false;
+        waylandSupport = false;
+        x11Support = false;
+      } // lib.optionalAttrs (prev.mpv-unwrapped.override.__functionArgs?screenSaverSupport) {
+        screenSaverSupport = false;
+      });
       msmtp = prev.msmtp.override { withKeyring = false; };
       mupdf = prev.mupdf.override { enableGL = false; enableX11 = false; };
       neofetch = prev.neofetch.override { x11Support = false; };
