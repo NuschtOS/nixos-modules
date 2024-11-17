@@ -167,7 +167,7 @@ in
           } ];
         };
         genHttpProbeScrapeConfig = { name, opts }: commonProbeScrapeConfig // {
-          job_name = "blackbox_http_${name}_${toString opts.statusCode}";
+          job_name = "blackbox_http_${name}";
           params.module = [ "http_${name}" ];
           inherit (commonProbeScrapeConfig) relabel_configs;
           static_configs = [ {
@@ -190,7 +190,7 @@ in
       ) cfgb.httpProbe
       ++ lib.mapAttrsToList (name: opts:
         if (opts.ip == "both" || opts.ip == "ip6") then (genHttpProbeScrapeConfig { inherit name opts; } // {
-          job_name = "blackbox_http_${name}_${toString opts.statusCode}_ip6";
+          job_name = "blackbox_http_${name}_ip6";
           params.module = [ "http_${name}_ip6" ];
         }) else null
       ) cfgb.httpProbe);
