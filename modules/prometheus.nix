@@ -26,6 +26,38 @@ in
         '';
       };
 
+      dnsProbe = lib.mkOption {
+        type = with lib.types; attrsOf (submodule {
+          options = {
+            names = lib.mkOption {
+              type = with lib.types; listOf str;
+              example = [ "example.com" ];
+              description = "Query name to query";
+            };
+
+            targets = lib.mkOption {
+              type = with lib.types; listOf str;
+              default = if config.services.resolved.enable then [ "127.0.0.53" ] else lib.head config.networking.nameservers;
+              defaultText = lib.literalExpression "if config.services.resolved.enable then [ \"127.0.0.53\" ] else lib.head config.networking.nameservers";
+              description = "DNS servers to test this probe against.";
+            };
+
+            type = lib.mkOption {
+              type = lib.types.str;
+              example = "A";
+              description = "Record type to query (A, AAAA, CNAME, SOA, NS, ...)";
+            };
+          };
+        });
+        default = { };
+        example = ''
+          {
+            name = "example.com";
+            type = "A";
+          }
+        '';
+      };
+
       httpProbe = lib.mkOption {
         type = with lib.types; attrsOf (submodule {
           options = {
@@ -75,34 +107,46 @@ in
   config = lib.mkIf cfg.enable {
     services.prometheus = {
       exporters.blackbox = {
-        config = lib.mkIf (cfgb.httpProbe != { }) {
-          # TODO: how to properly remove an attrset layer
-          modules = lib.mkMerge (lib.mapAttrsToList (name: opts: let
-            setting = {
-              "http_${name}" = {
-                http = {
-                  fail_if_not_ssl = true;
-                  ip_protocol_fallback = false;
-                  method = "GET";
-                  no_follow_redirects = true;
-                  preferred_ip_protocol = "ip4";
-                  valid_http_versions = [
-                    "HTTP/1.1"
-                    "HTTP/2.0"
-                  ];
-                  valid_status_codes = opts.statusCode;
+        config.modules = lib.mkMerge (
+          (lib.mapAttrsToList (probeName: opts:
+            (lib.foldl (x: name: x // {
+              "dns_${probeName}_${name}" = {
+                dns = {
+                  query_name = name;
+                  query_type = opts.type;
+                  valid_rcodes = [ "NOERROR" ];
                 };
-                prober = "http";
-                timeout = "10s";
+                prober = "dns";
+                timeout = "5s";
               };
+            }) { } opts.names)
+          ) cfgb.dnsProbe)
+
+        ++ lib.mapAttrsToList (name: opts: let
+          setting = {
+            "http_${name}" = {
+              http = {
+                fail_if_not_ssl = true;
+                ip_protocol_fallback = false;
+                method = "GET";
+                no_follow_redirects = true;
+                preferred_ip_protocol = "ip4";
+                valid_http_versions = [
+                  "HTTP/1.1"
+                  "HTTP/2.0"
+                ];
+                valid_status_codes = opts.statusCode;
+              };
+              prober = "http";
+              timeout = "10s";
             };
-          in (lib.optionalAttrs (opts.ip == "both" || opts.ip == "ip4") setting)
-            // (lib.optionalAttrs (opts.ip == "both" || opts.ip == "ip6") {
-            "http_${name}_ip6" = lib.recursiveUpdate setting."http_${name}" {
-              http.preferred_ip_protocol = "ip6";
-            };
-          })) cfgb.httpProbe);
-        };
+          };
+        in (lib.optionalAttrs (opts.ip == "both" || opts.ip == "ip4") setting)
+          // (lib.optionalAttrs (opts.ip == "both" || opts.ip == "ip6") {
+          "http_${name}_ip6" = lib.recursiveUpdate setting."http_${name}" {
+            http.preferred_ip_protocol = "ip6";
+          };
+        })) cfgb.httpProbe);
 
         configFile = lib.mkIf (cfgb.config != { }) (yamlFormat.generate "blackbox-exporter.yaml" cfgb.config);
       };
@@ -110,10 +154,8 @@ in
       ruleFiles = map (rule: yamlFormat.generate "prometheus-rule" rule) cfg.rulesConfig;
 
       scrapeConfigs = let
-        genHttpProbeScrapeConfig = { name, opts }: {
-          job_name = "blackbox_http_${name}_${toString opts.statusCode}";
+        commonProbeScrapeConfig = {
           metrics_path = "/probe";
-          params.module = [ "http_${name}" ];
           relabel_configs = [ {
             source_labels = [ "__address__" ];
             target_label = "__param_target";
@@ -124,11 +166,27 @@ in
             target_label = "__address__";
             replacement = cfgb.blackboxExporterURL;
           } ];
+        };
+        genHttpProbeScrapeConfig = { name, opts }: commonProbeScrapeConfig // {
+          job_name = "blackbox_http_${name}_${toString opts.statusCode}";
+          params.module = [ "http_${name}" ];
+          inherit (commonProbeScrapeConfig) relabel_configs;
           static_configs = [ {
             targets = opts.urls;
           } ];
         };
-      in lib.filter (v: v != null) (lib.mapAttrsToList (name: opts:
+      in lib.flatten (lib.foldl (x: probe: x ++ [
+        (lib.foldl (x: name: x ++ [
+          (commonProbeScrapeConfig // {
+            job_name = "blackbox_dns_${probe.name}_${name}";
+            params.module = [ "dns_${probe.name}_${name}" ];
+            static_configs = [ {
+              inherit (probe.value) targets;
+            } ];
+          })
+        ]) [ ] probe.value.names)
+      ]) [ ] (lib.attrsToList cfgb.dnsProbe))
+      ++ lib.filter (v: v != null) (lib.mapAttrsToList (name: opts:
         if (opts.ip == "both" || opts.ip == "ip4") then (genHttpProbeScrapeConfig { inherit name opts; }) else null
       ) cfgb.httpProbe
       ++ lib.mapAttrsToList (name: opts:
