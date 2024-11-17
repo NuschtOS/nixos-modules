@@ -126,7 +126,6 @@ in
           setting = {
             "http_${name}" = {
               http = {
-                fail_if_not_ssl = true;
                 ip_protocol_fallback = false;
                 method = "GET";
                 follow_redirects = false;
