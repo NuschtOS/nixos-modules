@@ -226,5 +226,12 @@ in
       userFilter = replaceStr: "(|(uid=${replaceStr})(mail=${replaceStr}))";
       userBaseDN = "ou=users";
     };
+
+    systemd.services = lib.mkIf cfg.oauth2-proxy.configure {
+      oauth2-proxy.serviceConfig = {
+         requires = [ "network-online.target" ];
+         after = [ "network-online.target" ];
+       };
+    };
   };
 }
