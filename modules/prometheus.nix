@@ -77,7 +77,7 @@ in
             statusCode = lib.mkOption {
               type = with lib.types; listOf ints.unsigned;
               example = [ 200 ];
-              description = "HTTP status code which is considered sucessfull.";
+              description = "HTTP status code which is considered successful.";
             };
           };
         });
@@ -129,7 +129,7 @@ in
                 fail_if_not_ssl = true;
                 ip_protocol_fallback = false;
                 method = "GET";
-                no_follow_redirects = true;
+                follow_redirects = false;
                 preferred_ip_protocol = "ip4";
                 valid_http_versions = [
                   "HTTP/1.1"
