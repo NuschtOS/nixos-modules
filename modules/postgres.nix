@@ -1,4 +1,4 @@
-{ config, lib, libS, pkgs, utils, ... }:
+{ config, lib, libS, options, pkgs, utils, ... }:
 
 let
   cfg = config.services.postgresql;
@@ -122,14 +122,15 @@ in
 
     environment.systemPackages = lib.optional cfgu.enable (
       let
+        extensions = if lib.hasAttr "extensions" options.services.postgresql then "extensions" else "extraPlugins";
         # conditions copied from nixos/modules/services/databases/postgresql.nix
         newPackage = if cfg.enableJIT then cfgu.newPackage.withJIT else cfgu.newPackage;
         newData = "/var/lib/postgresql/${cfgu.newPackage.psqlSchema}";
-        newBin = "${if cfg.extraPlugins == [] then newPackage else newPackage.withPackages cfg.extraPlugins}/bin";
+        newBin = "${if cfg.${extensions} == [] then newPackage else newPackage.withPackages cfg.${extensions}}/bin";
 
         oldPackage = if cfg.enableJIT then cfg.package.withJIT else cfg.package;
         oldData = config.services.postgresql.dataDir;
-        oldBin = "${if cfg.extraPlugins == [] then oldPackage else oldPackage.withPackages cfg.extraPlugins}/bin";
+        oldBin = "${if cfg.${extensions} == [] then oldPackage else oldPackage.withPackages cfg.${extensions}}/bin";
       in
       pkgs.writeScriptBin "upgrade-postgres" /* bash */ ''
         set -eu
