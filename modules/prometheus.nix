@@ -152,7 +152,7 @@ in
           })
         ) cfgb.httpProbe);
 
-        configFile = lib.mkIf (cfgb.config != { }) (yamlFormat.generate "blackbox-exporter.yaml" cfgb.config);
+        configFile = yamlFormat.generate "blackbox-exporter.yaml" cfgb.config;
       };
 
       ruleFiles = map (rule: yamlFormat.generate "prometheus-rule" rule) cfg.rulesConfig;
