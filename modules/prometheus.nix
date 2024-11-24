@@ -141,11 +141,16 @@ in
             };
           };
         in (lib.optionalAttrs (opts.ip == "both" || opts.ip == "ip4") setting)
-          // (lib.optionalAttrs (opts.ip == "both" || opts.ip == "ip6") {
-          "http_${name}_ip6" = lib.recursiveUpdate setting."http_${name}" {
-            http.preferred_ip_protocol = "ip6";
-          };
-        })) cfgb.httpProbe);
+          // (lib.optionalAttrs (opts.ip == "both") {
+            "http_${name}_ip6" = lib.recursiveUpdate setting."http_${name}" {
+              http.preferred_ip_protocol = "ip6";
+            };
+          }) // (lib.optionalAttrs (opts.ip == "ip6") {
+            "http_${name}" = lib.recursiveUpdate setting."http_${name}" {
+              http.preferred_ip_protocol = "ip6";
+            };
+          })
+        ) cfgb.httpProbe);
 
         configFile = lib.mkIf (cfgb.config != { }) (yamlFormat.generate "blackbox-exporter.yaml" cfgb.config);
       };
@@ -189,9 +194,12 @@ in
         if (opts.ip == "both" || opts.ip == "ip4") then (genHttpProbeScrapeConfig { inherit name opts; }) else null
       ) cfgb.httpProbe
       ++ lib.mapAttrsToList (name: opts:
-        if (opts.ip == "both" || opts.ip == "ip6") then (genHttpProbeScrapeConfig { inherit name opts; } // {
+        if (opts.ip == "both") then (genHttpProbeScrapeConfig { inherit name opts; } // {
           job_name = "blackbox_http_${name}_ip6";
           params.module = [ "http_${name}_ip6" ];
+        }) else if (opts.ip == "ip6") then (genHttpProbeScrapeConfig { inherit name opts; } // {
+          job_name = "blackbox_http_${name}";
+          params.module = [ "http_${name}" ];
         }) else null
       ) cfgb.httpProbe);
     };
