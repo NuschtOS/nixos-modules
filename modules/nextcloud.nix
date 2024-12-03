@@ -14,15 +14,15 @@ in
 
       configureMemoriesVaapi = lib.mkOption {
         type = lib.types.bool;
-        default = config.hardware.intelGPU;
-        defaultText = "config.hardware.intelGPU";
+        default = lib.hasAttr "driver" (config.hardware.intelgpu or { });
+        defaultText = lib.literalExpression ''lib.hasAttr "driver" config.hardware.intelgpu'';
         description = "Whether to configure Memories App to use an Intel iGPU for hardware acceleration.";
       };
 
       configurePreviewSettings = lib.mkOption {
         type = lib.types.bool;
         default = cfg.configureImaginary;
-        defaultText = "config.services.nextcloud.configureImaginary";
+        defaultText = lib.literalExpression "config.services.nextcloud.configureImaginary";
         description = ''
           Whether to configure the preview settings to be more optimised for real world usage.
           By default this is enabled, when Imaginary is configured.

@@ -5,7 +5,9 @@ let
 in
 {
   options.programs.firefox = {
-    hardwareAcceleration = lib.mkEnableOption "Firefox hardware acceleration";
+    hardwareAcceleration = lib.mkEnableOption "Firefox hardware acceleration" // {
+      default = lib.hasAttr "driver" (config.hardware.intelgpu or { });
+    };
   };
 
   config = lib.mkIf cfg.hardwareAcceleration {
