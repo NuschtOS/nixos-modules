@@ -160,7 +160,7 @@ in
         echo "
 
 
-          Run the following commands after setting:
+          Run the below shell commands after setting this NixOS option:
           services.postgresql.package = pkgs.postgresql_${lib.versions.major cfgu.newPackage.version}
 
           sudo -u postgres vacuumdb --all --analyze-in-stages
