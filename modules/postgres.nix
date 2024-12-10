@@ -120,54 +120,62 @@ in
     warnings = lib.optional (lib.versionOlder cfg.package.version latestVersion)
       "You are are running PostgreSQL version ${cfg.package.version} but the latest version is ${latestVersion}. Consider upgrading :)";
 
-    environment.systemPackages = lib.optional cfgu.enable (
-      let
-        extensions = if lib.hasAttr "extensions" options.services.postgresql then "extensions" else "extraPlugins";
-        # conditions copied from nixos/modules/services/databases/postgresql.nix
-        newPackage = if cfg.enableJIT then cfgu.newPackage.withJIT else cfgu.newPackage;
-        newData = "/var/lib/postgresql/${cfgu.newPackage.psqlSchema}";
-        newBin = "${if cfg.${extensions} == [] then newPackage else newPackage.withPackages cfg.${extensions}}/bin";
-
-        oldPackage = if cfg.enableJIT then cfg.package.withJIT else cfg.package;
-        oldData = config.services.postgresql.dataDir;
-        oldBin = "${if cfg.${extensions} == [] then oldPackage else oldPackage.withPackages cfg.${extensions}}/bin";
-      in
-      pkgs.writeScriptBin "upgrade-postgres" /* bash */ ''
-        set -eu
-
-        echo "Current version: ${cfg.package.version}"
-        echo "Update version:  ${cfgu.newPackage.version}"
-
-        if [[ ${cfgu.newPackage.version} == ${cfg.package.version} ]]; then
-          echo "There is no major postgres update available."
-          exit 2
+    environment = {
+      interactiveShellInit = lib.mkIf cfgu.enable ''
+        if [[ ${cfgu.newPackage.version} != ${cfg.package.version} ]]; then
+          echo "There is a major postgres update available! Current version: ${cfg.package.version}, Update version:  ${cfgu.newPackage.version}"
         fi
+      '';
 
-        # don't fail when any unit cannot be stopped
-        systemctl stop ${lib.concatStringsSep " " cfgu.stopServices} || true
-        systemctl stop postgresql
+      systemPackages = lib.mkIf cfgu.enable [ (
+        let
+          extensions = if lib.hasAttr "extensions" options.services.postgresql then "extensions" else "extraPlugins";
+          # conditions copied from nixos/modules/services/databases/postgresql.nix
+          newPackage = if cfg.enableJIT then cfgu.newPackage.withJIT else cfgu.newPackage;
+          newData = "/var/lib/postgresql/${cfgu.newPackage.psqlSchema}";
+          newBin = "${if cfg.${extensions} == [] then newPackage else newPackage.withPackages cfg.${extensions}}/bin";
 
-        install -d -m 0700 -o postgres -g postgres "${newData}"
-        cd "${newData}"
-        sudo -u postgres "${newBin}/initdb" -D "${newData}"
+          oldPackage = if cfg.enableJIT then cfg.package.withJIT else cfg.package;
+          oldData = config.services.postgresql.dataDir;
+          oldBin = "${if cfg.${extensions} == [] then oldPackage else oldPackage.withPackages cfg.${extensions}}/bin";
+        in
+        pkgs.writeScriptBin "upgrade-postgres" /* bash */ ''
+          set -eu
 
-        sudo -u postgres "${newBin}/pg_upgrade" \
-          --old-datadir "${oldData}" --new-datadir "${newData}" \
-          --old-bindir ${oldBin} --new-bindir ${newBin} \
-          ${lib.concatStringsSep " " cfgu.extraArgs} \
-          "$@"
+          echo "Current version: ${cfg.package.version}"
+          echo "Update version:  ${cfgu.newPackage.version}"
 
-        echo "
+          if [[ ${cfgu.newPackage.version} == ${cfg.package.version} ]]; then
+            echo "There is no major postgres update available."
+            exit 2
+          fi
+
+          # don't fail when any unit cannot be stopped
+          systemctl stop ${lib.concatStringsSep " " cfgu.stopServices} || true
+          systemctl stop postgresql
+
+          install -d -m 0700 -o postgres -g postgres "${newData}"
+          cd "${newData}"
+          sudo -u postgres "${newBin}/initdb" -D "${newData}"
+
+          sudo -u postgres "${newBin}/pg_upgrade" \
+            --old-datadir "${oldData}" --new-datadir "${newData}" \
+            --old-bindir ${oldBin} --new-bindir ${newBin} \
+            ${lib.concatStringsSep " " cfgu.extraArgs} \
+            "$@"
+
+          echo "
 
 
-          Run the below shell commands after setting this NixOS option:
-          services.postgresql.package = pkgs.postgresql_${lib.versions.major cfgu.newPackage.version}
+            Run the below shell commands after setting this NixOS option:
+            services.postgresql.package = pkgs.postgresql_${lib.versions.major cfgu.newPackage.version}
 
-          sudo -u postgres vacuumdb --all --analyze-in-stages
-          ${newData}/delete_old_cluster.sh
-        "
-      ''
-    );
+            sudo -u postgres vacuumdb --all --analyze-in-stages
+            ${newData}/delete_old_cluster.sh
+          "
+        ''
+      ) ];
+    };
 
     services = {
       postgresql = {
