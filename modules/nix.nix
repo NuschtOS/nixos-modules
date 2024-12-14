@@ -111,12 +111,12 @@ in
       activationScripts = {
         deleteChannels = lib.mkIf cfg.deleteChannels /* bash */ ''
           echo "Deleting all channels..."
-          rm -rfv /root/{.nix-channels,.nix-defexpr} /home/*/{.nix-channels,.nix-defexpr} /nix/var/nix/profiles/per-user/*/channels* || true
+          rm -rfv /root/{.local/state/nix/defexpr,.nix-channels,.nix-defexpr} /home/*/{.local/state/nix/defexpr,.nix-channels,.nix-defexpr} /nix/var/nix/profiles/per-user/*/channels* || true
         '';
 
         deleteUserProfiles = lib.mkIf cfg.deleteUserProfiles /* bash */ ''
           echo "Deleting all user profiles..."
-          rm -rfv /root/.nix-profile /home/*/.nix-profile /nix/var/nix/profiles/per-user/*/profile* || true
+          rm -rfv /root/{.local/state/nix/profile,.nix-profile} /home/*/{.local/state/nix/profile,.nix-profile} /nix/var/nix/profiles/per-user/*/profile* || true
         '';
 
         diff-system = lib.mkIf cfg.diffSystem {
