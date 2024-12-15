@@ -13,11 +13,15 @@ in
       recommendedDefaults = libS.mkOpinionatedOption "set recommended and maintenance reducing default settings";
     };
 
-    podman.recommendedDefaults = libS.mkOpinionatedOption "set recommended and maintenance reducing default settings";
+    podman = {
+      aggressiveAutoPrune = libS.mkOpinionatedOption "configure aggressive auto pruning which removes everything unreferenced by running containers. This includes named volumes and mounts should be used instead";
+
+      recommendedDefaults = libS.mkOpinionatedOption "set recommended and maintenance reducing default settings";
+    };
   };
 
   imports = [
-    (lib.mkRenamedOptionModule ["virtualisation" "docker" "aggresiveAutoPrune"] ["virtualisation" "docker" "aggressiveAutoPrune"])
+    (lib.mkRemovedOptionModule "use virtualisation.docker.aggressiveAutoPrune")
   ];
 
   config = {
@@ -54,8 +58,8 @@ in
       };
 
       podman = {
-        autoPrune = {
-          enable = lib.mkIf cfgp.recommendedDefaults true;
+        autoPrune = lib.mkIf cfgp.aggressiveAutoPrune {
+          enable = true;
           flags = autoPruneFlags;
         };
         defaultNetwork.settings.dns_enabled = lib.mkIf cfgp.recommendedDefaults true;
