@@ -21,7 +21,7 @@ in
   };
 
   imports = [
-    (lib.mkRemovedOptionModule "use virtualisation.docker.aggressiveAutoPrune")
+    (lib.mkRemovedOptionModule ["virtualisation" "docker" "aggresiveAutoPrune"] "use virtualisation.docker.aggressiveAutoPrune")
   ];
 
   config = {
