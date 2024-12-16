@@ -49,7 +49,7 @@ in
       includeSubDomains = lib.mkEnableOption "" // { description = "Whether to add `includeSubDomains` to the `Strict-Transport-Security` header"; };
     };
 
-    tcpFastOpen = libS.mkOpinionatedOption "enable tcp fast open";
+    tcpFastOpen = lib.mkEnableOption "" // { description = "Whether to configure tcp fast open. This requires configuring useACMEHost for `_` due to limitatons in the nginx config parser"; };
 
     # source https://gist.github.com/danbst/f1e81358d5dd0ba9c763a950e91a25d0
     virtualHosts = lib.mkOption {
