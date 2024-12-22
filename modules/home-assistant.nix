@@ -10,7 +10,7 @@ in
       blueprints = lib.mkOption {
         type = with lib.types; listOf package;
         default = [];
-        example = lib.literalExpression ''
+        example = lib.literalExpression /* nix */ ''
           [
             (pkgs.fetchFromGitHub {
               owner = "...";
@@ -91,6 +91,9 @@ in
           time_zone = config.time.timeZone;
           unit_system = "metric";
         };
+
+        # see https://github.com/zigpy/zigpy/pull/1340
+        zha.zigpy_config.ota.z2m_remote_index = "https://raw.githubusercontent.com/Koenkk/zigbee-OTA/master/index.json";
       };
     })
 
@@ -169,7 +172,7 @@ in
 
   config.systemd.services = lib.mkIf (cfg.enable && cfg.blueprints != []) {
     # copied and adopted from customComponents
-    home-assistant.preStart = ''
+    home-assistant.preStart = /* shell */ ''
       mkdir -p "${cfg.configDir}/blueprints"
 
       # remove components symlinked in from below the /nix/store
