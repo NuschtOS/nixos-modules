@@ -140,7 +140,7 @@ in
         (lib.mkIf config.boot.isContainer (pkgs.writeShellScript "diff-closures-on-nspawn" diffBoot))
         (lib.mkIf (config.boot.loader.external.enable && !config.boot.isContainer) (lib.mkForce (pkgs.writeShellScript "install-bootloader-external" ''
           ${diffBoot}
-          exec ${config.boot.loader.external.installHook}
+          exec ${config.boot.loader.external.installHook} "$@"
         '')))
       ]);
     };
