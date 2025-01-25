@@ -111,6 +111,7 @@ lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
     module = {
       services.nextcloud = {
         enable = true;
+        config.dbtype = "pgsql";
         config.adminpassFile = "/password";
         hostName = "example.com";
       };
