@@ -1,7 +1,10 @@
 # This module continues the upstream removed option environment.noXlibs
 
-{ config, lib, options, ... }:
+{ config, lib, options, pkgs, ... }:
 
+let
+  cfg = config.environment.noGraphicsPackages;
+in
 {
   meta.maintainers = [ lib.maintainers.SuperSandro2000 ];
 
@@ -24,8 +27,8 @@
     };
   };
 
-  config = lib.mkIf config.environment.noGraphicsPackages {
-    assertions = [
+  config = {
+    assertions = lib.mkIf cfg [
       # copied from lib.mkRemovedOptionModule
       (let
         optionName = [ "environment" "noXlibs" ];
@@ -46,9 +49,9 @@
       }
     ];
 
-    fonts.fontconfig.enable = false;
+    fonts.fontconfig.enable = lib.mkIf cfg false;
 
-    nixpkgs.overlays = lib.singleton (lib.const (prev: {
+    nixpkgs.overlays = lib.singleton (lib.const (prev: (lib.mapAttrs (name: value: if cfg then value else prev.${name}) {
       beam = prev.beam_nox;
       cairo = prev.cairo.override { x11Support = false; };
       dbus = prev.dbus.override { x11Support = false; };
@@ -141,10 +144,10 @@
       vulkan-loader = prev.vulkan-loader.override { wayland = null; };
       wayland = prev.wayland.override { withDocumentation = false; };
       zbar = prev.zbar.override { enableVideo = false; withXorg = false; };
-    }));
+    })));
 
-    programs.ssh.setXAuthLocation = false;
+    programs.ssh.setXAuthLocation = lib.mkIf cfg false;
 
-    security.pam.services.su.forwardXAuth = lib.mkForce false;
+    security.pam.services.su.forwardXAuth = lib.mkIf cfg (lib.mkForce false);
   };
 }
