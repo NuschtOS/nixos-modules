@@ -137,9 +137,6 @@ in
           error_log syslog:server=unix:/dev/log;
         '' + lib.optionalString cfg.configureQuic /* nginx */''
           quic_retry on;
-        '' + lib.optionalString cfg.recommendedZstdSettings /* nginx */ ''
-          # from harmonia readme
-          zstd_types application/x-nix-archive;
         '';
 
         enableQuicBPF = lib.mkIf cfg.configureQuic true;
