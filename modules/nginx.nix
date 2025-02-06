@@ -146,12 +146,12 @@ in
 
         package = lib.mkIf cfg.configureQuic pkgs.nginxQuic; # based on pkgs.nginxMainline
 
-        recommendedBrotliSettings = lib.mkIf cfg.allRecommendOptions true;
-        recommendedGzipSettings = lib.mkIf cfg.allRecommendOptions true;
-        recommendedOptimisation = lib.mkIf cfg.allRecommendOptions true;
-        recommendedProxySettings = lib.mkIf cfg.allRecommendOptions true;
-        recommendedTlsSettings = lib.mkIf cfg.allRecommendOptions true;
-        recommendedZstdSettings = lib.mkIf cfg.allRecommendOptions true;
+        recommendedBrotliSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
+        recommendedGzipSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
+        recommendedOptimisation = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
+        recommendedProxySettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
+        recommendedTlsSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
+        recommendedZstdSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
 
         resolver.addresses =
           let
