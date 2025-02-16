@@ -52,8 +52,13 @@ By using `nixos-modules.nixosModule`, all available modules are imported.
 
 It is also possible to only import a subset of modules.
 Under `nixos-modules.nixosModules.<name>` we expose all modules available in the modules directory.
-If that's the case for you, remember to add `_module.args.libS` in `configuration.nix`.
-Look at [the note in `flake.nix`](./flake.nix) for how to do that.
+This requires manually providing `libS` as a module argument.
+The following snippet is equal to what adding all modules is doing:
+```nix
+{
+  _module.args.libS = lib.mkOverride 1000 (self.lib { inherit lib config; });
+}
+```
 
 ## Available options
 
