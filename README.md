@@ -49,8 +49,16 @@ Add or merge the following settings to your `flake.nix`:
 If your `nixpkgs` input is named differently, update the `follows` to your name accordingly.
 
 By using `nixos-modules.nixosModule`, all available modules are imported.
+
 It is also possible to only import a subset of modules.
 Under `nixos-modules.nixosModules.<name>` we expose all modules available in the modules directory.
+This requires manually providing `libS` as a module argument.
+The following snippet is equal to what adding all modules is doing:
+```nix
+{
+  _module.args.libS = lib.mkOverride 1000 (self.lib { inherit lib config; });
+}
+```
 
 ## Available options
 
