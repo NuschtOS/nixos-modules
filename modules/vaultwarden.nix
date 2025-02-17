@@ -32,7 +32,7 @@ in
         upstreams.vaultwarden.servers."127.0.0.1:${toString cfg.config.ROCKET_PORT}" = { };
         virtualHosts.${cfg.domain}.locations = {
           "/".proxyPass = "http://vaultwarden";
-          "/notifications/hub" = {
+          "= /notifications/hub" = {
             proxyPass = "http://vaultwarden";
             proxyWebsockets = true;
           };
