@@ -109,7 +109,7 @@ in
     virtualHosts = {
       "${cfg.settings.server.domain}".locations = {
         "/".proxyPass = "http://grafana";
-        "/api/live/ws" = {
+        "= /api/live/ws" = {
           proxyPass = "http://grafana";
           proxyWebsockets = true;
         };
