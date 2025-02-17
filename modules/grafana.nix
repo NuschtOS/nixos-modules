@@ -54,10 +54,6 @@ in
     ];
 
     services.grafana.settings = lib.mkMerge [
-      # empty to fix plain eval in tests https://github.com/NixOS/nixpkgs/pull/354361
-      # TODO: drop when this PR is available everywhere https://tracker.nixos.c3d2.de/?pr=354361
-      {}
-
       (lib.mkIf (cfg.enable && cfg.recommendedDefaults) (libS.modules.mkRecursiveDefault {
         # no analytics, sorry, not sorry
         analytics = {
@@ -75,6 +71,13 @@ in
           root_url = "https://${cfg.settings.server.domain}";
         };
       }))
+
+      (lib.mkIf (cfg.enable && cfg.configureNginx) {
+        server = {
+          protocol = "socket";
+          socket_gid = config.users.groups.nginx.gid;
+        };
+      })
 
       (lib.mkIf (cfg.enable && cfg.oauth.enable) {
         "auth.generic_oauth" = let
@@ -99,7 +102,6 @@ in
           scopes = "openid email groups profile offline_access";
           token_url = "${issuer}/token";
         };
-        server.protocol = "socket";
       })
     ];
   };
