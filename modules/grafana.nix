@@ -72,6 +72,13 @@ in
         };
       }))
 
+      (lib.mkIf (cfg.enable && cfg.configureNginx) {
+        server = {
+          protocol = "socket";
+          socket_gid = config.users.groups.nginx.gid;
+        };
+      })
+
       (lib.mkIf (cfg.enable && cfg.oauth.enable) {
         "auth.generic_oauth" = let
           inherit (config.services.dex.settings) issuer;
@@ -95,7 +102,6 @@ in
           scopes = "openid email groups profile offline_access";
           token_url = "${issuer}/token";
         };
-        server.protocol = "socket";
       })
     ];
   };
