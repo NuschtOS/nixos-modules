@@ -1,30 +1,41 @@
 { config, lib, libS, ... }:
 
 let
-  cfg = config.services.hydra.ldap;
+  cfg = config.services.hydra;
+  cfgl = cfg.ldap;
   inherit (config.security) ldap;
 in
 {
   options = {
-    services.hydra.ldap = {
-      enable = lib.mkEnableOption ''
-        login only via LDAP.
-        The bind user password must be placed at `/var/lib/hydra/ldap-password.conf` in the format `bindpw = "PASSWORD"
-        It is recommended to use a password without special characters because the perl config parser has weird escaping rule like that comment characters `#` must be escape with backslash
-      '';
-
-      roleMappings = lib.mkOption {
-        type = with lib.types; listOf (attrsOf str);
-        example = [{ hydra-admins = "admins"; }];
-        default = [ ];
-        description = "Map LDAP groups to hydra permissions. See upstream doc, especially role_mapping.";
+    services.hydra = {
+      configurePostgres = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        example = true;
+        description = "Whether to configure and create a local PostgreSQL database.";
       };
 
-      userGroup = libS.ldap.mkUserGroupOption;
+      ldap = {
+        enable = lib.mkEnableOption ''
+          login only via LDAP.
+          The bind user password must be placed at `/var/lib/hydra/ldap-password.conf` in the format `bindpw = "PASSWORD"
+          It is recommended to use a password without special characters because the perl config parser has weird escaping rule
+          like that comment characters `#` must be escape with backslash
+        '';
+
+        roleMappings = lib.mkOption {
+          type = with lib.types; listOf (attrsOf str);
+          example = [{ hydra-admins = "admins"; }];
+          default = [ ];
+          description = "Map LDAP groups to hydra permissions. See upstream doc, especially role_mapping.";
+        };
+
+        userGroup = libS.ldap.mkUserGroupOption;
+      };
     };
   };
 
-  config.services.hydra.extraConfig = lib.mkIf cfg.enable /* xml */ ''
+  config.services.hydra.extraConfig = lib.mkIf cfgl.enable /* xml */ ''
     # https://hydra.nixos.org/build/196107287/download/1/hydra/configuration.html#using-ldap-as-authentication-backend-optional
     <ldap>
       <config>
@@ -48,7 +59,7 @@ in
             sslversion = tlsv1_3
           </start_tls_options>
           user_basedn = "${ldap.userBaseDN}"
-          user_filter = "${ldap.searchFilterWithGroupFilter cfg.userGroup (ldap.userFilter "%s")}"
+          user_filter = "${ldap.searchFilterWithGroupFilter cfgl.userGroup (ldap.userFilter "%s")}"
           user_scope = one
           user_field = ${ldap.userField}
           <user_search_options>
@@ -72,15 +83,15 @@ in
         # Allow all users in the dev group to restart jobs and cancel builds
         # dev = restart-jobs
         # dev = cancel-build
-        ${lib.concatStringsSep "\n" (lib.concatMap (lib.mapAttrsToList (name: value: "${name} = ${value}")) cfg.roleMappings)}
+        ${lib.concatStringsSep "\n" (lib.concatMap (lib.mapAttrsToList (name: value: "${name} = ${value}")) cfgl.roleMappings)}
       </role_mapping>
     </ldap>
   '';
 
   config.services.portunus.seedSettings.groups = [
-    (lib.mkIf (cfg.userGroup != null) {
+    (lib.mkIf (cfgl.userGroup != null) {
       long_name = "Hydra Users";
-      name = cfg.userGroup;
+      name = cfgl.userGroup;
       permissions = { };
     })
   ] ++ lib.flatten (map lib.attrValues (map
@@ -89,5 +100,13 @@ in
       name = ldapGroup;
       permissions = { };
     }))
-    cfg.roleMappings));
+    cfgl.roleMappings));
+
+  config.services.postgresql = lib.mkIf cfg.configurePostgres {
+    ensureDatabases = [ "hydra" ];
+    ensureUsers = [ {
+      name = "hydra";
+      ensureDBOwnership = true;
+    } ];
+  };
 }
