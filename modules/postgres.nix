@@ -22,6 +22,8 @@ in
       '';
     };
 
+    enableAllPreloadedLibraries = libS.mkOpinionatedOption "enable all `shared_preload_libraries`";
+
     ensureUsers = lib.mkOption {
       type = lib.types.listOf (lib.types.submodule {
         options = {
@@ -33,6 +35,8 @@ in
         };
       });
     };
+
+    preloadAllExtensions = libS.mkOpinionatedOption "load all installed extensions through `shared_preload_libraries`";
 
     recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
 
@@ -181,7 +185,12 @@ in
       postgresql = {
         databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
         enableJIT = lib.mkIf cfg.recommendedDefaults true;
-        settings.shared_preload_libraries = lib.mkIf cfg.configurePgStatStatements "pg_stat_statements";
+        settings.shared_preload_libraries = lib.mkMerge [
+          (lib.mkIf cfg.configurePgStatStatements [ "pg_stat_statements" ])
+          # TODO: upstream, this probably requires a new entry in passthru to pick if the object name doesn't match the plugin name or there are multiple
+          # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix#L76
+          (lib.mkIf cfg.preloadAllExtensions (map lib.getName cfg.finalPackage.installedExtensions))
+        ];
         upgrade.stopServices = with config.services; lib.mkMerge [
           (lib.mkIf (atuin.enable && atuin.database.createLocally) [ "atuin" ])
           (lib.mkIf (gitea.enable && gitea.database.socket == "/run/postgresql") [ "gitea" ])
@@ -245,11 +254,18 @@ in
 
             # install/update pg_stat_statements extension in all databases
             # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
-            (lib.mkIf cfg.configurePgStatStatements (lib.concatStrings (map (db:
+            (lib.mkIf (cfg.enableAllPreloadedLibraries || cfg.cfg.configurePgStatStatements) (lib.concatStrings (map (db:
               (lib.concatMapStringsSep "\n" (ext: /* bash */ ''
                 $PSQL -tAd "${db}" -c "CREATE EXTENSION IF NOT EXISTS ${ext}"
                 $PSQL -tAd "${db}" -c "ALTER EXTENSION ${ext} UPDATE"
-              '') (lib.splitString "," cfg.settings.shared_preload_libraries))
+              '') (lib.splitString "," (if cfg.enableAllPreloadedLibraries then
+                  cfg.settings.shared_preload_libraries
+                else if cfg.configurePgStatStatements then
+                  "pg_stat_statements"
+                else
+                  ""
+                ))
+              )
             ) cfg.databases)))
 
             (lib.mkIf cfg.refreshCollation (lib.concatStrings (map (db: /* bash */ ''
