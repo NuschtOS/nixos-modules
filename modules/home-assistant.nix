@@ -7,6 +7,13 @@ in
 {
   options = {
     services.home-assistant = {
+      configurePostgres = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        example = true;
+        description = "Whether to configure and create a local PostgreSQL database.";
+      };
+
       ldap = {
         enable = lib.mkEnableOption ''login only via LDAP
 
@@ -137,6 +144,10 @@ in
         meta = true;
       }];
     })
+
+    (lib.mkIf cfg.configurePostgres {
+      config.recorder.db_url = "postgresql://@/hass";
+    })
   ];
 
   config.services.portunus.seedSettings.groups = lib.optional (cfg.ldap.userGroup != null) {
@@ -147,6 +158,14 @@ in
     long_name = "Home-Assistant Administrators";
     name = cfg.ldap.adminGroup;
     permissions = { };
+  };
+
+  config.services.postgresql = lib.mkIf cfg.configurePostgres {
+    ensureDatabases = [ "hass" ];
+    ensureUsers = [ {
+      name = "hass";
+      ensureDBOwnership = true;
+    } ];
   };
 
   config.systemd.tmpfiles.rules = lib.mkIf (cfg.enable && cfg.recommendedDefaults) [
