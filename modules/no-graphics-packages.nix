@@ -43,8 +43,7 @@ in
       })
 
       {
-        # services.graphical-desktop.enable does not exist 24.05
-        assertion = (!config.services.graphical-desktop.enable or false) && !config.services.xserver.enable;
+        assertion = !config.services.graphical-desktop.enable && !config.services.xserver.enable;
         message = "environment.noGraphicsPackages requires that no graphical desktop is being used! Please unset this option.";
       }
     ];
