@@ -7,15 +7,17 @@ in
   options = {
     boot.zfs = {
       recommendedDefaults = libS.mkOpinionatedOption "enable recommended ZFS settings";
-      latestCompatibleKernel = lib.mkEnableOption "use the latest ZFS compatible kernel";
     };
   };
 
-  config = lib.mkIf cfg.enabled {
-    # TODO: add srvos mixin?
-    # https://github.com/nix-community/srvos/blob/main/nixos/mixins/latest-zfs-kernel.nix
-    boot.kernelPackages = lib.mkIf cfg.latestCompatibleKernel (lib.mkDefault cfg.package.latestCompatibleLinuxPackages);
+  imports = [
+    (lib.mkRemovedOptionModule ["boot" "zfs" "latestCompatibleKernel"] ''
+      latestCompatibleKernel has been removed because zfs.passthru.latestCompatibleLinuxPackages has been effectively removed.
+      Consider using <https://github.com/nix-community/srvos/blob/main/nixos/mixins/latest-zfs-kernel.nix> instead.
+    '')
+  ];
 
+  config = lib.mkIf cfg.enabled {
     services.zfs = lib.mkIf cfg.recommendedDefaults {
       autoScrub.enable = true;
       trim.enable = true;
