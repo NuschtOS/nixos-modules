@@ -22,6 +22,8 @@ in
       '';
     };
 
+    enableAllPreloadedLibraries = libS.mkOpinionatedOption "enable all `shared_preload_libraries`";
+
     ensureUsers = lib.mkOption {
       type = lib.types.listOf (lib.types.submodule {
         options = {
@@ -245,11 +247,18 @@ in
 
             # install/update pg_stat_statements extension in all databases
             # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
-            (lib.mkIf cfg.configurePgStatStatements (lib.concatStrings (map (db:
+            (lib.mkIf (cfg.enableAllPreloadedLibraries || cfg.cfg.configurePgStatStatements) (lib.concatStrings (map (db:
               (lib.concatMapStringsSep "\n" (ext: /* bash */ ''
                 $PSQL -tAd "${db}" -c "CREATE EXTENSION IF NOT EXISTS ${ext}"
                 $PSQL -tAd "${db}" -c "ALTER EXTENSION ${ext} UPDATE"
-              '') (lib.splitString "," cfg.settings.shared_preload_libraries))
+              '') (lib.splitString "," (if cfg.enableAllPreloadedLibraries then
+                  cfg.settings.shared_preload_libraries
+                else if cfg.configurePgStatStatements then
+                  "pg_stat_statements"
+                else
+                  ""
+                ))
+              )
             ) cfg.databases)))
 
             (lib.mkIf cfg.refreshCollation (lib.concatStrings (map (db: /* bash */ ''
