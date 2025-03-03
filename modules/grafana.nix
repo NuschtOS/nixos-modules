@@ -12,6 +12,13 @@ in
         description = "Whether to configure Nginx.";
       };
 
+      configurePostgres = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        example = true;
+        description = "Whether to configure and create a local PostgreSQL database.";
+      };
+
       oauth = {
         enable = lib.mkEnableOption "login only via OAuth2";
         enableViewerRole = lib.mkOption {
@@ -79,6 +86,14 @@ in
         };
       })
 
+      (lib.mkIf (cfg.enable && cfg.configurePostgres) {
+        database = {
+          host = "/run/postgresql";
+          type = "postgres";
+          user = "grafana";
+        };
+      })
+
       (lib.mkIf (cfg.enable && cfg.oauth.enable) {
         "auth.generic_oauth" = let
           inherit (config.services.dex.settings) issuer;
@@ -136,6 +151,14 @@ in
       name = cfg.oauth.userGroup;
       permissions = { };
     };
+  };
+
+  config.services.postgresql = lib.mkIf cfg.configurePostgres {
+    ensureDatabases = [ "grafana" ];
+    ensureUsers = [ {
+      name = "grafana";
+      ensureDBOwnership = true;
+    } ];
   };
 
   config.users.users = lib.mkIf (cfg.enable && cfg.configureNginx) {
