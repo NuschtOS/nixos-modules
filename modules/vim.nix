@@ -11,8 +11,7 @@ in
     };
   };
 
-  # TODO: drop else with 24.11
-  config = lib.mkIf (if cfg?enable then cfg.enable else true) {
+  config = lib.mkIf cfg.enable {
     environment.etc = lib.mkIf (cfg.undofile || cfg.rememberCursorPosition) {
       "vim/vimrc".text = lib.optionalString cfg.undofile /* vim */ ''
         set undofile                  " save undo file after quit
