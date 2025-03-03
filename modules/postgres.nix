@@ -36,6 +36,8 @@ in
       });
     };
 
+    preloadAllExtensions = libS.mkOpinionatedOption "load all installed extensions through `shared_preload_libraries`";
+
     recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
 
     refreshCollation = libS.mkOpinionatedOption "refresh collation on startup. This prevents errors when initializing new DBs after a glibc upgrade";
@@ -183,7 +185,12 @@ in
       postgresql = {
         databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
         enableJIT = lib.mkIf cfg.recommendedDefaults true;
-        settings.shared_preload_libraries = lib.mkIf cfg.configurePgStatStatements "pg_stat_statements";
+        settings.shared_preload_libraries = lib.mkMerge [
+          (lib.mkIf cfg.configurePgStatStatements [ "pg_stat_statements" ])
+          # TODO: upstream, this probably requires a new entry in passthru to pick if the object name doesn't match the plugin name or there are multiple
+          # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix#L76
+          (lib.mkIf cfg.preloadAllExtensions (map lib.getName cfg.finalPackage.installedExtensions))
+        ];
         upgrade.stopServices = with config.services; lib.mkMerge [
           (lib.mkIf (atuin.enable && atuin.database.createLocally) [ "atuin" ])
           (lib.mkIf (gitea.enable && gitea.database.socket == "/run/postgresql") [ "gitea" ])
