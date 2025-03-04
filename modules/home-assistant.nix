@@ -71,6 +71,7 @@ in
           unit_system = "metric";
         };
 
+        # https://www.home-assistant.io/integrations/recorder/#common-filtering-examples
         recoder = {
           exclude = {
             domains = [ "automation" "update" ];
