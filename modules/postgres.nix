@@ -198,7 +198,7 @@ in
           (lib.mkIf (healthchecks.enable && healthchecks.settings.DB_HOST == "/run/postgresql") [ "healthchecks" ])
           (lib.mkIf (hedgedoc.enable && hedgedoc.settings.db.host == "/run/postgresql") [ "hedgedoc" ])
           # @ means to connect to localhost
-          (lib.mkIf (home-assistant.enable && (lib.hasPrefix "postgresql://@/" home-assistant.config.recorder.db_url)) [ "home-assistant" ])
+          (lib.mkIf (home-assistant.enable && (lib.hasPrefix "postgresql://@/" home-assistant.config.recorder.db_url or "")) [ "home-assistant" ])
           # if host= is omitted, hydra defaults to connect to localhost
           (lib.mkIf (hydra.enable && (!lib.hasInfix ";host=" hydra.dbi)) [
             "hydra-evaluator" "hydra-notify" "hydra-send-stats" "hydra-update-gc-roots" "hydra-queue-runner" "hydra-server"

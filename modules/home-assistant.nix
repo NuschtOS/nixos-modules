@@ -71,6 +71,16 @@ in
           unit_system = "metric";
         };
 
+        # https://www.home-assistant.io/integrations/recorder/#common-filtering-examples
+        recoder = {
+          exclude = {
+            domains = [ "automation" "update" ];
+            entity_globs = [ "sensor.sun*" "weather.*" ];
+            entities = [ "sensor.date" "sensor.last_boot" "sun.sun" ];
+            event_types = [ "call_service" ];
+          };
+        };
+
         # see https://github.com/zigpy/zigpy/pull/1340
         zha.zigpy_config.ota.z2m_remote_index = "https://raw.githubusercontent.com/Koenkk/zigbee-OTA/master/index.json";
       };
