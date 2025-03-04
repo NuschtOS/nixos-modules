@@ -11,6 +11,13 @@ in
     services.matrix-synapse = {
       addAdditionalOembedProvider = libS.mkOpinionatedOption "add additional oembed providers from oembed.com";
 
+      configurePostgres = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        example = true;
+        description = "Whether to configure and create a local PostgreSQL database.";
+      };
+
       domain = lib.mkOption {
         type = lib.types.str;
         example = "matrix.example.com";
@@ -198,11 +205,23 @@ in
       ];
     };
 
+    services.postgresql = lib.mkIf cfg.configurePostgres {
+      databases = [ "matrix-synapse" ]; # some parts of nixos-modules read this field to know all databases
+    };
+
     services.portunus.seedSettings.groups = lib.mkIf (cfgl.userGroup != null) [ {
       long_name = "Matrix Users";
       name = cfgl.userGroup;
       permissions = { };
     } ];
+
+    systemd.services = lib.mkIf cfg.configurePostgres {
+      # https://element-hq.github.io/synapse/latest/postgres.html#set-up-database
+      # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix#L655
+      postgresql.postStart = ''
+        $PSQL -tAc "SELECT 1 FROM pg_database WHERE datname = 'matrix-synapse'" | grep -q 1 || $PSQL -tAc 'CREATE DATABASE "matrix-synapse" ENCODING="UTF8" LOCALE="C" TEMPLATE="template0" OWNER="matrix-synapse"'
+      '';
+    };
 
     users.users = lib.mkIf cfg.listenOnSocket {
       nginx.extraGroups = [ "matrix-synapse" ];
