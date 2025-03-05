@@ -72,9 +72,9 @@ in
           locations = lib.mkOption {
             type = with lib.types; attrsOf (submodule {
               options.extraConfig = lib.mkOption { };
-              config.extraConfig = lib.mkIf cfg.hstsHeader.enable (/* nginx */ ''
+              config.extraConfig = lib.optionalString cfg.hstsHeader.enable /* nginx */ ''
                 more_set_headers "Strict-Transport-Security: max-age=63072000; ${lib.optionalString cfg.hstsHeader.includeSubDomains "includeSubDomains; "}preload";
-              '' + cfg.commonServerConfig + cfgv.commonLocationsConfig);
+              '' + cfg.commonServerConfig + cfgv.commonLocationsConfig;
             });
           };
         };
