@@ -1,0 +1,33 @@
+--- a/config/locales/de.yml	1970-01-01 01:00:01.000000000 +0100
++++ b/config/locales/de.yml	2025-03-04 23:10:30.555066004 +0100
+@@ -1804,6 +1804,9 @@
+   themes:
+     contrast: Mastodon (Hoher Kontrast)
+     default: Mastodon (Dunkel)
++    mastodon-bird-ui-contrast: Mastodon Bird UI (Hoher Kontrast)
++    mastodon-bird-ui-dark: Mastodon Bird UI (Dunkel)
++    mastodon-bird-ui-light: Mastodon Bird UI (Hell)
+     mastodon-light: Mastodon (Hell)
+     system: Automatisch (mit System synchronisieren)
+   time:
+--- a/config/locales/en.yml	1970-01-01 01:00:01.000000000 +0100
++++ b/config/locales/en.yml	2025-03-04 23:11:25.390474198 +0100
+@@ -1805,6 +1805,9 @@
+   themes:
+     contrast: Mastodon (High contrast)
+     default: Mastodon (Dark)
++    mastodon-bird-ui-contrast: Mastodon Bird UI (High contrast)
++    mastodon-bird-ui-dark: Mastodon Bird UI (Dark)
++    mastodon-bird-ui-light: Mastodon Bird UI (Light)
+     mastodon-light: Mastodon (Light)
+     system: Automatic (use system theme)
+   time:
+--- a/config/themes.yml	1970-01-01 01:00:01.000000000 +0100
++++ b/config/themes.yml	2025-03-04 23:12:24.998956621 +0100
+@@ -1,3 +1,6 @@
+ default: styles/application.scss
+ contrast: styles/contrast.scss
+ mastodon-light: styles/mastodon-light.scss
++mastodon-bird-ui-dark: styles/mastodon-bird-ui-dark.scss
++mastodon-bird-ui-contrast: styles/mastodon-bird-ui-contrast.scss
++mastodon-bird-ui-light: styles/mastodon-bird-ui-light.scss
