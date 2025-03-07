@@ -28,16 +28,18 @@ in
           By default this is enabled, when Imaginary is configured.
         '';
       };
-
-      configureRecognize = lib.mkEnableOption "" // { description = ''
-        Whether to configure dependencies for Recognize App.
-
-        ::: {.note}
-        This currently does not work with declerataive installed apps.
-        :::
-      ''; };
     };
   };
+
+  imports = [
+    (lib.mkRemovedOptionModule ["services" "nextcloud" "configureRecognize"] ''
+      configureRecognize has been removed in favor of using the recognize packages from NixOS like:
+
+      services.nextcloud.extraApps = {
+        inherit (config.services.nextcloud.package.packages) recognize;
+      };
+    '')
+  ];
 
   config = lib.mkIf cfg.enable {
     services = {
@@ -49,7 +51,7 @@ in
 
       nextcloud = {
         extraApps = let
-          inherit (pkgs."nextcloud${lib.versions.major cfg.package.version}Packages") apps;
+          inherit (config.services.nextcloud.package.packages) apps;
         in lib.mkMerge [
           (lib.mkIf cfg.configureMemories {
             inherit (apps) memories;
@@ -185,19 +187,6 @@ in
           };
         };
 
-        nextcloud-setup = lib.mkIf cfg.configureRecognize {
-          script = /* bash */ ''
-            export PATH=$PATH:/etc/profiles/per-user/nextcloud/bin:/run/current-system/sw/bin
-
-            if [[ ! -e ${cfg.home}/store-apps/recognize/node_modules/@tensorflow/tfjs-node/lib/napi-v8/tfjs_binding.node ]]; then
-              if [[ -d ${cfg.home}/store-apps/recognize/node_modules/ ]]; then
-                cd ${cfg.home}/store-apps/recognize/node_modules/
-                npm rebuild @tensorflow/tfjs-node --build-addon-from-source
-              fi
-            fi
-          '';
-        };
-
         phpfpm-nextcloud.serviceConfig = lib.mkIf (cfg.configureMemories && cfg.configureMemoriesVaapi) {
           DeviceAllow = [ "/dev/dri/renderD128 rwm" ];
           PrivateDevices = lib.mkForce false;
@@ -225,16 +214,7 @@ in
         # generate video thumbnails with preview generator
         lib.optional cfg.configurePreviewSettings ffmpeg-headless
         # required for memories, duplicated with nextcloud-cron to better debug
-        ++ lib.optional cfg.configureMemories perl
-        # required for recognize app
-        ++ lib.optionals cfg.configureRecognize [
-          gnumake # installation requirement
-          nodejs_20 # runtime and installation requirement
-          # TODO: drop with 23.11
-          (pkgs.node-pre-gyp or nodejs_20.pkgs.node-pre-gyp) # installation requirement
-          python3 # requirement for node-pre-gyp otherwise fails with exit code 236
-          util-linux # runtime requirement for taskset
-        ];
+        ++ lib.optional cfg.configureMemories perl;
     };
   };
 }
