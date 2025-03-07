@@ -2,6 +2,8 @@
 
 let
   cfg = config.services.nextcloud;
+  inherit (pkgs."nextcloud${lib.versions.major cfg.package.version}Packages") apps;
+  hasMemoriesApp = apps?memories;
 in
 {
   options = {
@@ -50,9 +52,7 @@ in
       };
 
       nextcloud = {
-        extraApps = let
-          inherit (pkgs."nextcloud${lib.versions.major cfg.package.version}Packages") apps;
-        in lib.mkMerge [
+        extraApps = lib.mkMerge [
           (lib.mkIf cfg.configureMemories {
             inherit (apps) memories;
           })
@@ -102,10 +102,12 @@ in
               ''OC\Preview\Movie''
             ];
 
-            "memories.exiftool" = lib.getExe pkgs.exiftool;
+            "memories.exiftool_no_local" = false;
+            "memories.exiftool" = if hasMemoriesApp then "${apps.memories}/bin-ext/exiftool/exiftool" else lib.getExe pkgs.exiftool;
+            "memories.vod.ffmpeg" = if hasMemoriesApp then "${apps.memories}/bin-ext/ffmpeg" else lib.getExe pkgs.ffmpeg-headless;
+            "memories.vod.ffprobe" = if hasMemoriesApp then "${apps.memories}/bin-ext/ffprobe" else lib.getExe' pkgs.ffmpeg-headless "ffprobe";
+            "memories.vod.path" = lib.mkIf hasMemoriesApp "${apps.memories}/bin-ext/go-vod";
             "memories.vod.vaapi" = lib.mkIf cfg.configureMemoriesVaapi true;
-            "memories.vod.ffmpeg" = lib.getExe pkgs.ffmpeg-headless;
-            "memories.vod.ffprobe" = lib.getExe' pkgs.ffmpeg-headless "ffprobe";
           })
 
           (lib.mkIf cfg.configurePreviewSettings {
@@ -138,7 +140,7 @@ in
       services = let
         occ = "/run/current-system/sw/bin/nextcloud-occ";
       in {
-        nextcloud-cron = lib.mkIf cfg.configureMemories {
+        nextcloud-cron = lib.mkIf (cfg.configureMemories != hasMemoriesApp) {
           # required for memories
           # see https://github.com/pulsejet/memories/blob/master/docs/troubleshooting.md#issues-with-nixos
           path = with pkgs; [ perl ];
@@ -214,7 +216,7 @@ in
         # generate video thumbnails with preview generator
         lib.optional cfg.configurePreviewSettings ffmpeg-headless
         # required for memories, duplicated with nextcloud-cron to better debug
-        ++ lib.optional cfg.configureMemories perl;
+        ++ lib.optional (cfg.configureMemories && !hasMemoriesApp) perl;
     };
   };
 }
