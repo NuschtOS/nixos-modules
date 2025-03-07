@@ -79,7 +79,7 @@ in
         };
 
         # https://www.home-assistant.io/integrations/recorder/#common-filtering-examples
-        recoder = {
+        recorder = {
           exclude = {
             domains = [ "automation" "update" ];
             entity_globs = [ "sensor.sun*" "weather.*" ];
