@@ -3,6 +3,7 @@
 let
   cfg = config.services.nextcloud;
   inherit (pkgs."nextcloud${lib.versions.major cfg.package.version}Packages") apps;
+  # TODO: drop when dropping 24.11 support
   hasMemoriesApp = apps?memories;
 in
 {
