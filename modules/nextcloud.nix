@@ -141,7 +141,7 @@ in
       services = let
         occ = "/run/current-system/sw/bin/nextcloud-occ";
       in {
-        nextcloud-cron = lib.mkIf (cfg.configureMemories != hasMemoriesApp) {
+        nextcloud-cron = lib.mkIf (cfg.configureMemories && !hasMemoriesApp) {
           # required for memories
           # see https://github.com/pulsejet/memories/blob/master/docs/troubleshooting.md#issues-with-nixos
           path = with pkgs; [ perl ];
