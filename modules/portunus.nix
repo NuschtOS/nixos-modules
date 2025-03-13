@@ -239,10 +239,7 @@ in
     };
 
     systemd.services = lib.mkIf cfg.oauth2-proxy.configure {
-      oauth2-proxy.serviceConfig = {
-         requires = [ "network-online.target" ];
-         after = [ "network-online.target" ];
-       };
+      oauth2-proxy.requires = [ "network-online.target" ];
     };
   };
 }
