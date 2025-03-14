@@ -201,6 +201,7 @@ in
         reverseProxy = true;
         upstream = "http://127.0.0.1:4181";
         extraConfig = {
+          code-challenge-method = "S256"; # supported by dex and inidcated by a logged warning
           exclude-logging-path = "/oauth2/static/css/all.min.css,/oauth2/static/css/bulma.min.css";
           oidc-issuer-url = cfgd.settings.issuer;
           provider-display-name = "Portunus";
@@ -239,10 +240,7 @@ in
     };
 
     systemd.services = lib.mkIf cfg.oauth2-proxy.configure {
-      oauth2-proxy.serviceConfig = {
-         requires = [ "network-online.target" ];
-         after = [ "network-online.target" ];
-       };
+      oauth2-proxy.requires = [ "network-online.target" ];
     };
   };
 }
