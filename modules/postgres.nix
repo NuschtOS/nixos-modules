@@ -116,10 +116,16 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    assertions = [ {
-      assertion = cfg.refreshCollation -> lib.versionAtLeast cfg.package.version "15";
-      message = "services.postgresql.refreshCollation requires at least PostgreSQL version 15";
-    } ];
+    assertions = [
+      {
+        assertion = cfg.refreshCollation -> lib.versionAtLeast cfg.package.version "15";
+        message = "services.postgresql.refreshCollation requires at least PostgreSQL version 15";
+      }
+      {
+        assertion = lib.all (so: so != "") (lib.splitString "," cfg.settings.shared_preload_libraries);
+        message = "services.postgresql.settings.shared_preload_libraries cannot contain empty elements: \"${cfg.settings.shared_preload_libraries}\"";
+      }
+    ];
 
     warnings = lib.optional (lib.versionOlder cfg.package.version latestVersion)
       "You are are running PostgreSQL version ${cfg.package.version} but the latest version is ${latestVersion}. Consider upgrading :)";
@@ -185,18 +191,17 @@ in
       postgresql = {
         databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
         enableJIT = lib.mkIf cfg.recommendedDefaults true;
-        settings.shared_preload_libraries = lib.mkMerge [
-          (lib.mkIf cfg.configurePgStatStatements [ "pg_stat_statements" ])
+        settings.shared_preload_libraries =
+          lib.optional cfg.configurePgStatStatements "pg_stat_statements"
           # TODO: upstream, this probably requires a new entry in passthru to pick if the object name doesn't match the plugin name or there are multiple
           # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix#L76
-          (let
+          ++ (let
             # drop workaround when dropping support for 24.11
             # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/databases/postgresql.nix#L47-L49
             basePackage = if cfg.enableJIT then cfg.package.withJIT else cfg.package.withoutJIT;
             postgresPkg = if cfg.extensions == [ ] then basePackage else basePackage.withPackages cfg.extensions;
             finalPackage = cfg.finalPackage or postgresPkg;
-          in lib.mkIf cfg.preloadAllExtensions (map lib.getName finalPackage.installedExtensions))
-        ];
+          in lib.optionals cfg.preloadAllExtensions (map lib.getName finalPackage.installedExtensions));
         upgrade.stopServices = with config.services; lib.mkMerge [
           (lib.mkIf (atuin.enable && atuin.database.createLocally) [ "atuin" ])
           (lib.mkIf (gitea.enable && gitea.database.socket == "/run/postgresql") [ "gitea" ])
