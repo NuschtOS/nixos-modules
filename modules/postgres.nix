@@ -197,14 +197,21 @@ in
         settings.shared_preload_libraries =
           lib.optional cfg.configurePgStatStatements "pg_stat_statements"
           # TODO: upstream, this probably requires a new entry in passthru to pick if the object name doesn't match the plugin name or there are multiple
-          # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix#L76
+          # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix#L81
           ++ (let
             # drop workaround when dropping support for 24.11
-            # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/databases/postgresql.nix#L47-L49
+            # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/databases/postgresql.nix#L52-L54
             basePackage = if cfg.enableJIT then cfg.package.withJIT else cfg.package.withoutJIT;
             postgresPkg = if cfg.extensions == [ ] then basePackage else basePackage.withPackages cfg.extensions;
             finalPackage = cfg.finalPackage or postgresPkg;
-          in lib.optionals cfg.preloadAllExtensions (map lib.getName finalPackage.installedExtensions));
+
+            # NOTE: move into extensions when upstreaming
+            getSoOrFallback = so: let
+              name = lib.getName so;
+            in {
+              postgis = "postgis-3";
+            }.${name} or name;
+          in lib.optionals cfg.preloadAllExtensions (map getSoOrFallback finalPackage.installedExtensions));
         upgrade.stopServices = with config.services; lib.mkMerge [
           (lib.mkIf (atuin.enable && atuin.database.createLocally) [ "atuin" ])
           (lib.mkIf (gitea.enable && gitea.database.socket == "/run/postgresql") [ "gitea" ])
@@ -269,9 +276,12 @@ in
             # install/update pg_stat_statements extension in all databases
             # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
             (lib.mkIf (cfg.enableAllPreloadedLibraries || cfg.configurePgStatStatements) (lib.concatStrings (map (db:
-              (lib.concatMapStringsSep "\n" (ext: /* bash */ ''
-                $PSQL -tAd "${db}" -c "CREATE EXTENSION IF NOT EXISTS ${ext}"
-                $PSQL -tAd "${db}" -c "ALTER EXTENSION ${ext} UPDATE"
+              (lib.concatMapStringsSep "\n" (ext: let
+                # This is ugly...
+                ext' = lib.head (lib.splitString "-" ext);
+              in /* bash */ ''
+                $PSQL -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${ext'}"'
+                $PSQL -tAd '${db}' -c 'ALTER EXTENSION "${ext'}" UPDATE'
               '') (lib.splitString "," (if cfg.enableAllPreloadedLibraries then
                   cfg.settings.shared_preload_libraries
                 else if cfg.configurePgStatStatements then
