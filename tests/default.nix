@@ -1,4 +1,4 @@
-{ lib, pkgs, self, system }:
+{ lib, self, system }:
 
 let
   mkTest = { module ? { } }: lib.nixosSystem {
@@ -13,7 +13,11 @@ let
     inherit system;
   };
 in
-lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
+lib.mapAttrs (name: value: let
+  inherit (value.config.system.build) toplevel;
+in toplevel // {
+  inherit (value) config options;
+})({
   no-config = mkTest { };
 
   # https://github.com/NuschtOS/nixos-modules/issues/2
@@ -117,7 +121,24 @@ lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
       };
     };
   };
-} // lib.optionalAttrs (lib.versionAtLeast lib.version "24.11") {
+
+  postgresql-plain = mkTest {
+    module = {
+      services.postgresql.enable = true;
+    };
+  };
+
+  postgresql-load-extensions = mkTest {
+    module = {
+      services.postgresql = {
+        enable = true;
+        configurePgStatStatements = true;
+        enableAllPreloadedLibraries = true;
+        preloadAllExtensions = true;
+      };
+    };
+  };
+
   # https://github.com/NuschtOS/nixos-modules/issues/156
   renovate-plain = mkTest {
     module = {
@@ -126,7 +147,7 @@ lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
       };
     };
   };
-} // {
+
   vaultwarden-no-nginx = mkTest {
     module = {
       services.vaultwarden = {
