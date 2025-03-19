@@ -205,7 +205,7 @@ in
             postgresPkg = if cfg.extensions == [ ] then basePackage else basePackage.withPackages cfg.extensions;
             finalPackage = cfg.finalPackage or postgresPkg;
 
-            # NOTE: move into extensions when upstreaming
+            # NOTE: move into extensions passthru.libName when upstreaming and find via cfg.finalPackage.installedExtensions
             getSoOrFallback = so: let
               name = lib.getName so;
             in {
@@ -281,7 +281,10 @@ in
                 ext' = lib.head (lib.splitString "-" ext);
               in /* bash */ ''
                 $PSQL -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${ext'}"'
-                $PSQL -tAd '${db}' -c 'ALTER EXTENSION "${ext'}" UPDATE'
+                $PSQL -tAd '${db}' -c '${if ext' == "postgis" then
+                  "SELECT postgis_extensions_upgrade()"
+                else
+                  ''ALTER EXTENSION "${ext'}" UPDATE''}'
               '') (lib.splitString "," (if cfg.enableAllPreloadedLibraries then
                   cfg.settings.shared_preload_libraries
                 else if cfg.configurePgStatStatements then
