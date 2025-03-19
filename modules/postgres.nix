@@ -122,7 +122,10 @@ in
         message = "services.postgresql.refreshCollation requires at least PostgreSQL version 15";
       }
       {
-        assertion = lib.all (so: so != "") (lib.splitString "," cfg.settings.shared_preload_libraries);
+        assertion = let
+          # the csv type maps an empty list [] to an empty string which splitString maps to [""] .....
+          preload_libs = lib.splitString "," cfg.settings.shared_preload_libraries;
+        in preload_libs == "" -> lib.all (so: so != "") preload_libs;
         message = "services.postgresql.settings.shared_preload_libraries cannot contain empty elements: \"${cfg.settings.shared_preload_libraries}\"";
       }
     ];
