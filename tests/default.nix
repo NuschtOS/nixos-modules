@@ -121,6 +121,24 @@ in toplevel // {
       };
     };
   };
+
+  postgresql-plain = mkTest {
+    module = {
+      services.postgresql.enable = true;
+    };
+  };
+
+  postgresql-load-extensions = mkTest {
+    module = {
+      services.postgresql = {
+        enable = true;
+        configurePgStatStatements = true;
+        enableAllPreloadedLibraries = true;
+        preloadAllExtensions = true;
+      };
+    };
+  };
+
   # https://github.com/NuschtOS/nixos-modules/issues/156
   renovate-plain = mkTest {
     module = {
