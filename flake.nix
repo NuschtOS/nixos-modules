@@ -54,7 +54,7 @@
     } // flake-utils.lib.eachDefaultSystem (system: let
       pkgs = nixpkgs.legacyPackages.${system};
     in {
-      checks = import ./tests { inherit lib pkgs self system; };
+      checks = import ./tests { inherit lib self system; };
 
       packages = {
         default = self.packages.${system}.debugging;
