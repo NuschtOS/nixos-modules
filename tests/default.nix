@@ -13,7 +13,11 @@ let
     inherit system;
   };
 in
-lib.mapAttrs (name: value: value.config.system.build.toplevel) ({
+lib.mapAttrs (name: value: let
+  inherit (value.config.system.build) toplevel;
+in toplevel // {
+  inherit (value) config options;
+})({
   no-config = mkTest { };
 
   # https://github.com/NuschtOS/nixos-modules/issues/2
