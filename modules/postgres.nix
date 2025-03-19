@@ -22,7 +22,7 @@ in
       '';
     };
 
-    enableAllPreloadedLibraries = libS.mkOpinionatedOption "enable all `shared_preload_libraries`";
+    enableAllPreloadedLibraries = libS.mkOpinionatedOption "enable all extensions installed through `shared_preload_libraries`";
 
     ensureUsers = lib.mkOption {
       type = lib.types.listOf (lib.types.submodule {
