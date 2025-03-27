@@ -93,7 +93,7 @@ in
                   ;;
                 # used by nixos-rebuild --target-host ... --build-host ...
                 "nix-store -r")
-                  exec ${lib.getExe' cfg.package "nix-store"} "$@"
+                  exec ${lib.getExe' cfg.package "nix-store"} -r
                   ;;
                 *)
                   echo "Access is only allowed for nix remote building, not running command \"$SSH_ORIGINAL_COMMAND\"" 1>&2
