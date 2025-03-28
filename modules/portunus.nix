@@ -147,12 +147,8 @@ in
                 ./dex-session-cookie-password-connector-2.41.patch
               else if (lib.versionAtLeast prev.dex-oidc.version "2.40") then
                 ./dex-session-cookie-password-connector-2.40.patch
-              else if (lib.versionAtLeast prev.dex-oidc.version "2.39") then
-                ./dex-session-cookie-password-connector-2.39.patch
-              else if (lib.versionAtLeast prev.dex-oidc.version "2.38") then
-                ./dex-session-cookie-password-connector-2.38.patch
               else
-                ./dex-session-cookie-password-connector-2.37.patch
+                throw "Dex version ${dex-oidc.version} is not supported."
               )
 
               # Complain if the env set in SecretEnv cannot be found
@@ -168,12 +164,8 @@ in
               "sha256-a0F4itrposTBeI1XB0Ru3wBkw2zMBlsMhZUW8PuM1NA="
             else if lib.versionAtLeast prev.dex-oidc.version "2.40" then
               "sha256-oxu3eNsjUGo6Mh6QybeGggsCZsZOGYo7nBD5ZU8MSy8="
-            else if lib.versionAtLeast prev.dex-oidc.version "2.39" then
-              "sha256-NgKZb2Oi4BInO/dSLzSUK722L/3pWQFWSNynjSj5sEE="
-            else if lib.versionAtLeast prev.dex-oidc.version "2.38" then
-              "sha256-f0b4z+Li0nspdWQyg4DPv6kFCO9xzO8IZBScSX2DoIs="
             else
-              "sha256-YIi67pPIcVndIjWk94ckv6X4WLELUe/J/03e+XWIdHE=";
+              throw "Dex version ${dex-oidc.version} is not supported.";
           });
         };
 
