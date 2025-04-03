@@ -67,7 +67,7 @@ in
 
     nix.settings = {
       builders-use-substitutes = lib.mkIf cfg.recommendedDefaults true;
-      connect-timeout = lib.mkIf cfg.recommendedDefaults 20;
+      connect-timeout = lib.mkIf cfg.recommendedDefaults (lib.mkDefault 20);
       experimental-features = lib.mkIf cfg.recommendedDefaults [ "nix-command" "flakes" ];
       trusted-users = lib.mkIf cfg.remoteBuilder.enable [ cfg.remoteBuilder.name ];
     };
