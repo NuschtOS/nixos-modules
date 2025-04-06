@@ -44,11 +44,11 @@ in
           useIPTables = !config.networking.nftables.enable;
         in lib.mkIf cfgd.recommendedDefaults {
           fixed-cidr-v6 = "fd00::/80"; # TODO: is this a good idea for all networks?
-          iptables = useIPTables;
-          ip6tables = useIPTables;
+          iptables = lib.mkIf useIPTables true;
+          ip6tables = lib.mkIf useIPTables true;
           ipv6 = true;
           # userland proxy is slow, does not give back ports and if iptables/nftables is available it is just worse
-          userland-proxy = false;
+          userland-proxy = lib.mkIf useIPTables false;
         };
 
         autoPrune = lib.mkIf cfgd.aggressiveAutoPrune {
