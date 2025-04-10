@@ -2,6 +2,7 @@
 
 let
   cfg = config.services.matrix-synapse;
+  cfga = cfg.synapse-admin;
   cfge = cfg.element-web;
   cfgl = cfg.ldap;
   inherit (config.security) ldap;
@@ -50,6 +51,12 @@ in
           example = "/var/lib/secrets/search-user-password";
           description = "Path to a file containing the password for the search/bind user.";
         };
+      };
+
+      synapse-admin = {
+        enable = lib.mkEnableOption "" // { description = "Whether to configure synapse-admin to be served at the matrix servers domain under the /admin path."; };
+
+        package = lib.mkPackageOption pkgs "synapse-admin" { };
       };
 
       recommendedDefaults = libS.mkOpinionatedOption "set recommended and secure default settings";
@@ -153,6 +160,24 @@ in
       };
 
       virtualHosts = lib.mkMerge [
+        (lib.mkIf cfga.enable {
+          # see https://github.com/etkecc/synapse-admin/blob/main/docs/reverse-proxy.md#nginx
+          "${cfg.domain}" = {
+            forceSSL = lib.mkIf cfg.recommendedDefaults true;
+            locations = {
+              "= /admin".return = "307 /admin/";
+              "^~ /admin/" = {
+                alias = "${cfga.package}/";
+                tryFiles = "$uri $uri/ /index.html";
+              };
+              "~ ^/admin/.*\.(?:css|js|jpg|jpeg|gif|png|svg|ico|woff|woff2|ttf|eot|webp)$".extraConfig = /* nginx */ ''
+                expires 30d;
+                more_set_headers "Cache-Control: public";
+              '';
+            };
+          };
+        })
+
         (lib.mkIf cfge.enable {
           "${cfge.domain}" = {
             forceSSL = lib.mkIf cfg.recommendedDefaults true;
