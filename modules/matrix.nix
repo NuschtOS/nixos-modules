@@ -166,14 +166,20 @@ in
             forceSSL = lib.mkIf cfg.recommendedDefaults true;
             locations = {
               "= /admin".return = "307 /admin/";
-              "^~ /admin/" = {
+              "/admin/" = {
                 alias = "${cfga.package}/";
+                priority = 500;
                 tryFiles = "$uri $uri/ /index.html";
               };
-              "~ ^/admin/.*\.(?:css|js|jpg|jpeg|gif|png|svg|ico|woff|woff2|ttf|eot|webp)$".extraConfig = /* nginx */ ''
-                expires 30d;
-                more_set_headers "Cache-Control: public";
-              '';
+              "~ ^/admin/.*\\.(?:css|js|jpg|jpeg|gif|png|svg|ico|woff|woff2|ttf|eot|webp)$" = {
+                priority = 400;
+                root = cfga.package;
+                extraConfig = /* nginx */ ''
+                  rewrite ^/admin/(.*)$ /$1 break;
+                  expires 30d;
+                  more_set_headers "Cache-Control: public";
+                '';
+              };
             };
           };
         })
