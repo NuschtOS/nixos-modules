@@ -11,7 +11,7 @@ in
       default = null;
       description = ''
         Microarchitecture string for nixpkgs.hostPlatform.gcc.march and to generate system-features.
-        Can be determined with: ``nix shell nixpkgs#gcc -c gcc -march=native -Q --help=target | grep march``
+        Can be determined with: ``nix --extra-experimental-features "flakes nix-command" shell nixpkgs#gcc -c gcc -march=native -Q --help=target | grep march``
       '';
     };
   };
