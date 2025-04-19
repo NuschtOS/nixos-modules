@@ -57,6 +57,7 @@ in
         enable = lib.mkEnableOption "" // { description = "Whether to configure synapse-admin to be served at the matrix servers domain under the /admin path."; };
 
         package = lib.mkPackageOption pkgs "synapse-admin" { } // {
+          # TODO: remove after 25.05
           default = pkgs.synapse-admin-etkecc or pkgs.synapse-admin;
           example = "pkgs.synapse-admin-etkecc";
           extraDescription = "If synapse-admin-etkecc exists, that is the default, otherwise synapse-admin.";
