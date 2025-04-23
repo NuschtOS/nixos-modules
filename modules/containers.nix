@@ -16,6 +16,8 @@ in
     podman = {
       aggressiveAutoPrune = libS.mkOpinionatedOption "configure aggressive auto pruning which removes everything unreferenced by running containers. This includes named volumes and mounts should be used instead";
 
+      configureDNS = libS.mkOpinionatedOption "configure DNS in podman by default like in Docker";
+
       recommendedDefaults = libS.mkOpinionatedOption "set recommended and maintenance reducing default settings";
     };
   };
@@ -25,6 +27,11 @@ in
   ];
 
   config = {
+    networking.firewall.interfaces."podman0" = lib.mkIf cfgp.configureDNS {
+      allowedUDPPorts = [ 53 ];
+      allowedTCPPorts = [ 53 ];
+    };
+
     virtualisation = let
       autoPruneFlags = [
         "--all"
@@ -62,7 +69,7 @@ in
           enable = true;
           flags = autoPruneFlags;
         };
-        defaultNetwork.settings.dns_enabled = lib.mkIf cfgp.recommendedDefaults true;
+        defaultNetwork.settings.dns_enabled = lib.mkIf cfgp.configureDNS true;
       };
     };
   };
