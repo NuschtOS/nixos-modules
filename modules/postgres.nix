@@ -115,14 +115,14 @@ in
     };
 
     vacuumAnalyzeTimer = {
-      enable = libS.mkOpinionatedOption "timer to run VACUUM ANALYZE on all DBs";
+      enable = libS.mkOpinionatedOption "configure a systemd timer to run `VACUUM ANALYZE` periodically on all DBs";
 
       timerConfig = lib.mkOption {
         type = lib.types.nullOr (lib.types.attrsOf utils.systemdUtils.unitOptions.unitOption);
         default = {
           OnCalendar = "03:00";
           Persistent = true;
-          RandomizedDelaySec = "30m";
+          RandomizedDelaySec = "10m";
         };
         example = {
           OnCalendar = "06:00";
@@ -216,7 +216,7 @@ in
       postgresql = {
         databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
         enableJIT = lib.mkIf cfg.recommendedDefaults true;
-        extensions = ps: with ps; lib.mkIf cfg.pgRepackTimer [ pg_repack ];
+        extensions = lib.mkIf cfg.pgRepackTimer.enable (ps: with ps; [ pg_repack ]);
         settings.shared_preload_libraries =
           lib.optional cfg.configurePgStatStatements "pg_stat_statements"
           # TODO: upstream, this probably requires a new entry in passthru to pick if the object name doesn't match the plugin name or there are multiple
@@ -341,7 +341,6 @@ in
         postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
           description = "Vacuum and analyze all PostgreSQL databases";
           after = [ "postgresql.service" ];
-          requires = [ "postgresql.service" ];
           serviceConfig = {
             ExecStart = "${lib.getExe' cfg.package "psql"} --port=${builtins.toString cfg.settings.port} -tAc 'VACUUM ANALYZE'";
             User = "postgres";
