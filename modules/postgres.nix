@@ -36,6 +36,28 @@ in
       });
     };
 
+    pgRepackTimer = {
+      enable = libS.mkOpinionatedOption "install pg_repack and configure a systemd timer to run it periodically on all DBs";
+
+      timerConfig = lib.mkOption {
+        type = lib.types.nullOr (lib.types.attrsOf utils.systemdUtils.unitOptions.unitOption);
+        default = {
+          OnCalendar = "02:00";
+          Persistent = true;
+          RandomizedDelaySec = "10m";
+        };
+        example = {
+          OnCalendar = "06:00";
+          Persistent = true;
+          RandomizedDelaySec = "5h";
+        };
+        description = ''
+          When to run the VACUUM ANALYZE.
+          See {manpage}`systemd.timer(5)` for details.
+        '';
+      };
+    };
+
     preloadAllExtensions = libS.mkOpinionatedOption "load all installed extensions through `shared_preload_libraries`";
 
     recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
@@ -194,6 +216,7 @@ in
       postgresql = {
         databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
         enableJIT = lib.mkIf cfg.recommendedDefaults true;
+        extensions = ps: with ps; lib.mkIf cfg.pgRepackTimer [ pg_repack ];
         settings.shared_preload_libraries =
           lib.optional cfg.configurePgStatStatements "pg_stat_statements"
           # TODO: upstream, this probably requires a new entry in passthru to pick if the object name doesn't match the plugin name or there are multiple
@@ -305,6 +328,16 @@ in
           stopIfChanged = lib.mkIf cfg.recommendedDefaults false;
         };
 
+        postgresql-pg-repack = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
+          description = "Repack all PostgreSQL databases";
+          after = [ "postgresql.service" ];
+          serviceConfig = {
+            ExecStart =  "${lib.getExe cfg.package.pkgs.pg_repack} --port=${builtins.toString cfg.settings.port} --all";
+            User = "postgres";
+          };
+          wantedBy = [ "timers.target" ];
+        };
+
         postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
           description = "Vacuum and analyze all PostgreSQL databases";
           after = [ "postgresql.service" ];
@@ -317,9 +350,15 @@ in
         };
       };
 
-      timers.postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
-        inherit (cfg.vacuumAnalyzeTimer) timerConfig;
-        wantedBy = [ "timers.target" ];
+      timers = {
+        postgresql-pg-repack = lib.mkIf cfg.pgRepackTimer.enable {
+          inherit (cfg.vacuumAnalyzeTimer) timerConfig;
+          wantedBy = [ "timers.target" ];
+        };
+        postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
+          inherit (cfg.vacuumAnalyzeTimer) timerConfig;
+          wantedBy = [ "timers.target" ];
+        };
       };
     };
   };
