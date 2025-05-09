@@ -233,8 +233,10 @@ in
               name = lib.getName so;
             in {
               postgis = "postgis-3";
+              # withJIT installs the postgres' jit output as an extension but that is no shared object to load
+              postgresql = null;
             }.${name} or name;
-          in lib.optionals cfg.preloadAllExtensions (map getSoOrFallback finalPackage.installedExtensions));
+          in lib.optionals cfg.preloadAllExtensions (lib.filter (x: x != null) (map getSoOrFallback finalPackage.installedExtensions)));
         upgrade.stopServices = with config.services; lib.mkMerge [
           (lib.mkIf (atuin.enable && atuin.database.createLocally) [ "atuin" ])
           (lib.mkIf (gancio.enable && gancio.settings.db.dialect == "postgres") [ "gancio" ])
