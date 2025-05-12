@@ -116,6 +116,10 @@ in
       }
 
       (lib.mkIf cfg.recommendedDefaults {
+         log = {
+           loggers."synapse.http.matrixfederationclient".level = "ERROR";
+           root.level = "WARN";
+         };
         settings = {
           federation_client_minimum_tls_version = "1.2";
           public_baseurl = "https://${cfg.domain}";
