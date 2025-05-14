@@ -20,6 +20,9 @@ in
         # focus events enabled for terminals that support them
         set -g focus-events on
 
+        # mouse control
+        set -g mouse on
+
         # open new tab in PWD
         bind '"' split-window -c "#{pane_current_path}"
         bind % split-window -h -c "#{pane_current_path}"
