@@ -14,6 +14,7 @@ in
       baseIndex = 1;
       clock24 = true;
       escapeTime = 100;
+      historyLimit = 50000;
       terminal = "xterm-256color";
       extraConfig = /* tmux */''
         # focus events enabled for terminals that support them
