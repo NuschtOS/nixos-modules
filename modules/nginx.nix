@@ -13,6 +13,8 @@ in
       description = "Shared configuration snipped added to every virtualHosts' extraConfig.";
     };
 
+    compileWithAWSlc = libS.mkOpinionatedOption "compile nginx with aws-lc as crypto library";
+
     configureQuic = lib.mkEnableOption "quic support in nginx";
 
     default404Server = {
@@ -141,7 +143,27 @@ in
 
         enableQuicBPF = lib.mkIf cfg.configureQuic true;
 
-        package = lib.mkIf cfg.configureQuic pkgs.nginxQuic; # based on pkgs.nginxMainline
+        package = let
+          overrideNginx = pkg:
+            if cfg.compileWithAWSlc then
+              (pkg.override {
+                openssl = pkgs.aws-lc;
+              }).overrideAttrs ({ patches ? [ ], ... }: {
+                patches = patches ++ [
+                  (pkgs.fetchpatch {
+                    url = "https://github.com/aws/aws-lc/raw/refs/tags/v${pkgs.aws-lc.version}/tests/ci/integration/nginx_patch/aws-lc-nginx.patch";
+                    hash = "sha256-6OPLpt0hVDPdG70eJrwehwcX3i9N5lkvaeVaAjFSByM=";
+                  })
+                ];
+              })
+            else
+              pkg;
+        in lib.mkIf (cfg.configureQuic || cfg.compileWithAWSlc || cfg.recommendedDefaults) (overrideNginx (
+          if cfg.configureQuic then
+            pkgs.nginxQuic
+          else
+            pkgs.nginxMainline
+        ));
 
         recommendedBrotliSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
         recommendedGzipSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
