@@ -80,6 +80,8 @@ in
             });
           };
         };
+
+        config.kTLS = lib.mkIf cfg.compileWithAWSlc false;
       }));
     };
   };
@@ -92,12 +94,18 @@ in
   ];
 
   config = lib.mkIf cfg.enable {
-    assertions = lib.mkIf cfg.hstsHeader.enable (lib.attrValues (lib.mapAttrs (host: hostConfig: {
-      assertion = (lib.length (lib.attrNames hostConfig.locations)) == 0 -> hostConfig.root == null;
-      message = let
-        name = ''services.nginx.virtualHosts."${host}"'';
-      in "Use ${name}.locations./.root instead of ${name}.root to properly apply .locations.*.extraConfig set by services.nginx.hstsHeader.enable";
-    }) cfg.virtualHosts));
+    assertions = lib.mkIf cfg.hstsHeader.enable (lib.flatten (lib.attrValues (lib.mapAttrs (host: hostConfig: let
+      name = ''services.nginx.virtualHosts."${host}"'';
+    in [
+      {
+        assertion = (lib.length (lib.attrNames hostConfig.locations)) == 0 -> hostConfig.root == null;
+        message = "Use ${name}.locations./.root instead of ${name}.root to properly apply .locations.*.extraConfig set by `services.nginx.hstsHeader.enable`.";
+      }
+      {
+        assertion = cfg.compileWithAWSlc -> !hostConfig.kTLS;
+        message = "${name} uses kTLS which is incompatible with aws-lc.";
+      }
+    ]) cfg.virtualHosts)));
 
     boot.kernel.sysctl = lib.mkIf cfg.tcpFastOpen {
       # enable tcp fastopen for outgoing and incoming connections
@@ -202,7 +210,7 @@ in
           in
           lib.mkIf (cfg.recommendedDefaults || cfg.default404Server.enable || cfg.configureQuic) {
             "_" = {
-              kTLS = lib.mkIf cfg.recommendedDefaults true;
+              kTLS = lib.mkIf (cfg.recommendedDefaults && !cfg.compileWithAWSlc) true;
               reuseport = lib.mkIf (cfg.recommendedDefaults || cfg.configureQuic) true;
 
               default = lib.mkIf cfg.default404Server.enable true;
