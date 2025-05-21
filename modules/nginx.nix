@@ -170,7 +170,11 @@ in
           if cfg.configureQuic then
             pkgs.nginxQuic
           else
-            pkgs.nginxMainline
+            # use the newer version
+            if lib.versionOlder pkgs.nginx.version pkgs.nginxMainline.version then
+              pkgs.nginxMainline
+            else
+              pkgs.nginx
         ));
 
         recommendedBrotliSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
