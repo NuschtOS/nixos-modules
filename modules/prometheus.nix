@@ -162,11 +162,12 @@ in
           metrics_path = "/probe";
           relabel_configs = [ {
             source_labels = [ "__address__" ];
-            target_label = "__param_target";
+            target_label = "__param_target"; # __param_* will be rewritten as query string
           } {
             source_labels = [ "__param_target" ];
             target_label = "instance";
           } {
+            # needed because blackbox exporter (ab)uses targets for its targets but we actually need to ask the exporter about the target state
             target_label = "__address__";
             replacement = cfgb.blackboxExporterURL;
           } ];
