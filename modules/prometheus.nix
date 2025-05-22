@@ -29,7 +29,7 @@ in
       dnsProbe = lib.mkOption {
         type = with lib.types; attrsOf (submodule {
           options = {
-            names = lib.mkOption {
+            domains = lib.mkOption {
               type = with lib.types; listOf str;
               example = [ "example.com" ];
               description = "Query name to query";
@@ -109,17 +109,17 @@ in
       exporters.blackbox = {
         config.modules = lib.mkMerge (
           (lib.mapAttrsToList (probeName: opts:
-            (lib.foldl (x: name: x // {
-              "dns_${probeName}_${name}" = {
+            (lib.foldl (x: domain: x // {
+              "dns_${probeName}_${domain}" = {
                 dns = {
-                  query_name = name;
+                  query_name = domain;
                   query_type = opts.type;
                   valid_rcodes = [ "NOERROR" ];
                 };
                 prober = "dns";
                 timeout = "5s";
               };
-            }) { } opts.names)
+            }) { } opts.domains)
           ) cfgb.dnsProbe)
 
         ++ lib.mapAttrsToList (name: opts: let
@@ -171,6 +171,7 @@ in
             replacement = cfgb.blackboxExporterURL;
           } ];
         };
+
         genHttpProbeScrapeConfig = { name, opts }: commonProbeScrapeConfig // {
           job_name = "blackbox_http_${name}";
           params.module = [ "http_${name}" ];
@@ -180,16 +181,17 @@ in
           } ];
         };
       in lib.flatten (lib.foldl (x: probe: x ++ [
-        (lib.foldl (x: name: x ++ [
+        (lib.foldl (x: domain: x ++ [
           (commonProbeScrapeConfig // {
-            job_name = "blackbox_dns_${probe.name}_${name}";
-            params.module = [ "dns_${probe.name}_${name}" ];
+            job_name = "blackbox_dns_${probe.name}_${domain}";
+            params.module = [ "dns_${probe.name}_${domain}" ];
             static_configs = [ {
               inherit (probe.value) targets;
             } ];
           })
-        ]) [ ] probe.value.names)
+        ]) [ ] probe.value.domains)
       ]) [ ] (lib.attrsToList cfgb.dnsProbe))
+
       ++ lib.filter (v: v != null) (lib.mapAttrsToList (name: opts:
         if (opts.ip == "both" || opts.ip == "ip4") then (genHttpProbeScrapeConfig { inherit name opts; }) else null
       ) cfgb.httpProbe
