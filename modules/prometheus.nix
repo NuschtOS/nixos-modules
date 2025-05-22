@@ -176,7 +176,6 @@ in
         genHttpProbeScrapeConfig = { name, opts }: commonProbeScrapeConfig // {
           job_name = "blackbox_http_${name}";
           params.module = [ "http_${name}" ];
-          inherit (commonProbeScrapeConfig) relabel_configs;
           static_configs = [ {
             targets = opts.urls;
           } ];
