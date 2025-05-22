@@ -176,6 +176,11 @@ in
         genHttpProbeScrapeConfig = { name, opts }: commonProbeScrapeConfig // {
           job_name = "blackbox_http_${name}";
           params.module = [ "http_${name}" ];
+          relabel_configs = commonProbeScrapeConfig.relabel_configs ++ [ {
+            source_labels = [ "__param_target" ];
+            regex = "https?://(.*)";
+            target_label = "domain";
+          } ];
           static_configs = [ {
             targets = opts.urls;
           } ];
@@ -186,6 +191,7 @@ in
             job_name = "blackbox_dns_${probe.name}_${domain}";
             params.module = [ "dns_${probe.name}_${domain}" ];
             static_configs = [ {
+              labels = { inherit domain; };
               inherit (probe.value) targets;
             } ];
           })
