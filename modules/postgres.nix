@@ -1,9 +1,16 @@
 { config, lib, libS, options, pkgs, utils, ... }:
 
 let
+  opt = options.services.postgresql;
   cfg = config.services.postgresql;
   cfgu = config.services.postgresql.upgrade;
   latestVersion = if pkgs?postgresql_17 then "17" else "16";
+  mkTimerDefault = time: {
+    OnBootSec = "10m";
+    OnCalendar = time;
+    Persistent = true;
+    RandomizedDelaySec = "10m";
+  };
 in
 {
   options.services.postgresql = {
@@ -41,11 +48,7 @@ in
 
       timerConfig = lib.mkOption {
         type = lib.types.nullOr (lib.types.attrsOf utils.systemdUtils.unitOptions.unitOption);
-        default = {
-          OnCalendar = "02:00";
-          Persistent = true;
-          RandomizedDelaySec = "10m";
-        };
+        default = mkTimerDefault "02:00";
         example = {
           OnCalendar = "06:00";
           Persistent = true;
@@ -119,11 +122,7 @@ in
 
       timerConfig = lib.mkOption {
         type = lib.types.nullOr (lib.types.attrsOf utils.systemdUtils.unitOptions.unitOption);
-        default = {
-          OnCalendar = "03:00";
-          Persistent = true;
-          RandomizedDelaySec = "10m";
-        };
+        default = mkTimerDefault "03:00";
         example = {
           OnCalendar = "06:00";
           Persistent = true;
@@ -351,13 +350,18 @@ in
         };
       };
 
-      timers = {
+      timers = let
+        mkTimerConfig = name: lib.mkMerge [
+          (lib.mkDefault opt."${name}".timerConfig.default)
+          cfg."${name}".timerConfig
+        ];
+      in {
         postgresql-pg-repack = lib.mkIf cfg.pgRepackTimer.enable {
-          inherit (cfg.vacuumAnalyzeTimer) timerConfig;
+          timerConfig = mkTimerConfig "pgRepackTimer";
           wantedBy = [ "timers.target" ];
         };
         postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
-          inherit (cfg.vacuumAnalyzeTimer) timerConfig;
+          timerConfig = mkTimerConfig "vacuumAnalyzeTimer";
           wantedBy = [ "timers.target" ];
         };
       };
