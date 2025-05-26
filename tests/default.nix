@@ -26,7 +26,7 @@ in toplevel // {
       security.acme.staging = true;
     };
   };
-} // lib.optionalAttrs (lib.versionAtLeast lib.version "24.11") {
+
   # https://github.com/NuschtOS/nixos-modules/issues/39
   hound-repos = mkTest {
     module = {
@@ -36,7 +36,7 @@ in toplevel // {
       };
     };
   };
-} // {
+
   grafana-no-nginx = mkTest {
     module = {
       services.grafana = {
