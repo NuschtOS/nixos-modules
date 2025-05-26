@@ -3,8 +3,6 @@
 let
   cfg = config.services.nextcloud;
   inherit (pkgs."nextcloud${lib.versions.major cfg.package.version}Packages") apps;
-  # TODO: drop when dropping 24.11 support
-  hasMemoriesApp = apps?memories;
 in
 {
   options = {
@@ -104,10 +102,10 @@ in
             ];
 
             "memories.exiftool_no_local" = false;
-            "memories.exiftool" = if hasMemoriesApp then "${apps.memories}/bin-ext/exiftool/exiftool" else lib.getExe pkgs.exiftool;
-            "memories.vod.ffmpeg" = if hasMemoriesApp then "${apps.memories}/bin-ext/ffmpeg" else lib.getExe pkgs.ffmpeg-headless;
-            "memories.vod.ffprobe" = if hasMemoriesApp then "${apps.memories}/bin-ext/ffprobe" else lib.getExe' pkgs.ffmpeg-headless "ffprobe";
-            "memories.vod.path" = lib.mkIf hasMemoriesApp "${apps.memories}/bin-ext/go-vod";
+            "memories.exiftool" = "${apps.memories}/bin-ext/exiftool/exiftool";
+            "memories.vod.ffmpeg" = "${apps.memories}/bin-ext/ffmpeg";
+            "memories.vod.ffprobe" = "${apps.memories}/bin-ext/ffprobe";
+            "memories.vod.path" = "${apps.memories}/bin-ext/go-vod";
             "memories.vod.vaapi" = lib.mkIf cfg.configureMemoriesVaapi true;
           })
 
@@ -141,15 +139,6 @@ in
       services = let
         occ = "/run/current-system/sw/bin/nextcloud-occ";
       in {
-        nextcloud-cron = lib.mkIf (cfg.configureMemories && !hasMemoriesApp) {
-          # required for memories
-          # see https://github.com/pulsejet/memories/blob/master/docs/troubleshooting.md#issues-with-nixos
-          path = with pkgs; [ perl ];
-          # fix memories app being unpacked without the x-bit on binaries
-          # could be done in nextcloud-update-plugins but then manually updates would be broken until the next auto update
-          preStart = "${lib.getExe' pkgs.coreutils "chmod"} +x ${cfg.home}/store-apps/memories/bin-ext/*";
-        };
-
         nextcloud-cron-preview-generator = lib.mkIf cfg.configurePreviewSettings {
           environment.NEXTCLOUD_CONFIG_DIR = "${cfg.datadir}/config";
           serviceConfig = {
@@ -213,11 +202,8 @@ in
       extraGroups = lib.mkIf (cfg.configureMemories && cfg.configureMemoriesVaapi) [
         "render" # access /dev/dri/renderD128
       ];
-      packages = with pkgs;
-        # generate video thumbnails with preview generator
-        lib.optional cfg.configurePreviewSettings ffmpeg-headless
-        # required for memories, duplicated with nextcloud-cron to better debug
-        ++ lib.optional (cfg.configureMemories && !hasMemoriesApp) perl;
+      # generate video thumbnails with preview generator
+      packages = lib.optional cfg.configurePreviewSettings pkgs.ffmpeg-headless;
     };
   };
 }

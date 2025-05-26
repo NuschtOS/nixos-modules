@@ -221,12 +221,6 @@ in
           # TODO: upstream, this probably requires a new entry in passthru to pick if the object name doesn't match the plugin name or there are multiple
           # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix#L81
           ++ (let
-            # drop workaround when dropping support for 24.11
-            # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/databases/postgresql.nix#L52-L54
-            basePackage = if cfg.enableJIT then cfg.package.withJIT else cfg.package.withoutJIT;
-            postgresPkg = if cfg.extensions == [ ] then basePackage else basePackage.withPackages cfg.extensions;
-            finalPackage = cfg.finalPackage or postgresPkg;
-
             # NOTE: move into extensions passthru.libName when upstreaming and find via cfg.finalPackage.installedExtensions
             getSoOrFallback = so: let
               name = lib.getName so;
@@ -235,7 +229,7 @@ in
               # withJIT installs the postgres' jit output as an extension but that is no shared object to load
               postgresql = null;
             }.${name} or name;
-          in lib.optionals cfg.preloadAllExtensions (lib.filter (x: x != null) (map getSoOrFallback finalPackage.installedExtensions)));
+          in lib.optionals cfg.preloadAllExtensions (lib.filter (x: x != null) (map getSoOrFallback cfg.finalPackage.installedExtensions)));
         upgrade.stopServices = with config.services; lib.mkMerge [
           (lib.mkIf (atuin.enable && atuin.database.createLocally) [ "atuin" ])
           (lib.mkIf (gancio.enable && gancio.settings.db.dialect == "postgres") [ "gancio" ])

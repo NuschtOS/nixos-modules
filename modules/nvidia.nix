@@ -1,9 +1,7 @@
-{ config, lib, options, ... }:
+{ config, lib, ... }:
 
 let
   cfg = config.hardware;
-  # TODO: remove with 24.11
-  hardwareOpengl = if options.hardware?graphics then "graphics" else "opengl";
 in
 {
   options.hardware = {
@@ -17,7 +15,7 @@ in
     };
 
     hardware = {
-      "${hardwareOpengl}".enable = true;
+      graphics.enable = true;
       nvidia = {
         modesetting.enable = true;
         nvidiaSettings = true;
