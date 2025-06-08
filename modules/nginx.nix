@@ -160,7 +160,14 @@ in
                 patches = patches ++ [
                   (pkgs.fetchpatch {
                     url = "https://github.com/aws/aws-lc/raw/refs/tags/v${pkgs.aws-lc.version}/tests/ci/integration/nginx_patch/aws-lc-nginx.patch";
-                    hash = "sha256-6OPLpt0hVDPdG70eJrwehwcX3i9N5lkvaeVaAjFSByM=";
+                    hash = let
+                      inherit (pkgs.aws-lc) version;
+                    in if version == "1.50.0" then
+                      "sha256-6OPLpt0hVDPdG70eJrwehwcX3i9N5lkvaeVaAjFSByM="
+                    else if version == "1.52.0" then
+                      "sha256-b7J13m3+A92H7vvGZ2aujwB855IKz7vUEmTMuL6XzuQ="
+                    else
+                      throw "aws-lc version ${version} is not supported.";
                   })
                 ];
               })
