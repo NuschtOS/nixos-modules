@@ -39,6 +39,9 @@ jobs:
 
       - name: Install Nix
         uses: nixbuild/nix-quick-install-action@v30
+        with:
+          nix_conf: |
+            ${{ matrix.targets.extraArgs }}
 
       - uses: nix-community/cache-nix-action@v6
         with:
