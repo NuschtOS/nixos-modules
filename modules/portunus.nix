@@ -129,7 +129,7 @@ in
     };
 
     nixpkgs.overlays = lib.mkIf cfg.enable [
-      (final: prev: with final; {
+      (final: prev: {
         dex-oidc = let
           functionArgs = prev.dex-oidc.override.__functionArgs;
           buildGoModule = if functionArgs?buildGoModule then
@@ -154,7 +154,7 @@ in
               )
 
               # Complain if the env set in SecretEnv cannot be found
-              (fetchpatch {
+              (final.fetchpatch {
                 url = "https://github.com/dexidp/dex/commit/f25f72053c9282cfe22521cd508698a07dc5190f.patch";
                 hash = "sha256-dyo+UPpceHxL3gcBQaGaDAHJqmysDJw051gMG1aeh5o=";
               })
