@@ -51,18 +51,7 @@
         _module.args.libS = lib.mkOverride 1000 (self.lib { inherit lib config; });
         imports = fileList "modules";
       };
-    } // flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = nixpkgs.legacyPackages.${system};
-    in {
+    } // flake-utils.lib.eachDefaultSystem (system: {
       checks = import ./tests { inherit lib self system; };
-
-      packages = {
-        default = self.packages.${system}.debugging;
-
-        debugging = pkgs.symlinkJoin {
-          name = "debugging-tools";
-          paths = import ./lib/debug-pkgs.nix pkgs;
-        };
-      };
     });
 }
