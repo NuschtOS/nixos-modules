@@ -32,16 +32,12 @@ jobs:
 
           - repo: SuperSandro2000/nixpkgs
             branch: nixos-unstable
-            extraArgs: extra-experimental-features = ca-derivations
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Nix
         uses: nixbuild/nix-quick-install-action@v30
-        with:
-          nix_conf: |
-            ${{ matrix.targets.extraArgs }}
 
       - uses: nix-community/cache-nix-action@v6
         with:
@@ -52,12 +48,14 @@ jobs:
         if: matrix.targets.repo != 'NuschtOS/nuschtpkgs' || matrix.targets.branch != 'nixos-unstable'
         run: |
           nix eval -L .#checks.x86_64-linux.no-config \
+            --extra-experimental-features ca-derivations \
             --override-input nixpkgs github:${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
 
       - name: run nix flake check with ${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
         if: matrix.targets.repo != 'NuschtOS/nuschtpkgs' || matrix.targets.branch != 'nixos-unstable'
         run: |
           nix flake check \
+            --extra-experimental-features ca-derivations \
             --override-input nixpkgs github:${{ matrix.targets.repo }}/${{ matrix.targets.branch }}
 
       - name: eval plain config with flake.lock
