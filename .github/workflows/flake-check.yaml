@@ -32,7 +32,7 @@ jobs:
 
           - repo: SuperSandro2000/nixpkgs
             branch: nixos-unstable
-            extraArgs: experimental-features = ca-derivations nix-command flakes
+            extraArgs: extra-experimental-features = ca-derivations
 
     steps:
       - uses: actions/checkout@v4
