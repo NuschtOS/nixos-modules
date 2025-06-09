@@ -99,7 +99,7 @@ in
             let
               providers = pkgs.fetchurl {
                 url = "https://oembed.com/providers.json?2024-12-13";
-                hash = "sha256-CL2d/DRukPZCHOkAWz3dCD1551KLcdIJBG1XiaWXYc8=";
+                hash = "sha256-s5zsZlsM77Wf+JZa/ZXdcytl7ov8FVFUsKM9eA+WUBo=";
               };
             in
             pkgs.runCommand "providers.json"
