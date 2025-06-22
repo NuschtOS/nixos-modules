@@ -156,6 +156,9 @@ in
             if cfg.compileWithAWSlc then
               (pkg.override {
                 openssl = pkgs.aws-lc;
+                # some advanced regex's cause nginx to crash with:
+                # traps: nginx[xxxxxx] trap invalid opcode ip:7fa6c23ebe79 sp:7ffcceaaa9e0 error:0 in memfd:sljit[1e79,7fa6c23ea000+10000]
+                pcre2 = pkgs.pcre2.override { withJitSealloc = false; };
               }).overrideAttrs ({ patches ? [ ], ... }: {
                 patches = patches ++ [
                   (pkgs.fetchpatch {
