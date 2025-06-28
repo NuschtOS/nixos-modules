@@ -66,9 +66,11 @@ in
       ];
     };
 
-    systemd.services.vaultwarden = {
-      after = lib.mkIf usingPostgres [ "postgresql.service" ];
-      requires = lib.mkIf usingPostgres [ "postgresql.service" ];
+    systemd.services.vaultwarden = let
+      postgresqlTarget = if lib.hasAttr "postgresql" config.systemd.targets then "postgresql.target" else "postgresql.service";
+    in {
+      after = lib.mkIf usingPostgres [ postgresqlTarget ];
+      requires = lib.mkIf usingPostgres [ postgresqlTarget ];
       serviceConfig = lib.mkIf cfg.recommendedDefaults {
         StateDirectory = lib.mkForce "vaultwarden"; # modules defaults to bitwarden_rs
       };
