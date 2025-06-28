@@ -325,7 +325,6 @@ in
 
         postgresql-pg-repack = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
           description = "Repack all PostgreSQL databases";
-          after = [ "postgresql.service" ];
           serviceConfig = {
             ExecStart =  "${lib.getExe cfg.package.pkgs.pg_repack} --port=${builtins.toString cfg.settings.port} --all";
             User = "postgres";
@@ -335,7 +334,6 @@ in
 
         postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
           description = "Vacuum and analyze all PostgreSQL databases";
-          after = [ "postgresql.service" ];
           serviceConfig = {
             ExecStart = "${lib.getExe' cfg.package "psql"} --port=${builtins.toString cfg.settings.port} -tAc 'VACUUM ANALYZE'";
             User = "postgres";
@@ -349,12 +347,15 @@ in
           (lib.mkDefault opt."${name}".timerConfig.default)
           cfg."${name}".timerConfig
         ];
+        postgresqlTarget = if lib.hasAttr "postgresql" config.systemd.targets then "postgresql.target" else "postgresql.service";
       in {
         postgresql-pg-repack = lib.mkIf cfg.pgRepackTimer.enable {
+          after = [ postgresqlTarget ];
           timerConfig = mkTimerConfig "pgRepackTimer";
           wantedBy = [ "timers.target" ];
         };
         postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
+          after = [ postgresqlTarget ];
           timerConfig = mkTimerConfig "vacuumAnalyzeTimer";
           wantedBy = [ "timers.target" ];
         };
