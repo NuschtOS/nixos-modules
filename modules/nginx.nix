@@ -161,16 +161,23 @@ in
                 pcre2 = pkgs.pcre2.override { withJitSealloc = false; };
               }).overrideAttrs ({ patches ? [ ], ... }: {
                 patches = patches ++ [
-                  (pkgs.fetchpatch {
-                    url = "https://github.com/aws/aws-lc/raw/refs/tags/v${pkgs.aws-lc.version}/tests/ci/integration/nginx_patch/aws-lc-nginx.patch";
-                    hash = let
-                      inherit (pkgs.aws-lc) version;
-                    in if version == "1.50.0" then
-                      "sha256-6OPLpt0hVDPdG70eJrwehwcX3i9N5lkvaeVaAjFSByM="
-                    else if version == "1.52.0" then
-                      "sha256-b7J13m3+A92H7vvGZ2aujwB855IKz7vUEmTMuL6XzuQ="
+                  (let
+                    # aws-lc 1.53+ wants nginx 1.28
+                    patchVersion = if lib.versions.majorMinor pkg.version == "1.27" then
+                      "1.52.0"
                     else
-                      throw "aws-lc version ${version} is not supported.";
+                      pkgs.aws-lc.version;
+                  in pkgs.fetchpatch {
+                    url = "https://github.com/aws/aws-lc/raw/refs/tags/v${patchVersion}/tests/ci/integration/nginx_patch/aws-lc-nginx.patch";
+                    hash =
+                      if patchVersion == "1.53.1" then
+                        "sha256-WDNJqr4jiDuU869puFyjfyEvlJO3ZiWLwhX9GWnnJgc="
+                      else if patchVersion == "1.52.0" then
+                        "sha256-b7J13m3+A92H7vvGZ2aujwB855IKz7vUEmTMuL6XzuQ="
+                      else if patchVersion == "1.50.0" then
+                        "sha256-6OPLpt0hVDPdG70eJrwehwcX3i9N5lkvaeVaAjFSByM="
+                      else
+                        throw "aws-lc version ${patchVersion} is not supported.";
                   })
                 ];
               })
