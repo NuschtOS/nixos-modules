@@ -94,7 +94,7 @@ in
   ];
 
   config = lib.mkIf cfg.enable {
-    assertions = lib.mkIf cfg.hstsHeader.enable (lib.flatten (lib.attrValues (lib.mapAttrs (host: hostConfig: let
+    assertions = lib.mkIf cfg.hstsHeader.enable (lib.mapAttrsToList (host: hostConfig: let
       name = ''services.nginx.virtualHosts."${host}"'';
     in [
       {
@@ -105,7 +105,7 @@ in
         assertion = cfg.compileWithAWSlc -> !hostConfig.kTLS;
         message = "${name} uses kTLS which is incompatible with aws-lc.";
       }
-    ]) cfg.virtualHosts)));
+    ]) cfg.virtualHosts);
 
     boot.kernel.sysctl = lib.mkIf cfg.tcpFastOpen {
       # enable tcp fastopen for outgoing and incoming connections
