@@ -248,8 +248,7 @@ in
           (lib.mkIf (matrix-synapse.enable && (!lib.hasAttr "host" matrix-synapse.settings.database.args)) [ "matrix-synapse" ])
           (lib.mkIf (mediawiki.enable && mediawiki.database.socket ==  "/run/postgresql") [ "phpfpm-mediawiki" ])
           (lib.mkIf (miniflux.enable && miniflux.createDatabaseLocally) [ "miniflux" ])
-          # TODO: simplify after https://github.com/NixOS/nixpkgs/pull/352508 got merged
-          (lib.mkIf (mobilizon.enable && lib.hasSuffix "/run/postgresql" mobilizon.settings.":mobilizon"."Mobilizon.Storage.Repo".socket_dir) [ "mobilizon" ])
+          (lib.mkIf (mobilizon.enable && mobilizon.settings.":mobilizon"."Mobilizon.Storage.Repo".socket_dir == "/run/postgresql") [ "mobilizon" ])
           (lib.mkIf (nextcloud.notify_push.enable && nextcloud.notify_push.dbhost == "/run/postgresql") [ "nextcloud-notify_push" ])
           (lib.mkIf (nextcloud.enable && nextcloud.config.dbhost == "/run/postgresql") [ "phpfpm-nextcloud" ])
           (lib.mkIf (pretalx.enable && pretalx.settings.database.host == "/run/postgresql") [ "pretalx-web" "pretalx-worker" ])
