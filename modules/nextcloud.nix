@@ -138,10 +138,12 @@ in
     systemd = {
       services = let
         occ = "/run/current-system/sw/bin/nextcloud-occ";
+        inherit (config.systemd.services.nextcloud-setup.serviceConfig) LoadCredential;
       in {
         nextcloud-cron-preview-generator = lib.mkIf cfg.configurePreviewSettings {
           environment.NEXTCLOUD_CONFIG_DIR = "${cfg.datadir}/config";
           serviceConfig = {
+            inherit LoadCredential;
             ExecStart = "${occ} preview:pre-generate";
             Type = "oneshot";
             User = "nextcloud";
@@ -174,6 +176,7 @@ in
             ${occ} config:app:set --value="256 1080" previewgenerator heightSizes
           '';
           serviceConfig = {
+            inherit LoadCredential;
             Type = "oneshot";
             User = "nextcloud";
           };
