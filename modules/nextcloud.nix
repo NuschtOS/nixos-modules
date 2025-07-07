@@ -92,7 +92,7 @@ in
             preview_imaginary_url = "http://127.0.0.1:${toString config.services.imaginary.port}/";
           })
 
-          (lib.mkIf cfg.configureMemories {
+          (lib.mkIf (cfg.configurePreviewSettings || cfg.configureMemories) {
             enabledPreviewProviders = [
               # https://memories.gallery/file-types/
               ''OC\Preview\Image'' # alias for png,jpeg,gif,bmp
@@ -100,7 +100,9 @@ in
               ''OC\Preview\TIFF''
               ''OC\Preview\Movie''
             ];
+          })
 
+          (lib.mkIf cfg.configureMemories {
             "memories.exiftool_no_local" = false;
             "memories.exiftool" = "${apps.memories}/bin-ext/exiftool/exiftool";
             "memories.vod.ffmpeg" = "${apps.memories}/bin-ext/ffmpeg";
