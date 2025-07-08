@@ -74,7 +74,7 @@ in
 
           (lib.mkIf cfg.configureImaginary {
             enabledPreviewProviders = [
-              # default from https://github.com/nextcloud/server/blob/master/config/config.sample.php#L1295-L1304
+              # default from https://github.com/nextcloud/server/blob/master/config/config.sample.php#L1494-L1505
               ''OC\Preview\BMP''
               ''OC\Preview\GIF''
               ''OC\Preview\JPEG''
@@ -85,14 +85,14 @@ in
               ''OC\Preview\PNG''
               ''OC\Preview\TXT''
               ''OC\Preview\XBitmap''
-              # https://docs.nextcloud.com/server/24/admin_manual/installation/server_tuning.html#previews
+              # https://docs.nextcloud.com/server/latest/admin_manual/installation/server_tuning.html#previews
               ''OC\Preview\Imaginary''
             ];
 
             preview_imaginary_url = "http://127.0.0.1:${toString config.services.imaginary.port}/";
           })
 
-          (lib.mkIf cfg.configureMemories {
+          (lib.mkIf (cfg.configurePreviewSettings || cfg.configureMemories) {
             enabledPreviewProviders = [
               # https://memories.gallery/file-types/
               ''OC\Preview\Image'' # alias for png,jpeg,gif,bmp
@@ -100,7 +100,9 @@ in
               ''OC\Preview\TIFF''
               ''OC\Preview\Movie''
             ];
+          })
 
+          (lib.mkIf cfg.configureMemories {
             "memories.exiftool_no_local" = false;
             "memories.exiftool" = "${apps.memories}/bin-ext/exiftool/exiftool";
             "memories.vod.ffmpeg" = "${apps.memories}/bin-ext/ffmpeg";
