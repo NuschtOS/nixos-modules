@@ -328,7 +328,6 @@ in
             ExecStart =  "${lib.getExe cfg.package.pkgs.pg_repack} --port=${builtins.toString cfg.settings.port} --all";
             User = "postgres";
           };
-          wantedBy = [ "timers.target" ];
         };
 
         postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
@@ -337,7 +336,6 @@ in
             ExecStart = "${lib.getExe' cfg.package "psql"} --port=${builtins.toString cfg.settings.port} -tAc 'VACUUM ANALYZE'";
             User = "postgres";
           };
-          wantedBy = [ "timers.target" ];
         };
       };
 
