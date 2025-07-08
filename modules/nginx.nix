@@ -163,12 +163,13 @@ in
                 patches = patches ++ [
                   (let
                     # aws-lc 1.53+ wants nginx 1.28
-                    patchVersion = if lib.versions.majorMinor pkg.version == "1.27" then
+                    patchVersion = if lib.any (v: lib.versions.majorMinor pkg.version == v) ["1.27" "1.28"] then
                       "1.52.0"
                     else
                       pkgs.aws-lc.version;
                   in pkgs.fetchpatch {
                     url = "https://github.com/aws/aws-lc/raw/refs/tags/v${patchVersion}/tests/ci/integration/nginx_patch/aws-lc-nginx.patch";
+                    name = "aws-lc-${patchVersion}-nginx-${pkg.version}.patch";
                     hash =
                       if patchVersion == "1.53.1" then
                         "sha256-WDNJqr4jiDuU869puFyjfyEvlJO3ZiWLwhX9GWnnJgc="
