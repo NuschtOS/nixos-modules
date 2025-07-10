@@ -24,19 +24,30 @@ in
 
     system.activationScripts.generateInitrdOpensshHostKeys = let
       sshKeygen = lib.getExe' config.programs.ssh.package "ssh-keygen";
-    in lib.optionalString cfg.generateHostKeys /* bash */ ''
-      if [[ ! -e ${initrdEd25519Key} || ! -e ${initrdRsaKey} ]]; then
-        echo "Generating OpenSSH initrd hostkeys..."
-        mkdir -m700 -p /etc/ssh/initrd/
-        ${sshKeygen} -t ed25519 -N "" -f ${initrdEd25519Key}
-        ${sshKeygen} -t rsa -b 4096 -N "" -f ${initrdRsaKey}
-      fi
-    '' + lib.optionalString cfg.regenerateWeakRSAHostKey /* bash */ ''
-      if [[ -e ${initrdRsaKey} && $(${sshKeygen} -l -f ${initrdRsaKey} | ${lib.getExe pkgs.gawk} '{print $1}') != 4096 ]]; then
-        echo "Regenerating OpenSSH initrd RSA hostkey which had less than 4096 bits..."
-        rm -f ${initrdRsaKey} ${initrdRsaKey}.pub
-        ${sshKeygen} -t rsa -b 4096 -N "" -f ${initrdRsaKey}
-      fi
-    '';
+    in lib.mkIf (cfg.generateHostKeys || cfg.regenerateWeakRSAHostKey) {
+      deps = [ "users" ]; # might not work if userborn is used...
+      text = let
+        id = config.ids.uids.root;
+        rootUser = config.users.users.root;
+      in lib.optionalString cfg.generateHostKeys /* bash */ ''
+        if [[ ! -e ${initrdEd25519Key} || ! -e ${initrdRsaKey} ]]; then
+          echo "Generating OpenSSH initrd hostkeys..."
+          mkdir -m700 -p /etc/ssh/initrd/
+          # big hack but don't tell anyone
+          # only here to satisfy ss-keygen
+          # https://github.com/openssh/openssh-portable/blob/eddd1d2daa64a6ab1a915ca88436fa41aede44d4/ssh-keygen.c#L3337
+          [ -e /etc/passwd ] || echo 'root:x:${id}:${id}:${rootUser.description}:${rootUser.home}:${rootUser.shell}' > /etc/passwd
+
+          ${sshKeygen} -t ed25519 -N "" -f ${initrdEd25519Key}
+          ${sshKeygen} -t rsa -b 4096 -N "" -f ${initrdRsaKey}
+        fi
+      '' + lib.optionalString cfg.regenerateWeakRSAHostKey /* bash */ ''
+        if [[ -e ${initrdRsaKey} && $(${sshKeygen} -l -f ${initrdRsaKey} | ${lib.getExe pkgs.gawk} '{print $1}') != 4096 ]]; then
+          echo "Regenerating OpenSSH initrd RSA hostkey which had less than 4096 bits..."
+          rm -f ${initrdRsaKey} ${initrdRsaKey}.pub
+          ${sshKeygen} -t rsa -b 4096 -N "" -f ${initrdRsaKey}
+        fi
+      '';
+    };
   };
 }
