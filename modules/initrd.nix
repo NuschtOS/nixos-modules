@@ -27,7 +27,7 @@ in
     in lib.mkIf (cfg.generateHostKeys || cfg.regenerateWeakRSAHostKey) {
       deps = [ "users" ]; # might not work if userborn is used...
       text = let
-        id = config.ids.uids.root;
+        id = toString config.ids.uids.root;
         rootUser = config.users.users.root;
       in lib.optionalString cfg.generateHostKeys /* bash */ ''
         if [[ ! -e ${initrdEd25519Key} || ! -e ${initrdRsaKey} ]]; then
