@@ -76,6 +76,10 @@ in
             });
           };
         };
+
+        config = {
+          extraConfig = cfg.commonServerConfig;
+        };
       }));
     };
   };
