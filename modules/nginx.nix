@@ -200,7 +200,7 @@ in
         recommendedOptimisation = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
         recommendedProxySettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
         recommendedTlsSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
-        recommendedZstdSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
+        # recommendedZstdSettings / experimentalZstdSettings is intentionally left out as it is buggy
 
         resolver.addresses =
           let
