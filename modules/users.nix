@@ -8,7 +8,7 @@
   config = lib.mkIf config.users.showFailedUnitsOnLogin {
     environment.interactiveShellInit = /* sh */ ''
       # raise some awareness towards failed services
-      systemctl --no-pager --failed || true
+      systemctl --no-pager --failed --quiet || true
     '';
   };
 }
