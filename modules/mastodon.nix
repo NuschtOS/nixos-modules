@@ -58,8 +58,8 @@ in
                 tag = "2.1.1";
                 hash = "sha256-WEw9wE+iBCLDDTZjFoDJ3EwKTY92+LyJyDqCIoVXhzk=";
               } else {
-                tag = "2.3.2";
-                hash = "sha256-wI7DQzEI64jjuxvxE/7f4Ra2LPHc6UtjvnZz6PoJhlQ=";
+                tag = "2.3.3";
+                hash = "sha256-ddx9P8eOtUzTDFMF0ZRKyIRujjLL6rFppUswJn40nFU=";
               };
             in {
               owner = "ronilaukkarinen";
