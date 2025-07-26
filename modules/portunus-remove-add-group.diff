@@ -1,18 +1,18 @@
 diff --git a/internal/frontend/core.go b/internal/frontend/core.go
-index 5976377..7c67991 100644
+index 7325623..26ad75b 100644
 --- a/internal/frontend/core.go
 +++ b/internal/frontend/core.go
-@@ -43,8 +43,6 @@ func HTTPHandler(nexus core.Nexus, isBehindTLSProxy bool) http.Handler {
-	r.Methods("POST").Path(`/users/{uid}/delete`).Handler(postUserDeleteHandler(nexus))
+@@ -45,8 +45,6 @@ func HTTPHandler(nexus core.Nexus, isBehindTLSProxy bool) http.Handler {
+ 	r.Methods("POST").Path(`/users/{uid}/delete`).Handler(postUserDeleteHandler(nexus))
  
-	r.Methods("GET").Path(`/groups`).Handler(getGroupsHandler(nexus))
+ 	r.Methods("GET").Path(`/groups`).Handler(getGroupsHandler(nexus))
 -	r.Methods("GET").Path(`/groups/new`).Handler(getGroupsNewHandler(nexus))
 -	r.Methods("POST").Path(`/groups/new`).Handler(postGroupsNewHandler(nexus))
-	r.Methods("GET").Path(`/groups/{name}/edit`).Handler(getGroupEditHandler(nexus))
-	r.Methods("POST").Path(`/groups/{name}/edit`).Handler(postGroupEditHandler(nexus))
-	r.Methods("GET").Path(`/groups/{name}/delete`).Handler(getGroupDeleteHandler(nexus))
+ 	r.Methods("GET").Path(`/groups/{name}/edit`).Handler(getGroupEditHandler(nexus))
+ 	r.Methods("POST").Path(`/groups/{name}/edit`).Handler(postGroupEditHandler(nexus))
+ 	r.Methods("GET").Path(`/groups/{name}/delete`).Handler(getGroupDeleteHandler(nexus))
 diff --git a/internal/frontend/groups.go b/internal/frontend/groups.go
-index 5ac6a75..ac59f4f 100644
+index c1d8d73..730e8b9 100644
 --- a/internal/frontend/groups.go
 +++ b/internal/frontend/groups.go
 @@ -38,7 +38,6 @@ func getGroupsHandler(n core.Nexus) http.Handler {
