@@ -122,6 +122,12 @@ in toplevel // {
     };
   };
 
+  nginx = mkTest {
+    module = {
+      services.nginx.compileWithAWSlc = true;
+    };
+  };
+
   postgresql-plain = mkTest {
     module = {
       services.postgresql.enable = true;
