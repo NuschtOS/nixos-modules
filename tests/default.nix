@@ -113,6 +113,15 @@ in toplevel // {
 
   nextcloud-plain = mkTest {
     module = {
+      # Fix error caused by default enabled redis
+      #
+      # error: The option `boot.kernel.sysctl."vm.overcommit_memory"' is defined multiple times while it's expected to be unique.
+      # Definition values:
+      # - In `/nix/store/8y9z0w3mckhxccyip5qbw96qlsi2k8im-source/nixos/modules/services/databases/redis.nix': "1"
+      # - In `/nix/store/8y9z0w3mckhxccyip5qbw96qlsi2k8im-source/nixos/modules/profiles/installation-device.nix': "1"
+      # Use `lib.mkForce value` or `lib.mkDefault value` to change the priority on any of these definitions.
+      boot.kernel.sysctl."vm.overcommit_memory" = lib.mkForce "1";
+
       services.nextcloud = {
         enable = true;
         config.dbtype = "pgsql";
