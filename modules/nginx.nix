@@ -182,7 +182,7 @@ in
                       else if patchVersion == "1.50.0" then
                         "sha256-6OPLpt0hVDPdG70eJrwehwcX3i9N5lkvaeVaAjFSByM="
                       else
-                        throw "aws-lc version ${patchVersion} is not supported.";
+                        throw "aws-lc version ${pkgs.aws-lc.version} in combination with nginx version ${pkg.version} is not supported.";
                   })
                 ];
               })
