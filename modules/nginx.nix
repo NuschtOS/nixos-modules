@@ -162,8 +162,12 @@ in
               }).overrideAttrs ({ patches ? [ ], ... }: {
                 patches = patches ++ [
                   (let
+                    mjMn = lib.versions.majorMinor;
+                    # nginx 1.29 is supported since https://github.com/aws/aws-lc/commit/050d696415f2b7a07fc791ded31f5e12ec82f5fe
+                    patchVersion = if lib.any (v: mjMn pkg.version == v) ["1.29"] && lib.any (v: mjMn pkgs.aws-lc.version == v) ["1.50"] then
+                      "1.53.1"
                     # aws-lc 1.53+ wants nginx 1.28
-                    patchVersion = if lib.any (v: lib.versions.majorMinor pkg.version == v) ["1.27" "1.28"] then
+                    else if lib.any (v: mjMn pkg.version == v) ["1.27" "1.28"] && lib.any (v: mjMn pkgs.aws-lc.version == v) ["1.56"] then
                       "1.52.0"
                     else
                       pkgs.aws-lc.version;
@@ -178,7 +182,7 @@ in
                       else if patchVersion == "1.50.0" then
                         "sha256-6OPLpt0hVDPdG70eJrwehwcX3i9N5lkvaeVaAjFSByM="
                       else
-                        throw "aws-lc version ${patchVersion} is not supported.";
+                        throw "aws-lc version ${pkgs.aws-lc.version} in combination with nginx version ${pkg.version} is not supported.";
                   })
                 ];
               })
