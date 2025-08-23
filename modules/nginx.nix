@@ -149,7 +149,8 @@ in
           quic_retry on;
         '';
 
-        enableQuicBPF = lib.mkIf cfg.configureQuic true;
+        # quic bpf only allows some reloads and then prints errors on wall
+        enableQuicBPF = lib.mkIf (cfg.configureQuic && !cfg.enableReload) true;
 
         package = let
           overrideNginx = pkg:
@@ -164,7 +165,7 @@ in
                   (let
                     mjMn = lib.versions.majorMinor;
                     # nginx 1.29 is supported since https://github.com/aws/aws-lc/commit/050d696415f2b7a07fc791ded31f5e12ec82f5fe
-                    patchVersion = if lib.any (v: mjMn pkg.version == v) ["1.29"] && lib.any (v: mjMn pkgs.aws-lc.version == v) ["1.50"] then
+                    patchVersion = if lib.any (v: mjMn pkg.version == v) ["1.29"] && lib.any (v: mjMn pkgs.aws-lc.version == v) ["1.50" "1.56"] then
                       "1.53.1"
                     # aws-lc 1.53+ wants nginx 1.28
                     else if lib.any (v: mjMn pkg.version == v) ["1.27" "1.28"] && lib.any (v: mjMn pkgs.aws-lc.version == v) ["1.56"] then
