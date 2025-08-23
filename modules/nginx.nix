@@ -149,7 +149,8 @@ in
           quic_retry on;
         '';
 
-        enableQuicBPF = lib.mkIf cfg.configureQuic true;
+        # quic bpf only allows some reloads and then prints errors on wall
+        enableQuicBPF = lib.mkIf (cfg.configureQuic && !cfg.enableReload) true;
 
         package = let
           overrideNginx = pkg:
