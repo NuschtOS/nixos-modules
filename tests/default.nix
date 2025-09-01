@@ -154,14 +154,15 @@ in toplevel // {
     };
   };
 
+  # NOTE: disabled due to constant build issues in CI
   # https://github.com/NuschtOS/nixos-modules/issues/156
-  renovate-plain = mkTest {
-    module = {
-      services.renovate = {
-        enable = true;
-      };
-    };
-  };
+  # renovate-plain = mkTest {
+  #   module = {
+  #     services.renovate = {
+  #       enable = true;
+  #     };
+  #   };
+  # };
 
   vaultwarden-no-nginx = mkTest {
     module = {
