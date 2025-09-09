@@ -7,7 +7,7 @@ in
 {
   options = {
     services.vaultwarden = {
-      configureNginx = libS.mkOpinionatedOption "configure nginx for the configured domain";
+      configureNginx = libS.mkOpinionatedOption "configure nginx to serve VaultWarden";
 
       domain = lib.mkOption {
         type = with lib.types; nullOr str;
