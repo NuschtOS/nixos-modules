@@ -301,7 +301,7 @@ in
 
       postgresqlBackup = lib.mkMerge [
         ({
-          databases = lib.subtractLists cfgb.databasesExcept config.services.postgresql.databases;
+          databases = lib.mkIf (cfg.recommendedDefaults || cfgb.databasesExcept != [ ]) (lib.subtractLists cfgb.databasesExcept config.services.postgresql.databases);
         } // lib.optionalAttrs hasPGdumpAllOptions {
           backupAll = lib.mkIf (cfgb.backupAllExcept != []) true;
           pgdumpAllOptions = lib.concatMapStringsSep" " (db: "--exclude-database=${db}") cfgb.backupAllExcept;
