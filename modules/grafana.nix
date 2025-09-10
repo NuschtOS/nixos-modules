@@ -9,7 +9,7 @@ in
       configureNginx = lib.mkOption {
         type = lib.types.bool;
         default = false;
-        description = "Whether to configure Nginx.";
+        description = "Whether to configure Nginx to serve Grafana";
       };
 
       configurePostgres = lib.mkOption {
