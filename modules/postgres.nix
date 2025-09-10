@@ -22,9 +22,9 @@ in
       databases = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         description = ''
-          List of all databases.
-
-          This option is used eg. when installing extensions like pg_stat_stements in all databases.
+          List of all databases that exist in postgres and are managed by NixOS.
+          When manually creating a database through scripts, they should be added to this option
+          to support automatically installing extensions (eg: `pg_stat_stements`) or creating backups.
 
           ::: {.note}
           `services.postgresql.ensureDatabases` and `postgres` are automatically added.
@@ -150,6 +150,28 @@ in
           This option also enforces ${optb.backupAll} to be turned on which has the effect that all databases are backed up except the ones listed in this option.
         '';
       };
+
+      databases = lib.mkOption {
+        defaultText = lib.literalExpression /* nix */ ''${opt.databases} ++ [ "postgres" ]'';
+        # NOTE: option description cannot be overwritten or merged
+        # description = ''
+        #   List of database names to dump into individually archives.
+        #
+        #   Defaults to all available postgres databases from the ${opt.databases} option.
+        #
+        #   ::: {.note}
+        #   lib.mkForce must be used to overwrite this option as otherwise appending to the list is not easily possible.
+        #   :::
+        # '';
+      };
+
+      databasesExcept = lib.mkOption {
+        type = with lib.types; listOf str;
+        default = [ ];
+        description = ''
+          This option can be used to exclude backups of databases that came from the ${opt.databases} default.
+        '';
+      };
     };
   };
 
@@ -230,6 +252,7 @@ in
 
     services = {
       postgresql = {
+        # NOTE: the defaultText of services.postgresqlBackup.databases must match this
         databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
         enableJIT = lib.mkIf cfg.recommendedDefaults true;
         extensions = lib.mkIf cfg.pgRepackTimer.enable (ps: with ps; [ pg_repack ]);
@@ -276,6 +299,7 @@ in
       postgresqlBackup = lib.mkMerge [
         {
           backupAll = lib.mkIf (cfgb.backupAllExcept != []) true;
+          databases = lib.subtractLists cfgb.databasesExcept config.services.postgresql.databases;
           pgdumpAllOptions = lib.concatMapStringsSep" " (db: "--exclude-database=${db}") cfgb.backupAllExcept;
         }
 
