@@ -6,6 +6,9 @@ let
   cfg = config.services.postgresql;
   cfgb = config.services.postgresqlBackup;
   cfgu = config.services.postgresql.upgrade;
+
+  hasPGdumpAllOptions = lib.versionAtLeast "25.11" lib.version;
+
   latestVersion = if pkgs?postgresql_17 then "17" else "16";
   mkTimerDefault = time: {
     OnBootSec = "10m";
@@ -139,7 +142,7 @@ in
       };
     };
 
-    postgresqlBackup = {
+    postgresqlBackup = lib.optionalAttrs hasPGdumpAllOptions {
       backupAllExcept = lib.mkOption {
         type = with lib.types; listOf str;
         default = [ ];
@@ -150,7 +153,7 @@ in
           This option also enforces ${optb.backupAll} to be turned on which has the effect that all databases are backed up except the ones listed in this option.
         '';
       };
-
+    } // {
       databases = lib.mkOption {
         defaultText = lib.literalExpression /* nix */ ''${opt.databases} ++ [ "postgres" ]'';
         # NOTE: option description cannot be overwritten or merged
@@ -297,11 +300,12 @@ in
       };
 
       postgresqlBackup = lib.mkMerge [
-        {
-          backupAll = lib.mkIf (cfgb.backupAllExcept != []) true;
+        ({
           databases = lib.subtractLists cfgb.databasesExcept config.services.postgresql.databases;
+        } // lib.optionalAttrs hasPGdumpAllOptions {
+          backupAll = lib.mkIf (cfgb.backupAllExcept != []) true;
           pgdumpAllOptions = lib.concatMapStringsSep" " (db: "--exclude-database=${db}") cfgb.backupAllExcept;
-        }
+        })
 
         (lib.mkIf cfg.recommendedDefaults {
           compression = "zstd";
