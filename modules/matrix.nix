@@ -246,7 +246,11 @@ in
     };
 
     services.postgresql = lib.mkIf cfg.configurePostgres {
+      enable = true;
       databases = [ "matrix-synapse" ]; # some parts of nixos-modules read this field to know all databases
+      ensureUsers = [ {
+        name = "matrix-synapse";
+      } ];
     };
 
     services.portunus.seedSettings.groups = lib.mkIf (cfgl.userGroup != null) [ {
