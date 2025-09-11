@@ -2,8 +2,13 @@
 
 let
   opt = options.services.postgresql;
+  optb = options.services.postgresqlBackup;
   cfg = config.services.postgresql;
+  cfgb = config.services.postgresqlBackup;
   cfgu = config.services.postgresql.upgrade;
+
+  hasPGdumpAllOptions = lib.versionAtLeast "25.11" lib.version;
+
   latestVersion = if pkgs?postgresql_17 then "17" else "16";
   mkTimerDefault = time: {
     OnBootSec = "10m";
@@ -13,124 +18,161 @@ let
   };
 in
 {
-  options.services.postgresql = {
-    configurePgStatStatements = libS.mkOpinionatedOption "configure and enable pg_stat_statements extension";
+  options.services = {
+    postgresql = {
+      configurePgStatStatements = libS.mkOpinionatedOption "configure and enable pg_stat_statements extension";
 
-    databases = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      description = ''
-        List of all databases.
-
-        This option is used eg. when installing extensions like pg_stat_stements in all databases.
-
-        ::: {.note}
-        `services.postgresql.ensureDatabases` and `postgres` are automatically added.
-        :::
-      '';
-    };
-
-    enableAllPreloadedLibraries = libS.mkOpinionatedOption "enable all extensions installed through `shared_preload_libraries`";
-
-    ensureUsers = lib.mkOption {
-      type = lib.types.listOf (lib.types.submodule {
-        options = {
-          ensurePasswordFile = lib.mkOption {
-            type = lib.types.nullOr lib.types.path;
-            default = null;
-            description = "Path to a file containing the password of the user.";
-          };
-        };
-      });
-    };
-
-    pgRepackTimer = {
-      enable = libS.mkOpinionatedOption "install pg_repack and configure a systemd timer to run it periodically on all DBs";
-
-      timerConfig = lib.mkOption {
-        type = lib.types.nullOr (lib.types.attrsOf utils.systemdUtils.unitOptions.unitOption);
-        default = mkTimerDefault "02:00";
-        example = {
-          OnCalendar = "06:00";
-          Persistent = true;
-          RandomizedDelaySec = "5h";
-        };
+      databases = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
         description = ''
-          When to run the VACUUM ANALYZE.
-          See {manpage}`systemd.timer(5)` for details.
-        '';
-      };
-    };
-
-    preloadAllExtensions = libS.mkOpinionatedOption "load all installed extensions through `shared_preload_libraries`";
-
-    recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
-
-    refreshCollation = libS.mkOpinionatedOption "refresh collation on startup. This prevents errors when initializing new DBs after a glibc upgrade";
-
-    upgrade = {
-      enable = libS.mkOpinionatedOption ''
-        install the `upgrade-postgres` script.
-
-        The script can upgrade a local postgres server in a two step process.
-        Before the upgrade can be be started, `services.postgresql.upgrade.stopServices` must be configured!
-        After that is done and deploment, the upgrade can be started by running the script.
-
-        The script first stops all services configured in `stopServices` and the postgres server and then runs a `pg_upgrade` with the configured `newPackage`.
-        After that is complete, `services.postgresql.package` must be adjusted and deployed.
-        As a final step it is highly recommend to run the printed `vacuumdb` command to achieve the best performance.
-        If the upgrade is successful, the old data can be deleted by running the printed `delete_old_cluster.sh` script.
-
-        ::: {.warning}
-        It is recommended to do a backup before doing the upgrade in the form of an SQL dump of the databases.
-        :::
-      '';
-
-      extraArgs = lib.mkOption {
-        type = with lib.types; listOf str;
-        default = [ "--link" "--jobs=$(nproc)" ];
-        description = "Extra arguments to pass to `pg_upgrade`. See <https://www.postgresql.org/docs/current/pgupgrade.html> for more information.";
-      };
-
-      newPackage = (lib.mkPackageOption pkgs "postgresql" {
-        default = [ "postgresql_${latestVersion}" ];
-      }) // {
-        description = ''
-          The postgres package that is being upgraded to.
-          After running `upgrade-postgres`, `service.postgresql.packages` must be set to this exact package to successfully complete the update.
-        '';
-      };
-
-      stopServices = lib.mkOption {
-        type = with lib.types; listOf str;
-        default = [ ];
-        example = [ "hedgedoc" "phpfpm-nextcloud" "nextcloud-notify_push" ];
-        description = ''
-          Systemd service names which are stopped before an upgrade is started.
-          It is very important that all postgres clients are stopped before an upgrade is attempted as they are blocking operations on the databases.
-
-          The service files of some well known services are added by default. Check the source code of the module to discover which those are.
+          List of all databases that exist in postgres and are managed by NixOS.
+          When manually creating a database through scripts, they should be added to this option
+          to support automatically installing extensions (eg: `pg_stat_stements`) or creating backups.
 
           ::: {.note}
-          These can match the service name but do not need to! For example services using phpfpm might have a `phpfpm-` prefix.
+          `services.postgresql.ensureDatabases` and `postgres` are automatically added.
           :::
         '';
       };
+
+      enableAllPreloadedLibraries = libS.mkOpinionatedOption "enable all extensions installed through `shared_preload_libraries`";
+
+      ensureUsers = lib.mkOption {
+        type = lib.types.listOf (lib.types.submodule {
+          options = {
+            ensurePasswordFile = lib.mkOption {
+              type = lib.types.nullOr lib.types.path;
+              default = null;
+              description = "Path to a file containing the password of the user.";
+            };
+          };
+        });
+      };
+
+      pgRepackTimer = {
+        enable = libS.mkOpinionatedOption "install pg_repack and configure a systemd timer to run it periodically on all DBs";
+
+        timerConfig = lib.mkOption {
+          type = lib.types.nullOr (lib.types.attrsOf utils.systemdUtils.unitOptions.unitOption);
+          default = mkTimerDefault "02:00";
+          example = {
+            OnCalendar = "06:00";
+            Persistent = true;
+            RandomizedDelaySec = "5h";
+          };
+          description = ''
+            When to run the VACUUM ANALYZE.
+            See {manpage}`systemd.timer(5)` for details.
+          '';
+        };
+      };
+
+      preloadAllExtensions = libS.mkOpinionatedOption "load all installed extensions through `shared_preload_libraries`";
+
+      recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
+
+      refreshCollation = libS.mkOpinionatedOption "refresh collation on startup. This prevents errors when initializing new DBs after a glibc upgrade";
+
+      upgrade = {
+        enable = libS.mkOpinionatedOption ''
+          install the `upgrade-postgres` script.
+
+          The script can upgrade a local postgres server in a two step process.
+          Before the upgrade can be be started, `services.postgresql.upgrade.stopServices` must be configured!
+          After that is done and deploment, the upgrade can be started by running the script.
+
+          The script first stops all services configured in `stopServices` and the postgres server and then runs a `pg_upgrade` with the configured `newPackage`.
+          After that is complete, `services.postgresql.package` must be adjusted and deployed.
+          As a final step it is highly recommend to run the printed `vacuumdb` command to achieve the best performance.
+          If the upgrade is successful, the old data can be deleted by running the printed `delete_old_cluster.sh` script.
+
+          ::: {.warning}
+          It is recommended to do a backup before doing the upgrade in the form of an SQL dump of the databases.
+          :::
+        '';
+
+        extraArgs = lib.mkOption {
+          type = with lib.types; listOf str;
+          default = [ "--link" "--jobs=$(nproc)" ];
+          description = "Extra arguments to pass to `pg_upgrade`. See <https://www.postgresql.org/docs/current/pgupgrade.html> for more information.";
+        };
+
+        newPackage = (lib.mkPackageOption pkgs "postgresql" {
+          default = [ "postgresql_${latestVersion}" ];
+        }) // {
+          description = ''
+            The postgres package that is being upgraded to.
+            After running `upgrade-postgres`, `service.postgresql.packages` must be set to this exact package to successfully complete the update.
+          '';
+        };
+
+        stopServices = lib.mkOption {
+          type = with lib.types; listOf str;
+          default = [ ];
+          example = [ "hedgedoc" "phpfpm-nextcloud" "nextcloud-notify_push" ];
+          description = ''
+            Systemd service names which are stopped before an upgrade is started.
+            It is very important that all postgres clients are stopped before an upgrade is attempted as they are blocking operations on the databases.
+
+            The service files of some well known services are added by default. Check the source code of the module to discover which those are.
+
+            ::: {.note}
+            These can match the service name but do not need to! For example services using phpfpm might have a `phpfpm-` prefix.
+            :::
+          '';
+        };
+      };
+
+      vacuumAnalyzeTimer = {
+        enable = libS.mkOpinionatedOption "configure a systemd timer to run `VACUUM ANALYZE` periodically on all DBs";
+
+        timerConfig = lib.mkOption {
+          type = lib.types.nullOr (lib.types.attrsOf utils.systemdUtils.unitOptions.unitOption);
+          default = mkTimerDefault "03:00";
+          example = {
+            OnCalendar = "06:00";
+            Persistent = true;
+            RandomizedDelaySec = "5h";
+          };
+          description = ''
+            When to run the VACUUM ANALYZE.
+            See {manpage}`systemd.timer(5)` for details.
+          '';
+        };
+      };
     };
 
-    vacuumAnalyzeTimer = {
-      enable = libS.mkOpinionatedOption "configure a systemd timer to run `VACUUM ANALYZE` periodically on all DBs";
-
-      timerConfig = lib.mkOption {
-        type = lib.types.nullOr (lib.types.attrsOf utils.systemdUtils.unitOptions.unitOption);
-        default = mkTimerDefault "03:00";
-        example = {
-          OnCalendar = "06:00";
-          Persistent = true;
-          RandomizedDelaySec = "5h";
-        };
+    postgresqlBackup = lib.optionalAttrs hasPGdumpAllOptions {
+      backupAllExcept = lib.mkOption {
+        type = with lib.types; listOf str;
+        default = [ ];
+        example = [ "lossy" ];
         description = ''
-          When to run the VACUUM ANALYZE.
-          See {manpage}`systemd.timer(5)` for details.
+          List of databases added to `pg_dumpall`'s `--exclude-database` argument.
+
+          This option also enforces ${optb.backupAll} to be turned on which has the effect that all databases are backed up except the ones listed in this option.
+        '';
+      };
+    } // {
+      databases = lib.mkOption {
+        defaultText = lib.literalExpression /* nix */ ''${opt.databases} ++ [ "postgres" ]'';
+        # NOTE: option description cannot be overwritten or merged
+        # description = ''
+        #   List of database names to dump into individually archives.
+        #
+        #   Defaults to all available postgres databases from the ${opt.databases} option.
+        #
+        #   ::: {.note}
+        #   lib.mkForce must be used to overwrite this option as otherwise appending to the list is not easily possible.
+        #   :::
+        # '';
+      };
+
+      databasesExcept = lib.mkOption {
+        type = with lib.types; listOf str;
+        default = [ ];
+        description = ''
+          This option can be used to exclude backups of databases that came from the ${opt.databases} default.
         '';
       };
     };
@@ -213,6 +255,7 @@ in
 
     services = {
       postgresql = {
+        # NOTE: the defaultText of services.postgresqlBackup.databases must match this
         databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
         enableJIT = lib.mkIf cfg.recommendedDefaults true;
         extensions = lib.mkIf cfg.pgRepackTimer.enable (ps: with ps; [ pg_repack ]);
@@ -256,11 +299,20 @@ in
         ];
       };
 
-      postgresqlBackup = lib.mkIf cfg.recommendedDefaults {
-        compression = "zstd";
-        compressionLevel = 9;
-        pgdumpOptions = "--create --clean";
-      };
+      postgresqlBackup = lib.mkMerge [
+        ({
+          databases = lib.mkIf (cfg.recommendedDefaults || cfgb.databasesExcept != [ ]) (lib.subtractLists cfgb.databasesExcept config.services.postgresql.databases);
+        } // lib.optionalAttrs hasPGdumpAllOptions {
+          backupAll = lib.mkIf (cfgb.backupAllExcept != []) true;
+          pgdumpAllOptions = lib.concatMapStringsSep" " (db: "--exclude-database=${db}") cfgb.backupAllExcept;
+        })
+
+        (lib.mkIf cfg.recommendedDefaults {
+          compression = "zstd";
+          compressionLevel = 9;
+          pgdumpOptions = "--create --clean";
+        })
+      ];
     };
 
     systemd = {

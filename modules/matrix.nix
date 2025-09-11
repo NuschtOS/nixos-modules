@@ -246,7 +246,11 @@ in
     };
 
     services.postgresql = lib.mkIf cfg.configurePostgres {
+      enable = true;
       databases = [ "matrix-synapse" ]; # some parts of nixos-modules read this field to know all databases
+      ensureUsers = [ {
+        name = "matrix-synapse";
+      } ];
     };
 
     services.portunus.seedSettings.groups = lib.mkIf (cfgl.userGroup != null) [ {
@@ -255,12 +259,16 @@ in
       permissions = { };
     } ];
 
-    systemd.services = lib.mkIf cfg.configurePostgres {
+    systemd.services = let
+      hasPostgresSetup = config.systemd.services?postgresql-setup;
+      mkCmd = psql: /* bash */ ''
+        ${psql} -tAc "SELECT 1 FROM pg_database WHERE datname = 'matrix-synapse'" | grep -q 1 || ${psql} -tAc 'CREATE DATABASE "matrix-synapse" ENCODING="UTF8" LOCALE="C" TEMPLATE="template0" OWNER="matrix-synapse"'
+      '';
+    in lib.mkIf cfg.configurePostgres {
       # https://element-hq.github.io/synapse/latest/postgres.html#set-up-database
       # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix#L655
-      postgresql.postStart = ''
-        $PSQL -tAc "SELECT 1 FROM pg_database WHERE datname = 'matrix-synapse'" | grep -q 1 || $PSQL -tAc 'CREATE DATABASE "matrix-synapse" ENCODING="UTF8" LOCALE="C" TEMPLATE="template0" OWNER="matrix-synapse"'
-      '';
+      postgresql.postStart = lib.mkIf (!hasPostgresSetup) (mkCmd "$PSQL");
+      postgresql-setup.script = lib.mkIf hasPostgresSetup (mkCmd "psql");
     };
 
     users.users = lib.mkIf cfg.listenOnSocket {
