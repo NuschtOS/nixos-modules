@@ -38,6 +38,8 @@ jobs:
 
       - name: Install Nix
         uses: nixbuild/nix-quick-install-action@v33
+        with:
+          nix_version: 2.31.0
 
       - uses: nix-community/cache-nix-action@v6
         with:
