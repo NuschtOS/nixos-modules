@@ -143,6 +143,8 @@ in
     };
 
     postgresqlBackup = lib.optionalAttrs hasPGdumpAllOptions {
+      backupAll = lib.mkOption { };
+
       backupAllExcept = lib.mkOption {
         type = with lib.types; listOf str;
         default = [ ];
