@@ -36,6 +36,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: reclaim space
+        uses: wimpysworld/nothing-but-nix@main
+        with:
+          hatchet-protocol: rampage
+
       - name: Install Nix
         uses: nixbuild/nix-quick-install-action@v30
 
