@@ -28,7 +28,7 @@ in
         allowedTCPPorts = [ 123 ];
         allowedUDPPorts = [ 123 ];
       };
-      recommendedTimeServers = lib.mkIf cfg.configureServer true;
+      recommendedTimeServers = lib.mkIf cfg.configureServer (lib.mkDefault true);
       timeServers = lib.mkIf config.networking.recommendedTimeServers [
         "ntp0.fau.de"
         "ntp1.hetzner.de"
