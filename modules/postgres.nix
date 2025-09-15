@@ -7,7 +7,7 @@ let
   cfgb = config.services.postgresqlBackup;
   cfgu = config.services.postgresql.upgrade;
 
-  hasPGdumpAllOptions = lib.versionAtLeast "25.11" lib.version;
+  hasPGdumpAllOptions = lib.versionAtLeast "25.11pre" lib.version;
 
   latestVersion = if pkgs?postgresql_17 then "17" else "16";
   mkTimerDefault = time: {
