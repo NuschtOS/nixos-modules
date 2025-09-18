@@ -196,7 +196,9 @@ in
         upstream = "http://127.0.0.1:4181";
         extraConfig = {
           code-challenge-method = "S256"; # supported by dex and inidcated by a logged warning
-          exclude-logging-path = "/oauth2/static/css/all.min.css,/oauth2/static/css/bulma.min.css";
+          # /oauth2/auth is used in nginx auth_request and gets lots of requests
+          # The two css files are static assets.
+          exclude-logging-path = "/oauth2/auth,/oauth2/static/css/all.min.css,/oauth2/static/css/bulma.min.css";
           oidc-issuer-url = cfgd.settings.issuer;
           provider-display-name = "Portunus";
           # checking for groups requires next to the default scopes also the `groups` scope, otherwise all authentication tries fail
