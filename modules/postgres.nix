@@ -290,7 +290,7 @@ in
           (lib.mkIf (home-assistant.enable && (lib.hasPrefix "postgresql://@/" home-assistant.config.recorder.db_url or "")) [ "home-assistant" ])
           # if host= is omitted, hydra defaults to connect to localhost
           (lib.mkIf (hydra.enable && (!lib.hasInfix ";host=" hydra.dbi)) [
-            "hydra-evaluator" "hydra-notify" "hydra-send-stats" "hydra-update-gc-roots" "hydra-queue-runner" "hydra-server"
+            "hydra-evaluator" "hydra-notify" "hydra-send-stats" "hydra-update-gc-roots.service" "hydra-update-gc-roots.timer" "hydra-queue-runner" "hydra-server"
           ])
           (lib.mkIf (mastodon.enable && mastodon.database.host == "/run/postgresql") [ "mastodon-sidekiq-all" "mastodon-streaming.target" "mastodon-web"])
           # assume that when host is set, which is not the default, the database is none local
