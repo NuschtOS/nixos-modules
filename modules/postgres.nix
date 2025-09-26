@@ -221,7 +221,7 @@ in
           oldData = config.services.postgresql.dataDir;
           oldBin = "${if cfg.${extensions} == [] then oldPackage else oldPackage.withPackages cfg.${extensions}}/bin";
         in
-        pkgs.writeScriptBin "upgrade-postgres" /* bash */ ''
+        pkgs.writeScriptBin "upgrade-postgres" /* bash */ (''
           set -eu
 
           echo "Current version: ${cfg.package.version}"
@@ -236,6 +236,12 @@ in
           systemctl stop ${lib.concatStringsSep " " cfgu.stopServices} || true
           systemctl stop postgresql
 
+        ''
+        # postgresql version 18 defaults to checksums enabled
+        # The Notes at https://www.postgresql.org/docs/18/app-pgchecksums.html mention that it is safe to enable them even when a failure would happen.
+        + lib.optionalString (lib.versionOlder currentMajorVersion "18" && lib.versionAtLeast newMajorVersion "18") ''
+          pg_checksums --pgdata ${oldData} --enable --progress
+        '' + ''
           install -d -m 0700 -o postgres -g postgres "${newData}"
           cd "${newData}"
           sudo -u postgres "${newBin}/initdb" -D "${newData}"
@@ -247,15 +253,24 @@ in
             "$@"
 
           echo "
+            -----------------------------
 
 
-            Run the below shell commands after setting this NixOS option:
-            services.postgresql.package = pkgs.postgresql_${newMajorVersion}
 
-            sudo -u postgres vacuumdb --all --analyze-in-stages
+
+            Now set this NixOS option and deploy:
+              services.postgresql.package = pkgs.postgresql_${newMajorVersion}
+
+            When the postgres os up and running execute those commands:
+            sudo -u postgres vacuumdb --all --analyze-in-stages --missing-stats-only
+            sudo -u postgres vacuumdb --all --analyze-only
+            sudo -u postgresq psql -f /var/lib/postgresql/18/update_extensions.sql
+
+
+            Once you checked that everything works, you can delete the old cluster with:
             ${newData}/delete_old_cluster.sh
           "
-        ''
+        '')
       ) ];
     };
 
