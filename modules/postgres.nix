@@ -9,7 +9,7 @@ let
 
   hasPGdumpAllOptions = lib.versionAtLeast "25.11pre" lib.version;
 
-  latestVersion = if pkgs?postgresql_17 then "17" else "16";
+  latestVersion = if pkgs?postgresql_18 then "18" else "17";
   mkTimerDefault = time: {
     OnBootSec = "10m";
     OnCalendar = time;
