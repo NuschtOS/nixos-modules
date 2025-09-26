@@ -337,95 +337,100 @@ in
     };
 
     systemd = {
-      services = {
-        postgresql.preStart = lib.mkIf cfg.preventDowngrade /* bash */ ''
-          found_current=false
-          for dir in $(find /var/lib/postgresql/ -mindepth 1 -maxdepth 1 -type d -not -name ".*" | sort --version-sort); do
-            if [[ $found_current == true ]]; then
-              echo "Found directory ''${dir} which is newer than the current major postgres version ${currentMajorVersion}, aborting startup due to ${opt.preventDowngrade}"
-              exit 10
-            fi
+      # TODO: drop the mkMerge when support for 25.05 is removed and we always have postgresql and postgresql-setup
+      services = lib.mkMerge [
+        {
+          postgresql.preStart = lib.mkIf cfg.preventDowngrade /* bash */ ''
+            found_current=false
+            for dir in $(find /var/lib/postgresql/ -mindepth 1 -maxdepth 1 -type d -not -name ".*" | sort --version-sort); do
+              if [[ $found_current == true ]]; then
+                echo "Found directory ''${dir} which is newer than the current major postgres version ${currentMajorVersion}, aborting startup due to ${opt.preventDowngrade}"
+                exit 10
+              fi
 
-            if [[ $(basename "$dir") == ${currentMajorVersion} ]]; then
-              found_current=true
-              continue
-            fi
-          done
-        '';
+              if [[ $(basename "$dir") == ${currentMajorVersion} ]]; then
+                found_current=true
+                continue
+              fi
+            done
+          '';
+        }
 
-        "postgresql${lib.optionalString hasPGdumpAllOptionsAndPostgresqlSetup "-setup"}" = {
-          postStart = lib.mkMerge [
-            (lib.mkIf cfg.refreshCollation (lib.mkBefore /* bash */ ''
-              # copied from upstream due to the lack of extensibility
-              # TODO: improve this upstream?
-              PSQL="psql --port=${toString cfg.settings.port}"
+        {
+          "postgresql${lib.optionalString hasPGdumpAllOptionsAndPostgresqlSetup "-setup"}" = {
+            postStart = lib.mkMerge [
+              (lib.mkIf cfg.refreshCollation (lib.mkBefore /* bash */ ''
+                # copied from upstream due to the lack of extensibility
+                # TODO: improve this upstream?
+                PSQL="psql --port=${toString cfg.settings.port}"
 
-              while ! $PSQL -d postgres -c "" 2> /dev/null; do
-                if ! kill -0 "$MAINPID"; then exit 1; fi
-                sleep 0.1
-              done
+                while ! $PSQL -d postgres -c "" 2> /dev/null; do
+                  if ! kill -0 "$MAINPID"; then exit 1; fi
+                  sleep 0.1
+                done
 
-              $PSQL -tAc 'ALTER DATABASE "template1" REFRESH COLLATION VERSION'
-            ''))
+                $PSQL -tAc 'ALTER DATABASE "template1" REFRESH COLLATION VERSION'
+              ''))
 
-            (lib.concatMapStrings (user: lib.optionalString (user.ensurePasswordFile != null) /* psql */ ''
-              $PSQL -tA <<'EOF'
-                DO $$
-                DECLARE password TEXT;
-                BEGIN
-                  password := trim(both from replace(pg_read_file('${user.ensurePasswordFile}'), E'\n', '''));
-                  EXECUTE format('ALTER ROLE ${user.name} WITH PASSWORD '''%s''';', password);
-                END $$;
-              EOF
-            '') cfg.ensureUsers)
+              (lib.concatMapStrings (user: lib.optionalString (user.ensurePasswordFile != null) /* psql */ ''
+                $PSQL -tA <<'EOF'
+                  DO $$
+                  DECLARE password TEXT;
+                  BEGIN
+                    password := trim(both from replace(pg_read_file('${user.ensurePasswordFile}'), E'\n', '''));
+                    EXECUTE format('ALTER ROLE ${user.name} WITH PASSWORD '''%s''';', password);
+                  END $$;
+                EOF
+              '') cfg.ensureUsers)
 
-            # install/update pg_stat_statements extension in all databases
-            # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
-            (lib.mkIf (cfg.enableAllPreloadedLibraries || cfg.configurePgStatStatements) (lib.concatStrings (map (db:
-              (lib.concatMapStringsSep "\n" (ext: let
-                # This is ugly...
-                ext' = lib.head (lib.splitString "-" ext);
-              in /* bash */ ''
-                $PSQL -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${ext'}"'
-                $PSQL -tAd '${db}' -c '${if ext' == "postgis" then
-                  "SELECT postgis_extensions_upgrade()"
-                else
-                  ''ALTER EXTENSION "${ext'}" UPDATE''}'
-              '') (lib.splitString "," (if cfg.enableAllPreloadedLibraries then
-                  cfg.settings.shared_preload_libraries
-                else if cfg.configurePgStatStatements then
-                  "pg_stat_statements"
-                else
-                  ""
-                ))
-              )
-            ) cfg.databases)))
+              # install/update pg_stat_statements extension in all databases
+              # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
+              (lib.mkIf (cfg.enableAllPreloadedLibraries || cfg.configurePgStatStatements) (lib.concatStrings (map (db:
+                (lib.concatMapStringsSep "\n" (ext: let
+                  # This is ugly...
+                  ext' = lib.head (lib.splitString "-" ext);
+                in /* bash */ ''
+                  $PSQL -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${ext'}"'
+                  $PSQL -tAd '${db}' -c '${if ext' == "postgis" then
+                    "SELECT postgis_extensions_upgrade()"
+                  else
+                    ''ALTER EXTENSION "${ext'}" UPDATE''}'
+                '') (lib.splitString "," (if cfg.enableAllPreloadedLibraries then
+                    cfg.settings.shared_preload_libraries
+                  else if cfg.configurePgStatStatements then
+                    "pg_stat_statements"
+                  else
+                    ""
+                  ))
+                )
+              ) cfg.databases)))
 
-            (lib.mkIf cfg.refreshCollation (lib.concatStrings (map (db: /* bash */ ''
-              $PSQL -tAc 'ALTER DATABASE "${db}" REFRESH COLLATION VERSION'
-            '') cfg.databases)))
-          ];
+              (lib.mkIf cfg.refreshCollation (lib.concatStrings (map (db: /* bash */ ''
+                $PSQL -tAc 'ALTER DATABASE "${db}" REFRESH COLLATION VERSION'
+              '') cfg.databases)))
+            ];
 
-          # reduce downtime for dependent services
-          stopIfChanged = lib.mkIf cfg.recommendedDefaults false;
-        };
-
-        postgresql-pg-repack = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
-          description = "Repack all PostgreSQL databases";
-          serviceConfig = {
-            ExecStart =  "${lib.getExe cfg.package.pkgs.pg_repack} --port=${builtins.toString cfg.settings.port} --all";
-            User = "postgres";
+            # reduce downtime for dependent services
+            stopIfChanged = lib.mkIf cfg.recommendedDefaults false;
           };
-        };
 
-        postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
-          description = "Vacuum and analyze all PostgreSQL databases";
-          serviceConfig = {
-            ExecStart = "${lib.getExe' cfg.package "psql"} --port=${builtins.toString cfg.settings.port} -tAc 'VACUUM ANALYZE'";
-            User = "postgres";
+          postgresql-pg-repack = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
+            description = "Repack all PostgreSQL databases";
+            serviceConfig = {
+              ExecStart =  "${lib.getExe cfg.package.pkgs.pg_repack} --port=${builtins.toString cfg.settings.port} --all";
+              User = "postgres";
+            };
           };
-        };
-      };
+
+          postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
+            description = "Vacuum and analyze all PostgreSQL databases";
+            serviceConfig = {
+              ExecStart = "${lib.getExe' cfg.package "psql"} --port=${builtins.toString cfg.settings.port} -tAc 'VACUUM ANALYZE'";
+              User = "postgres";
+            };
+          };
+        }
+      ];
 
       timers = let
         mkTimerConfig = name: lib.mkMerge [
