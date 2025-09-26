@@ -7,9 +7,9 @@ let
   cfgb = config.services.postgresqlBackup;
   cfgu = config.services.postgresql.upgrade;
 
-  hasPGdumpAllOptions = lib.versionAtLeast "25.11pre" lib.version;
-
+  hasPGdumpAllOptionsAndPostgresqlSetup = lib.versionAtLeast lib.version "25.11pre";
   latestVersion = if pkgs?postgresql_18 then "18" else "17";
+
   mkTimerDefault = time: {
     OnBootSec = "10m";
     OnCalendar = time;
@@ -142,7 +142,7 @@ in
       };
     };
 
-    postgresqlBackup = lib.optionalAttrs hasPGdumpAllOptions {
+    postgresqlBackup = lib.optionalAttrs hasPGdumpAllOptionsAndPostgresqlSetup {
       backupAll = lib.mkOption { };
 
       backupAllExcept = lib.mkOption {
@@ -304,7 +304,7 @@ in
       postgresqlBackup = lib.mkMerge [
         ({
           databases = lib.mkIf (cfg.recommendedDefaults || cfgb.databasesExcept != [ ]) (lib.subtractLists cfgb.databasesExcept config.services.postgresql.databases);
-        } // lib.optionalAttrs hasPGdumpAllOptions {
+        } // lib.optionalAttrs hasPGdumpAllOptionsAndPostgresqlSetup {
           backupAll = lib.mkIf (cfgb.backupAllExcept != []) true;
           pgdumpAllOptions = lib.concatMapStringsSep" " (db: "--exclude-database=${db}") cfgb.backupAllExcept;
         })
@@ -319,7 +319,7 @@ in
 
     systemd = {
       services = {
-        postgresql = {
+        "postgresql${lib.optionalString hasPGdumpAllOptionsAndPostgresqlSetup "-setup"}" = {
           postStart = lib.mkMerge [
             (lib.mkIf cfg.refreshCollation (lib.mkBefore /* bash */ ''
               # copied from upstream due to the lack of extensibility
