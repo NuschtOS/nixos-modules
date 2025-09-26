@@ -154,8 +154,8 @@ in
 
         nextcloud-preview-generator-setup = lib.mkIf cfg.configurePreviewSettings {
           wantedBy = [ "multi-user.target" ];
-          requires = [ "phpfpm-nextcloud.service" ];
-          after = [ "phpfpm-nextcloud.service" ];
+          wants = [ "nextcloud-setup.service" ];
+          after = [ "nextcloud-setup.service" ];
           environment.NEXTCLOUD_CONFIG_DIR = "${cfg.datadir}/config";
           script = /* bash */ ''
             # check with:
