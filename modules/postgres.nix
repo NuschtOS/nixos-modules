@@ -9,6 +9,8 @@ let
 
   hasPGdumpAllOptionsAndPostgresqlSetup = lib.versionAtLeast lib.version "25.11pre";
   latestVersion = if pkgs?postgresql_18 then "18" else "17";
+  currentMajorVersion = lib.versions.major cfg.package.version;
+  newMajorVersion = lib.versions.major cfgu.newPackage.version;
 
   mkTimerDefault = time: {
     OnBootSec = "10m";
@@ -200,7 +202,7 @@ in
 
     environment = {
       interactiveShellInit = lib.mkIf cfgu.enable ''
-        if [[ ${cfgu.newPackage.version} != ${cfg.package.version} ]]; then
+        if [[ ${currentMajorVersion} != ${newMajorVersion} ]]; then
           echo "There is a major postgres update available! Current version: ${cfg.package.version}, Update version:  ${cfgu.newPackage.version}"
         fi
       '';
@@ -223,7 +225,7 @@ in
           echo "Current version: ${cfg.package.version}"
           echo "Update version:  ${cfgu.newPackage.version}"
 
-          if [[ ${cfgu.newPackage.version} == ${cfg.package.version} ]]; then
+          if [[ ${currentMajorVersion} == ${newMajorVersion} ]]; then
             echo "There is no major postgres update available."
             exit 2
           fi
@@ -246,7 +248,7 @@ in
 
 
             Run the below shell commands after setting this NixOS option:
-            services.postgresql.package = pkgs.postgresql_${lib.versions.major cfgu.newPackage.version}
+            services.postgresql.package = pkgs.postgresql_${newMajorVersion}
 
             sudo -u postgres vacuumdb --all --analyze-in-stages
             ${newData}/delete_old_cluster.sh
