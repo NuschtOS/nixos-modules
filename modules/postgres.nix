@@ -71,6 +71,8 @@ in
 
       preloadAllExtensions = libS.mkOpinionatedOption "load all installed extensions through `shared_preload_libraries`";
 
+      preventDowngrade = libS.mkOpinionatedOption "abort startup if /var/lib/postgresql contains any directory not belonging to the current major postgres version";
+
       recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
 
       refreshCollation = libS.mkOpinionatedOption "refresh collation on startup. This prevents errors when initializing new DBs after a glibc upgrade";
@@ -321,6 +323,21 @@ in
 
     systemd = {
       services = {
+        postgresql.preStart = lib.mkIf cfg.preventDowngrade /* bash */ ''
+          found_current=false
+          for dir in $(find /var/lib/postgresql/ -mindepth 1 -maxdepth 1 -type d -not -name ".*" | sort --version-sort); do
+            if [[ $found_current == true ]]; then
+              echo "Found directory ''${dir} which is newer than the current major postgres version ${currentMajorVersion}, aborting startup due to ${opt.preventDowngrade}"
+              exit 10
+            fi
+
+            if [[ $(basename "$dir") == ${currentMajorVersion} ]]; then
+              found_current=true
+              continue
+            fi
+          done
+        '';
+
         "postgresql${lib.optionalString hasPGdumpAllOptionsAndPostgresqlSetup "-setup"}" = {
           postStart = lib.mkMerge [
             (lib.mkIf cfg.refreshCollation (lib.mkBefore /* bash */ ''
