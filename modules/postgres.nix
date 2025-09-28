@@ -310,6 +310,7 @@ in
           (lib.mkIf (mastodon.enable && mastodon.database.host == "/run/postgresql") [ "mastodon-sidekiq-all" "mastodon-streaming.target" "mastodon-web"])
           # assume that when host is set, which is not the default, the database is none local
           (lib.mkIf (matrix-synapse.enable && (!lib.hasAttr "host" matrix-synapse.settings.database.args)) [ "matrix-synapse" ])
+          (lib.mkIf (mediagoblin.enable && lib.hasPrefix "postgresql:///" mediagoblin.settings.mediagoblin.sql_engine) [ "mediagoblin-celeryd" "mediagoblin-paster" ])
           (lib.mkIf (mediawiki.enable && mediawiki.database.socket ==  "/run/postgresql") [ "phpfpm-mediawiki" ])
           (lib.mkIf (miniflux.enable && miniflux.createDatabaseLocally) [ "miniflux" ])
           (lib.mkIf (mobilizon.enable && mobilizon.settings.":mobilizon"."Mobilizon.Storage.Repo".socket_dir == "/run/postgresql") [ "mobilizon" ])
