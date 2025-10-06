@@ -85,9 +85,11 @@ in
 
           if ! [[ "${toString config.boot.initrd.availableKernelModules}" =~ $driver ]]; then
             echo
-            echo "Kernel module $driver is missing in ${options.boot.initrd.availableKernelModules}!"
-            echo "Unlock in initrd may fail because of this."
-            echo "Alternatively the ${opt.checkKernelModules.skipModules} option can be used to skip this module."
+            echo
+            echo "  Kernel module \"$driver\" is missing in \"${options.boot.initrd.availableKernelModules}\"!"
+            echo "  Unlock in initrd may fail because of this."
+            echo "  Alternatively the \"${opt.checkKernelModules.skipModules}\" option can be used to skip the module."
+            echo
             echo
             exit 1
           fi
