@@ -152,7 +152,7 @@ in
       secret = ''"$(cat ${cfgo.clientSecretFile})"'';
       icon-url = "${config.services.dex.settings.issuer}/theme/favicon.png";
       auto-discover-url = config.services.dex.discoveryEndpoint;
-      scopes = "groups";
+      scopes = "groups offline_access";
       required-claim-name = "groups";
       required-claim-value = cfgo.userGroup;
       group-claim-name = "groups";
