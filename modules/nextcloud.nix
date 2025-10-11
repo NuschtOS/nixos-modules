@@ -61,9 +61,13 @@ in
         ];
 
         phpOptions = lib.mkIf cfg.recommendedDefaults {
+          # recommended by nextcloud admin overview after some usage, default 8
+          "opcache.interned_strings_buffer" = 16;
           # https://docs.nextcloud.com/server/latest/admin_manual/installation/server_tuning.html#:~:text=opcache.jit%20%3D%201255%20opcache.jit_buffer_size%20%3D%20128m
           "opcache.jit" = 1255;
           "opcache.jit_buffer_size" = "128M";
+          # https://docs.nextcloud.com/server/32/admin_manual/installation/server_tuning.html#enable-php-opcache
+          "opcache.revalidate_freq" = 60; # default 1
         };
 
         settings = lib.mkMerge [
