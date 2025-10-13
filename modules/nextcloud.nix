@@ -2,7 +2,7 @@
 
 let
   cfg = config.services.nextcloud;
-  inherit (pkgs."nextcloud${lib.versions.major cfg.package.version}Packages") apps;
+  inherit (config.services.nextcloud.package.packages) apps;
 in
 {
   options = {
@@ -37,7 +37,7 @@ in
       configureRecognize has been removed in favor of using the recognize packages from NixOS like:
 
       services.nextcloud.extraApps = {
-        inherit (pkgs."nextcloud${lib.versions.major config.services.nextcloud.package.version}Packages".apps) recognize;
+        inherit (config.services.nextcloud.package.packages.apps) recognize;
       };
     '')
   ];

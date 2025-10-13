@@ -161,7 +161,7 @@ in
                 # traps: nginx[xxxxxx] trap invalid opcode ip:7fa6c23ebe79 sp:7ffcceaaa9e0 error:0 in memfd:sljit[1e79,7fa6c23ea000+10000]
                 pcre2 = pkgs.pcre2.override { withJitSealloc = false; };
               }).overrideAttrs ({ patches ? [ ], ... }: {
-                patches = patches ++ [
+                patches = patches ++ lib.optionals (lib.versionOlder pkg.version "1.29.2") [
                   (let
                     mjMn = lib.versions.majorMinor;
                     # nginx 1.29 is supported since https://github.com/aws/aws-lc/commit/050d696415f2b7a07fc791ded31f5e12ec82f5fe
