@@ -81,7 +81,10 @@ in
           };
         };
 
-        config.kTLS = lib.mkIf cfg.compileWithAWSlc false;
+        config = {
+          kTLS = lib.mkIf cfg.compileWithAWSlc false;
+          extraConfig = cfg.commonServerConfig;
+        };
       }));
     };
   };
