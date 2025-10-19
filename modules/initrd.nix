@@ -10,39 +10,60 @@ let
 in
 {
   options = {
-    boot.initrd.network = {
-      checkKernelModules = {
-        enable = lib.mkOption {
-          type = lib.types.bool;
-          default = cfgn.ssh.enable;
-          defaultText = lib.literalExpression "config.${optn.ssh.enable}";
-          description = ''
-            Whether to check if all interface related kernel modules are loaded in initrd.
-
-            This can be used to make sure that you are not getting locked out when unlocking LUKS disks over the network in initrd.
-          '';
-        };
-        skipModules = lib.mkOption {
-          type = lib.types.listOf lib.types.str;
-          default = [ ];
-          description = "Name of modules that are allowed to be missing.";
-        };
+    boot.initrd = {
+      luks.deterministicUnlock = libS.mkOpinionatedOption "unlock luks disks in deterministic order" // {
+        default = config.opinionatedDefaults && config.boot.initrd.systemd.enable;
       };
-      ssh = {
-        configureHostKeys = lib.mkEnableOption "" // { description = "Whether to configure before generate openssh host keys for the initrd"; };
-        generateHostKeys = lib.mkEnableOption "" // { description = "Whether to generate openssh host keys for the initrd. This must be enabled before they can be configured"; };
-        regenerateWeakRSAHostKey = libS.mkOpinionatedOption "regenerate weak (less than 4096 bits) RSA host keys" // {
-          default = config.services.openssh.regenerateWeakRSAHostKey;
+
+      network = {
+        checkKernelModules = {
+          enable = lib.mkOption {
+            type = lib.types.bool;
+            default = cfgn.ssh.enable;
+            defaultText = lib.literalExpression "config.${optn.ssh.enable}";
+            description = ''
+              Whether to check if all interface related kernel modules are loaded in initrd.
+
+              This can be used to make sure that you are not getting locked out when unlocking LUKS disks over the network in initrd.
+            '';
+          };
+          skipModules = lib.mkOption {
+            type = lib.types.listOf lib.types.str;
+            default = [ ];
+            description = "Name of modules that are allowed to be missing.";
+          };
+        };
+
+        ssh = {
+          configureHostKeys = lib.mkEnableOption "" // { description = "Whether to configure before generate openssh host keys for the initrd"; };
+          generateHostKeys = lib.mkEnableOption "" // { description = "Whether to generate openssh host keys for the initrd. This must be enabled before they can be configured"; };
+          regenerateWeakRSAHostKey = libS.mkOpinionatedOption "regenerate weak (less than 4096 bits) RSA host keys" // {
+            default = config.services.openssh.regenerateWeakRSAHostKey;
+          };
         };
       };
     };
   };
 
   config = lib.mkIf cfgn.enable {
-    boot.initrd.network.ssh.hostKeys = lib.mkIf cfgn.ssh.configureHostKeys [
-      initrdEd25519Key
-      initrdRsaKey
-    ];
+    assertions = [ {
+      assertion = cfg.luks.deterministicUnlock -> cfg.systemd.enable;
+      message = "${opt.luks.deterministicUnlock} requires ${opt.systemd.enable} to be true";
+    } ];
+
+    boot.initrd = {
+      network.ssh.hostKeys = lib.mkIf cfgn.ssh.configureHostKeys [
+        initrdEd25519Key
+        initrdRsaKey
+      ];
+
+      systemd.contents."/etc/profile".text = lib.mkIf (cfg.luks.devices != { }) (''
+        echo "If the boot process does not continue in 5 seconds, try running:"
+        echo "  systemctl start default.target"
+      '' + lib.concatMapAttrsStringSep "\n"
+        (volume: disk: "systemd-cryptsetup attach ${volume} ${disk.device}")
+        cfg.luks.devices);
+    };
 
     system = {
       activationScripts.generateInitrdOpensshHostKeys = let
