@@ -1,9 +1,10 @@
 { config, lib, libS, options, pkgs, ... }:
 
 let
-  cfg = config.boot.initrd.network;
-  opt = options.boot.initrd.network;
-  cfgs = config.boot.initrd.network.ssh;
+  cfg = config.boot.initrd;
+  opt = options.boot.initrd;
+  cfgn = config.boot.initrd.network;
+  optn = options.boot.initrd.network;
   initrdEd25519Key = "/etc/ssh/initrd/ssh_host_ed25519_key";
   initrdRsaKey = "/etc/ssh/initrd/ssh_host_rsa_key";
 in
@@ -13,8 +14,8 @@ in
       checkKernelModules = {
         enable = lib.mkOption {
           type = lib.types.bool;
-          default = cfgs.enable;
-          defaultText = lib.literalExpression "config.boot.initrd.network.ssh.enable";
+          default = cfgn.ssh.enable;
+          defaultText = lib.literalExpression "config.${optn.ssh.enable}";
           description = ''
             Whether to check if all interface related kernel modules are loaded in initrd.
 
@@ -37,8 +38,8 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    boot.initrd.network.ssh.hostKeys = lib.mkIf cfgs.configureHostKeys [
+  config = lib.mkIf cfgn.enable {
+    boot.initrd.network.ssh.hostKeys = lib.mkIf cfgn.ssh.configureHostKeys [
       initrdEd25519Key
       initrdRsaKey
     ];
@@ -46,12 +47,12 @@ in
     system = {
       activationScripts.generateInitrdOpensshHostKeys = let
         sshKeygen = lib.getExe' config.programs.ssh.package "ssh-keygen";
-      in lib.mkIf (cfgs.generateHostKeys || cfgs.regenerateWeakRSAHostKey) {
+      in lib.mkIf (cfgn.ssh.generateHostKeys || cfgn.ssh.regenerateWeakRSAHostKey) {
         deps = [ "users" ]; # might not work if userborn is used...
         text = let
           id = toString config.ids.uids.root;
           rootUser = config.users.users.root;
-        in lib.optionalString cfgs.generateHostKeys /* bash */ ''
+        in lib.optionalString cfgn.ssh.generateHostKeys /* bash */ ''
           if [[ ! -e ${initrdEd25519Key} || ! -e ${initrdRsaKey} ]]; then
             echo "Generating OpenSSH initrd hostkeys..."
             mkdir -m700 -p /etc/ssh/initrd/
@@ -63,7 +64,7 @@ in
             ${sshKeygen} -t ed25519 -N "" -f ${initrdEd25519Key}
             ${sshKeygen} -t rsa -b 4096 -N "" -f ${initrdRsaKey}
           fi
-        '' + lib.optionalString cfgs.regenerateWeakRSAHostKey /* bash */ ''
+        '' + lib.optionalString cfgn.ssh.regenerateWeakRSAHostKey /* bash */ ''
           if [[ -e ${initrdRsaKey} && $(${sshKeygen} -l -f ${initrdRsaKey} | ${lib.getExe pkgs.gawk} '{print $1}') != 4096 ]]; then
             echo "Regenerating OpenSSH initrd RSA hostkey which had less than 4096 bits..."
             rm -f ${initrdRsaKey} ${initrdRsaKey}.pub
@@ -72,7 +73,7 @@ in
         '';
       };
 
-      preSwitchChecks."checkForNetworkKernelModules" = lib.mkIf cfg.checkKernelModules.enable /* bash */ ''
+      preSwitchChecks."checkForNetworkKernelModules" = lib.mkIf cfgn.checkKernelModules.enable /* bash */ ''
         interfaces=$(ls /sys/class/net/)
         for interface in $interfaces; do
           # skip special devices like lo or virtual devices
@@ -80,16 +81,16 @@ in
 
           driver="$(basename "$(readlink -f "/sys/class/net/$interface/device/driver")")"
 
-          if [[ "${toString cfg.checkKernelModules.skipModules}" =~ $driver ]]; then
+          if [[ "${toString cfgn.checkKernelModules.skipModules}" =~ $driver ]]; then
             continue
           fi
 
           if ! [[ "${toString config.boot.initrd.availableKernelModules}" =~ $driver ]]; then
             echo
             echo
-            echo "  Kernel module \"$driver\" is missing in \"${options.boot.initrd.availableKernelModules}\"!"
+            echo "  Kernel module \"$driver\" is missing in \"${opt.availableKernelModules}\"!"
             echo "  Unlock in initrd may fail because of this."
-            echo "  Alternatively the \"${opt.checkKernelModules.skipModules}\" option can be used to skip the module."
+            echo "  Alternatively the \"${optn.checkKernelModules.skipModules}\" option can be used to skip the module."
             echo
             echo
             exit 1
