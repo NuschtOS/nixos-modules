@@ -20,7 +20,7 @@ in
           enable = lib.mkOption {
             type = lib.types.bool;
             default = cfgn.ssh.enable;
-            defaultText = lib.literalExpression "config.${optn.ssh.enable}";
+            defaultText = lib.literalExpression "config.boot.initrd.network.ssh.enable";
             description = ''
               Whether to check if all interface related kernel modules are loaded in initrd.
 
