@@ -28,7 +28,6 @@ in
     virtualisation = let
       autoPruneFlags = [
         "--all"
-        "--force"
         "--volumes"
       ];
     in {
