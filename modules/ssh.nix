@@ -12,6 +12,29 @@ in
       addPopularKnownHosts = libS.mkOpinionatedOption "add ssh public keys of popular websites to known_hosts";
       addHelpOnHostkeyMismatch = libS.mkOpinionatedOption "show a ssh-keygen command to remove mismatching ssh knownhosts entries";
       recommendedDefaults = libS.mkOpinionatedOption "set recommend and secure default settings";
+
+      package = lib.mkOption {
+        apply = p: if cfgP.addHelpOnHostkeyMismatch then
+          (p.overrideAttrs ({ patches, ... }: {
+            patches = patches ++ [
+              (pkgs.fetchpatch {
+                urls =
+                  let
+                    version = "1%259.9p1-1";
+                  in
+                  [
+                    "https://salsa.debian.org/ssh-team/openssh/-/raw/debian/${version}/debian/patches/mention-ssh-keygen-on-keychange.patch"
+                  ];
+                hash = "sha256-OZPOHwQkclUAjG3ShfYX66sbW2ahXPgsV6XNfzl9SIg=";
+              })
+            ];
+
+            # takes to long and unstable requires openssh to work to advance
+            doCheck = false;
+          }))
+        else
+          p;
+      };
     };
 
     services.openssh = {
@@ -63,36 +86,17 @@ in
         (libS.mkPubKey "*.your-storagebox.de" "ssh-rsa" "AAAAB3NzaC1yc2EAAAABIwAAAQEA5EB5p/5Hp3hGW1oHok+PIOH9Pbn7cnUiGmUEBrCVjnAw+HrKyN8bYVV0dIGllswYXwkG/+bgiBlE6IVIBAq+JwVWu1Sss3KarHY3OvFJUXZoZyRRg/Gc/+LRCE7lyKpwWQ70dbelGRyyJFH36eNv6ySXoUYtGkwlU5IVaHPApOxe4LHPZa/qhSRbPo2hwoh0orCtgejRebNtW5nlx00DNFgsvn8Svz2cIYLxsPVzKgUxs8Zxsxgn+Q/UvR7uq4AbAhyBMLxv7DjJ1pc7PJocuTno2Rw9uMZi1gkjbnmiOh6TTXIEWbnroyIhwc8555uto9melEUmWNQ+C+PwAK+MPw==")
         (libS.mkPubKey "*.your-storagebox.de" "ssh-ed25519" "AAAAC3NzaC1lZDI1NTE5AAAAIICf9svRenC/PLKIL9nk6K/pxQgoiFC41wTNvoIncOxs")
       ]);
-      package = lib.mkIf cfgP.addHelpOnHostkeyMismatch (pkgs.openssh.overrideAttrs ({ patches, ... }: {
-        patches = patches ++ [
-          (pkgs.fetchpatch {
-            urls =
-              let
-                version = "1%259.9p1-1";
-              in
-              [
-                "https://salsa.debian.org/ssh-team/openssh/-/raw/debian/${version}/debian/patches/mention-ssh-keygen-on-keychange.patch"
-              ];
-            hash = "sha256-OZPOHwQkclUAjG3ShfYX66sbW2ahXPgsV6XNfzl9SIg=";
-          })
-        ];
-
-        # takes to long and unstable requires openssh to work to advance
-        doCheck = false;
-      }));
     };
 
     services.openssh = lib.mkIf cfgS.recommendedDefaults {
       settings = {
-        # following ssh-audit: nixos default minus 2048 bit modules (diffie-hellman-group-exchange-sha256)
+        # following ssh-audit: nixos default minus 2048 bit modules (diffie-hellman-group-exchange-sha256) and not post-quantum safe (curve25519-sha256)
         KexAlgorithms = [
           "mlkem768x25519-sha256"
           "sntrup761x25519-sha512"
           "sntrup761x25519-sha512@openssh.com"
-          "curve25519-sha256"
-          "curve25519-sha256@libssh.org"
         ];
-        # following ssh-audit: nixos defaults minus encrypt-and-MAC
+        # following ssh-audit: nixos defaults
         Macs = [
           "hmac-sha2-512-etm@openssh.com"
           "hmac-sha2-256-etm@openssh.com"
