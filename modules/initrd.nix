@@ -57,12 +57,15 @@ in
         initrdRsaKey
       ];
 
-      systemd.contents."/etc/profile".text = lib.mkIf (cfg.luks.devices != { }) (''
-        echo "If the boot process does not continue in 5 seconds, try running:"
-        echo "  systemctl start default.target"
-      '' + lib.concatMapAttrsStringSep "\n"
-        (volume: disk: "systemd-cryptsetup attach ${volume} ${disk.device}")
-        cfg.luks.devices);
+      systemd.contents."/etc/profile" = lib.mkIf (cfg.luks.devices != { }) {
+        text = ''
+          echo "If the boot process does not continue in 5 seconds, try running:"
+          echo "  systemctl start default.target"
+        ''
+        + lib.concatMapAttrsStringSep "\n"
+          (volume: disk: "systemd-cryptsetup attach ${volume} ${disk.device}")
+          cfg.luks.devices;
+      };
     };
 
     system = {
