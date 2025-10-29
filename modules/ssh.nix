@@ -90,15 +90,13 @@ in
 
     services.openssh = lib.mkIf cfgS.recommendedDefaults {
       settings = {
-        # following ssh-audit: nixos default minus 2048 bit modules (diffie-hellman-group-exchange-sha256)
+        # following ssh-audit: nixos default minus 2048 bit modules (diffie-hellman-group-exchange-sha256) and not post-quantum safe (curve25519-sha256)
         KexAlgorithms = [
           "mlkem768x25519-sha256"
           "sntrup761x25519-sha512"
           "sntrup761x25519-sha512@openssh.com"
-          "curve25519-sha256"
-          "curve25519-sha256@libssh.org"
         ];
-        # following ssh-audit: nixos defaults minus encrypt-and-MAC
+        # following ssh-audit: nixos defaults
         Macs = [
           "hmac-sha2-512-etm@openssh.com"
           "hmac-sha2-256-etm@openssh.com"
