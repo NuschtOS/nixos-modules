@@ -389,13 +389,14 @@ in
               (lib.mkIf (cfg.enableAllPreloadedLibraries || cfg.configurePgStatStatements) (lib.concatStrings (map (db:
                 (lib.concatMapStringsSep "\n" (ext: let
                   # This is ugly...
-                  ext' = lib.head (lib.splitString "-" ext);
+                  extName = lib.head (lib.splitString "-" ext);
+
+                  extUpdateStatement = name: {
+                    "postgis" = "SELECT postgis_extensions_upgrade()";
+                  }.${name} or ''ALTER EXTENSION "${extName}" UPDATE'';
                 in /* bash */ ''
-                  $PSQL -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${ext'}"'
-                  $PSQL -tAd '${db}' -c '${if ext' == "postgis" then
-                    "SELECT postgis_extensions_upgrade()"
-                  else
-                    ''ALTER EXTENSION "${ext'}" UPDATE''}'
+                  $PSQL -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${extName}"'
+                  $PSQL -tAd '${db}' -c '${extUpdateStatement extName}'
                 '') (lib.splitString "," (if cfg.enableAllPreloadedLibraries then
                     cfg.settings.shared_preload_libraries
                   else if cfg.configurePgStatStatements then
