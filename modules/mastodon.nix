@@ -57,9 +57,12 @@ in
               args = if lib.versionOlder config.services.mastodon.package.version "4.4.0" then {
                 tag = "2.1.1";
                 hash = "sha256-WEw9wE+iBCLDDTZjFoDJ3EwKTY92+LyJyDqCIoVXhzk=";
-              } else {
+              } else if lib.versionOlder config.services.mastodon.package.version "4.5.0" then {
                 tag = "2.3.3";
                 hash = "sha256-ddx9P8eOtUzTDFMF0ZRKyIRujjLL6rFppUswJn40nFU=";
+              } else {
+                tag = "3.0.0";
+                hash = "sha256-xwNfkUQCAoglOSvxvH/FWkA+vNImQeOMeYRrHUGeVzQ=";
               };
             in {
               owner = "ronilaukkarinen";
