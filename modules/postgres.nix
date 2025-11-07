@@ -393,7 +393,7 @@ in
 
                   extUpdateStatement = name: {
                     # pg_repack cannot be updated but reinstalling it is safe
-                    "pg_repack" = "DROP EXTENSION pg_repack; CREATE EXTENSION pg_repack";
+                    "pg_repack" = "DROP EXTENSION pg_repack CASCADE; CREATE EXTENSION pg_repack";
                     "postgis" = "SELECT postgis_extensions_upgrade()";
                   }.${name} or ''ALTER EXTENSION "${extName}" UPDATE'';
                 in /* bash */ ''
