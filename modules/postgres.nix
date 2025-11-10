@@ -18,6 +18,9 @@ let
     Persistent = true;
     RandomizedDelaySec = "10m";
   };
+
+  # withJIT installs the postgres' jit output as an extension but that is no shared object to load
+  cfgInstalledExtensions = lib.filter (x: x != "postgresql") (map (e: lib.getName e) cfg.finalPackage.installedExtensions);
 in
 {
   options.services = {
@@ -37,7 +40,13 @@ in
         '';
       };
 
-      enableAllPreloadedLibraries = libS.mkOpinionatedOption "enable all extensions installed through `shared_preload_libraries`";
+      extensionToInstall = lib.mkOption {
+        type = lib.type.listOf lib.types.str;
+        defaultText = lib.literalExpression "config.services.postgresql.finalPackage.installedExtensions";
+        description = "List of extensions which are going to be installed.";
+      };
+
+      installAllAvailableExtensions = libS.mkOpinionatedOption "install all extensions installed with `ALTER EXTENSION \"...\" UPDATE` or the extension equivalent custom SQL statements";
 
       ensureUsers = lib.mkOption {
         type = lib.types.listOf (lib.types.submodule {
@@ -69,7 +78,7 @@ in
         };
       };
 
-      preloadAllExtensions = libS.mkOpinionatedOption "load all installed extensions through `shared_preload_libraries`";
+      preloadAllInstalledExtensions = libS.mkOpinionatedOption "load all installed extensions through `shared_preload_libraries`";
 
       preventDowngrade = libS.mkOpinionatedOption "abort startup if /var/lib/postgresql contains any directory not belonging to the current major postgres version";
 
@@ -184,6 +193,11 @@ in
     };
   };
 
+  imports = [
+    (lib.mkRenamedOptionModule ["services" "postgresql" "enableAllPreloadedLibraries"] ["services" "postgresql" "installAllAvailableExtensions"])
+    (lib.mkRenamedOptionModule ["services" "postgresql" "preloadAllExtensions"] ["services" "postgresql" "preloadAllInstalledExtensions"])
+  ];
+
   config = lib.mkIf cfg.enable {
     assertions = [
       {
@@ -280,20 +294,21 @@ in
         databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
         enableJIT = lib.mkIf cfg.recommendedDefaults true;
         extensions = lib.mkIf cfg.pgRepackTimer.enable (ps: with ps; [ pg_repack ]);
-        settings.shared_preload_libraries =
-          lib.optional cfg.configurePgStatStatements "pg_stat_statements"
+        extensionToInstall = lib.mkMerge [
+          (lib.mkIf cfg.configurePgStatStatements [ "pg_stat_statements" ])
+          cfgInstalledExtensions
+        ];
+        settings.shared_preload_libraries = lib.mkMerge [
+          (lib.mkIf cfg.configurePgStatStatements [ "pg_stat_statements" ])
           # TODO: upstream, this probably requires a new entry in passthru to pick if the object name doesn't match the plugin name or there are multiple
           # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix#L81
-          ++ (let
-            # NOTE: move into extensions passthru.libName when upstreaming and find via cfg.finalPackage.installedExtensions
-            getSoOrFallback = so: let
-              name = lib.getName so;
-            in {
+          (let
+            # NOTE: move into extensions passthru.libName when upstreaming
+            getSoOrFallback = ext:{
               postgis = "postgis-3";
-              # withJIT installs the postgres' jit output as an extension but that is no shared object to load
-              postgresql = null;
-            }.${name} or name;
-          in lib.optionals cfg.preloadAllExtensions (lib.filter (x: x != null) (map getSoOrFallback cfg.finalPackage.installedExtensions)));
+            }.${ext} or ext;
+          in lib.mkIf cfg.preloadAllInstalledExtensions (map getSoOrFallback cfgInstalledExtensions))
+        ];
         upgrade.stopServices = with config.services; lib.mkMerge [
           (lib.mkIf (atuin.enable && atuin.database.createLocally) [ "atuin" ])
           (lib.mkIf (gancio.enable && gancio.settings.db.dialect == "postgres") [ "gancio" ])
@@ -388,24 +403,15 @@ in
               # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
               (lib.mkIf (cfg.enableAllPreloadedLibraries || cfg.configurePgStatStatements) (lib.concatStrings (map (db:
                 (lib.concatMapStringsSep "\n" (ext: let
-                  # This is ugly...
-                  extName = lib.head (lib.splitString "-" ext);
-
                   extUpdateStatement = name: {
                     # pg_repack cannot be updated but reinstalling it is safe
                     "pg_repack" = "DROP EXTENSION pg_repack CASCADE; CREATE EXTENSION pg_repack";
                     "postgis" = "SELECT postgis_extensions_upgrade()";
-                  }.${name} or ''ALTER EXTENSION "${extName}" UPDATE'';
+                  }.${name} or ''ALTER EXTENSION "${ext}" UPDATE'';
                 in /* bash */ ''
-                  $PSQL -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${extName}"'
-                  $PSQL -tAd '${db}' -c '${extUpdateStatement extName}'
-                '') (lib.splitString "," (if cfg.enableAllPreloadedLibraries then
-                    cfg.settings.shared_preload_libraries
-                  else if cfg.configurePgStatStatements then
-                    "pg_stat_statements"
-                  else
-                    ""
-                  ))
+                  $PSQL -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${ext}"'
+                  $PSQL -tAd '${db}' -c '${extUpdateStatement ext}'
+                '') cfgInstalledExtensions
                 )
               ) cfg.databases)))
 

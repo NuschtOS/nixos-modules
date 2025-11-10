@@ -149,7 +149,7 @@ in toplevel // {
         enable = true;
         configurePgStatStatements = true;
         enableAllPreloadedLibraries = true;
-        preloadAllExtensions = true;
+        preloadAllInstalledExtensions = true;
       };
     };
   };
