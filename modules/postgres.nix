@@ -41,7 +41,7 @@ in
       };
 
       extensionToInstall = lib.mkOption {
-        type = lib.type.listOf lib.types.str;
+        type = lib.types.listOf lib.types.str;
         defaultText = lib.literalExpression "config.services.postgresql.finalPackage.installedExtensions";
         description = "List of extensions which are going to be installed.";
       };
