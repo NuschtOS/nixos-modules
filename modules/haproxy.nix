@@ -13,11 +13,6 @@ in
   config = lib.mkIf cfg.enable {
     services.haproxy = {
       package = lib.mkIf cfg.compileWithAWSlc (pkgs.haproxy.override { sslLibrary = "aws-lc"; });
-
-      config = lib.mkBefore (''
-        global
-          ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
-      '';
     };
   };
 }
