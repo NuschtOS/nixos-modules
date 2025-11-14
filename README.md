@@ -7,7 +7,7 @@ This includes features like:
 - More opinionated integrations on top of Portunus (Simple LDAP frontend), dex and oauth2-proxy
 - Easy Postgres upgrades between major versions, easy installation of extensions including `pg_stat_statements` and timer for pg_repack
 - Higher level configuration of Blackbox exporter's dnsProbes and httpProbes for Prometheus
-- Easy integration of Matrix Synapse, Element Web and extra Oembed providers
+- Easy integration of Matrix Synapse, Element Web, Synapse Admin by etkecc and extra Oembed providers
 - Check if network kernel modules could be missing in initrd and deterministic luks unlock order
 - Configure Nextcloud Apps Memories Apps and properly setup efficient preview generation
 - Predone Nginx config for Minio console and object storage (S3)
