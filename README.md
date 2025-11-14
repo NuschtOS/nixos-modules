@@ -3,24 +3,37 @@
 Collection of opinionated, integrated and shared NixOS modules.
 
 This includes features like:
-- Backend independent LDAP/OAuth2 abstraction with service integration
-- Easy Postgres upgrades between major versions and installation of `pg_stat_statements` extension in all databases
-- Easy integration of Matrix Synapse, Element Web and extra Oembed providers
-- Configure extra dependencies in Nextcloud for the Recognize and Memories Apps and properly setup preview generation
-- Restricted nix remote builders which can only execute remote builds
+- Backend independent LDAP/OAuth2 abstraction with service integration (see table below)
 - More opinionated integrations on top of Portunus (Simple LDAP frontend), dex and oauth2-proxy
+- Easy Postgres upgrades between major versions, easy installation of extensions including `pg_stat_statements` and timer for pg_repack
+- Higher level configuration of Blackbox exporter's dnsProbes and httpProbes for Prometheus
+- Easy integration of Matrix Synapse, Element Web and extra Oembed providers
+- Configure Nextcloud Apps Memories Apps and properly setup efficient preview generation
+- Predone Nginx config for Minio console and object storage (S3)
+- Restricted nix remote builders which can only execute remote builds
 
 and many smaller integrations like:
 
 - git-delta
 - Harmonia Nginx
-- Intel hardware acceleration
 - Mailman PostgreSQL
 - Nginx TCP fast open
+- Mastodon Bird UI patch
+- Hostname check (borrowed from srvos as module)
 - Nix diff system on activation and dry-activation
-- easy configuration of HTTP/HTTPS targets in Prometheus blackbox exporter
 - Vaultwarden Nginx and Postgres
+- Strace color patch
 - ... and much more!
+
+## LDPA & OAuth service support
+
+| Name  | LDAP | OAuth |
+|-------|------|-------|
+| Gitea |  ✅  |  ✅   |
+| Grafana | ❌ |  ✅   |
+| Hedgedoc | ✅ | ❌ |
+| Home-Assistant | ✅ | ❌ |
+| Mastodon | ✅ | ✅ |
 
 ## Usage
 
