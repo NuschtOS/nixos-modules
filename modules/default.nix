@@ -6,5 +6,6 @@
   imports = [
     (lib.mkRemovedOptionModule ["debugging" "enable"] "Because we never really used it.")
     (lib.mkRemovedOptionModule ["environment" "noGraphicsPackages"] "Maintaining it out of tree got unviable after the kernel started to depend on a graphics library through ~5 packages.")
+    (lib.mkRemovedOptionModule ["haproxy" "recommendedDefaults"] "it wasn't used")
   ];
 }

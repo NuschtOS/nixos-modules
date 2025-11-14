@@ -7,8 +7,6 @@ in
   options = {
     services.haproxy = {
       compileWithAWSlc = libS.mkOpinionatedOption "compile nginx with aws-lc as crypto library";
-
-      recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
     };
   };
 
