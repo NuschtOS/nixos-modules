@@ -40,9 +40,9 @@ in
       ];
     };
 
-    services.chrony = {
+    services.chrony = lib.mkIf cfg.configureServer {
       openFirewall = true;
-      extraConfig = lib.mkIf cfg.configureServer ''
+      extraConfig = ''
         allow
       '';
     };
