@@ -131,12 +131,7 @@ in
     nixpkgs.overlays = lib.mkIf cfg.enable [
       (final: prev: {
         dex-oidc = let
-          functionArgs = prev.dex-oidc.override.__functionArgs;
-          buildGoModule = if functionArgs?buildGoModule then
-            "buildGoModule"
-          else if functionArgs?buildGo124Module then
-            "buildGo124Module"
-          else throw "nixos-modules/portunus/dex: yet another buildGo*Module version...";
+          buildGoModule = lib.head (lib.attrNames (lib.filterAttrs (n: _v: lib.hasPrefix "buildGo" n) prev.dex-oidc.override.__functionArgs));
         in prev.dex-oidc.override {
           "${buildGoModule}" = args: final."${buildGoModule}" (args // (let
               inherit (prev.dex-oidc) version;
