@@ -11,7 +11,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    services.renovate.settings = {
+    services.renovate.settings = lib.mkIf cfg.recommendedDefaults {
       cachePrivatePackages = true;
       configMigration = true;
       optimizeForDisabled = true;
