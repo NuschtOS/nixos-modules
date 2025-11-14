@@ -17,9 +17,7 @@ in
       config = lib.mkBefore (''
         global
           ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
-      '' + lib.optionalString (!cfg.compileWithAWSlc) ''
-          ssl-dh-param-file ${config.security.dhparams.params.haproxy.path}
-      '');
+      '';
     };
   };
 }
