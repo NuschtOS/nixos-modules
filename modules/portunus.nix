@@ -131,12 +131,7 @@ in
     nixpkgs.overlays = lib.mkIf cfg.enable [
       (final: prev: {
         dex-oidc = let
-          functionArgs = prev.dex-oidc.override.__functionArgs;
-          buildGoModule = if functionArgs?buildGoModule then
-            "buildGoModule"
-          else if functionArgs?buildGo124Module then
-            "buildGo124Module"
-          else throw "nixos-modules/portunus/dex: yet another buildGo*Module version...";
+          buildGoModule = lib.head (lib.attrNames (lib.filterAttrs (n: _v: lib.hasPrefix "buildGo" n) prev.dex-oidc.override.__functionArgs));
         in prev.dex-oidc.override {
           "${buildGoModule}" = args: final."${buildGoModule}" (args // (let
               inherit (prev.dex-oidc) version;
@@ -145,10 +140,6 @@ in
               # remember session
               (if (lib.versionAtLeast version "2.42") then
                 ./dex-session-cookie-password-connector-2.42.patch
-              else if (lib.versionAtLeast version "2.41") then
-                ./dex-session-cookie-password-connector-2.41.patch
-              else if (lib.versionAtLeast version "2.40") then
-                ./dex-session-cookie-password-connector-2.40.patch
               else
                 throw "Dex version ${version} is not supported."
               )
@@ -162,10 +153,6 @@ in
 
             vendorHash = if lib.versionAtLeast version "2.42" then
               "sha256-yBAr1pDhaJChtz8km9eDISc9aU+2JtKhetlS8CbClaE="
-            else if lib.versionAtLeast version "2.41" then
-              "sha256-a0F4itrposTBeI1XB0Ru3wBkw2zMBlsMhZUW8PuM1NA="
-            else if lib.versionAtLeast version "2.40" then
-              "sha256-oxu3eNsjUGo6Mh6QybeGggsCZsZOGYo7nBD5ZU8MSy8="
             else
               throw "Dex version ${version} is not supported.";
           }));
