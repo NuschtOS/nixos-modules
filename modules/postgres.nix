@@ -401,7 +401,7 @@ in
 
               # install/update pg_stat_statements extension in all databases
               # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
-              (lib.mkIf (cfg.enableAllPreloadedLibraries || cfg.configurePgStatStatements) (lib.concatStrings (map (db:
+              (lib.mkIf (cfg.installAllAvailableExtensions || cfg.configurePgStatStatements) (lib.concatStrings (map (db:
                 (lib.concatMapStringsSep "\n" (ext: let
                   extUpdateStatement = name: {
                     # pg_repack cannot be updated but reinstalling it is safe
