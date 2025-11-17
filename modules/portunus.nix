@@ -138,7 +138,9 @@ in
           in {
             patches = args.patches or [ ] ++ [
               # remember session
-              (if (lib.versionAtLeast version "2.42") then
+              (if (lib.versionAtLeast version "2.43") then
+                ./dex-session-cookie-password-connector-2.43.patch
+              else if (lib.versionAtLeast version "2.42") then
                 ./dex-session-cookie-password-connector-2.42.patch
               else
                 throw "Dex version ${version} is not supported."
@@ -151,7 +153,9 @@ in
               })
             ];
 
-            vendorHash = if lib.versionAtLeast version "2.42" then
+            vendorHash = if lib.versionAtLeast version "2.43" then
+              "sha256-CPxW5meGQUGzMhIJAR6ZZZRuHCWclfcgp+ag9egCa70="
+            else if lib.versionAtLeast version "2.42" then
               "sha256-yBAr1pDhaJChtz8km9eDISc9aU+2JtKhetlS8CbClaE="
             else
               throw "Dex version ${version} is not supported.";
