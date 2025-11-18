@@ -15,7 +15,7 @@ in
         description = "URL under which prometheus can reach the blackbox exporter.";
       };
 
-      # TODO: upstream
+      # TODO: https://github.com/NixOS/nixpkgs/pull/448852
       config = lib.mkOption {
         inherit (yamlFormat) type;
         default = { };
@@ -106,53 +106,55 @@ in
 
   config = lib.mkIf cfg.enable {
     services.prometheus = {
-      exporters.blackbox = {
-        config.modules = lib.mkMerge (
-          (lib.mapAttrsToList (probeName: opts:
-            (lib.foldl (x: domain: x // {
-              "dns_${probeName}_${domain}" = {
-                dns = {
-                  query_name = domain;
-                  query_type = opts.type;
-                  valid_rcodes = [ "NOERROR" ];
+      exporters.blackbox = { options, ... }: {
+        config = {
+          config.modules = lib.mkMerge (
+            (lib.mapAttrsToList (probeName: opts:
+              (lib.foldl (x: domain: x // {
+                "dns_${probeName}_${domain}" = {
+                  dns = {
+                    query_name = domain;
+                    query_type = opts.type;
+                    valid_rcodes = [ "NOERROR" ];
+                  };
+                  prober = "dns";
+                  timeout = "5s";
                 };
-                prober = "dns";
-                timeout = "5s";
-              };
-            }) { } opts.domains)
-          ) cfgb.dnsProbe)
+              }) { } opts.domains)
+            ) cfgb.dnsProbe)
 
-        ++ lib.mapAttrsToList (name: opts: let
-          setting = {
-            "http_${name}" = {
-              http = {
-                ip_protocol_fallback = false;
-                method = "GET";
-                follow_redirects = false;
-                preferred_ip_protocol = "ip4";
-                valid_http_versions = [
-                  "HTTP/1.1"
-                  "HTTP/2.0"
-                ];
-                valid_status_codes = opts.statusCode;
+          ++ lib.mapAttrsToList (name: opts: let
+            setting = {
+              "http_${name}" = {
+                http = {
+                  ip_protocol_fallback = false;
+                  method = "GET";
+                  follow_redirects = false;
+                  preferred_ip_protocol = "ip4";
+                  valid_http_versions = [
+                    "HTTP/1.1"
+                    "HTTP/2.0"
+                  ];
+                  valid_status_codes = opts.statusCode;
+                };
+                prober = "http";
+                timeout = "10s";
               };
-              prober = "http";
-              timeout = "10s";
             };
-          };
-        in (lib.optionalAttrs (opts.ip == "both" || opts.ip == "ip4") setting)
-          // (lib.optionalAttrs (opts.ip == "both") {
-            "http_${name}_ip6" = lib.recursiveUpdate setting."http_${name}" {
-              http.preferred_ip_protocol = "ip6";
-            };
-          }) // (lib.optionalAttrs (opts.ip == "ip6") {
-            "http_${name}" = lib.recursiveUpdate setting."http_${name}" {
-              http.preferred_ip_protocol = "ip6";
-            };
-          })
-        ) cfgb.httpProbe);
-
-        configFile = yamlFormat.generate "blackbox-exporter.yaml" cfgb.config;
+          in (lib.optionalAttrs (opts.ip == "both" || opts.ip == "ip4") setting)
+            // (lib.optionalAttrs (opts.ip == "both") {
+              "http_${name}_ip6" = lib.recursiveUpdate setting."http_${name}" {
+                http.preferred_ip_protocol = "ip6";
+              };
+            }) // (lib.optionalAttrs (opts.ip == "ip6") {
+              "http_${name}" = lib.recursiveUpdate setting."http_${name}" {
+                http.preferred_ip_protocol = "ip6";
+              };
+            })
+          ) cfgb.httpProbe);
+          configFile = lib.mkIf options.enableConfigCheck.visible (yamlFormat.generate "blackbox-exporter.yaml" cfgb.config);
+          settings = lib.mkIf (!options.enableConfigCheck.visible) cfgb.config;
+        };
       };
 
       ruleFiles = map (rule: yamlFormat.generate "prometheus-rule" rule) cfg.rulesConfig;
