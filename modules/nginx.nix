@@ -35,8 +35,6 @@ in
       };
     };
 
-    generateDhparams = libS.mkOpinionatedOption "generate more secure, 2048 bits dhparams replacing the default 1024 bits";
-
     openFirewall = libS.mkOpinionatedOption "open the firewall port for the http (80/tcp), https (443/tcp) and if enabled quic (443/udp) ports";
 
     recommendedDefaults = libS.mkOpinionatedOption "set recommended performance options not grouped into other settings";
@@ -87,6 +85,7 @@ in
   };
 
   imports = [
+    (lib.mkRemovedOptionModule [ "services" "nginx" "generateDhparams" ] "Self generating dhparams is not recommended and no longer necessary since TLS 1.2.")
     (lib.mkRenamedOptionModule [ "services" "nginx" "allCompression" ] [ "services" "nginx" "allRecommendOptions" ])
     (lib.mkRenamedOptionModule [ "services" "nginx" "quic" "bpf" ] [ "services" "nginx" "enableQuicBPF" ])
     (lib.mkRenamedOptionModule [ "services" "nginx" "quic" "enable" ] [ "services" "nginx" "configureQuic" ])
@@ -221,7 +220,6 @@ in
                 addr;
           in
           lib.optionals (cfg.resolverAddrFromNameserver && config.networking.nameservers != [ ]) (map escapeIPv6 config.networking.nameservers);
-        sslDhparam = lib.mkIf cfg.generateDhparams config.security.dhparams.params.nginx.path;
 
         # NOTE: do not use mkMerge here to prevent infinite recursions
         virtualHosts =
@@ -256,11 +254,6 @@ in
             };
           };
       };
-    };
-
-    security.dhparams = lib.mkIf cfg.generateDhparams {
-      enable = cfg.generateDhparams;
-      params.nginx = { };
     };
 
     systemd.services.nginx.restartTriggers = lib.mkIf cfg.recommendedDefaults [ config.users.users.${cfg.user}.extraGroups ];
