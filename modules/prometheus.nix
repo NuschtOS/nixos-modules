@@ -152,8 +152,9 @@ in
               };
             })
           ) cfgb.httpProbe);
-          configFile = lib.mkIf options.enableConfigCheck.visible (yamlFormat.generate "blackbox-exporter.yaml" cfgb.config);
-          settings = lib.mkIf (!options.enableConfigCheck.visible) cfgb.config;
+          configFile = lib.mkIf (options.enableConfigCheck.visible or true) (yamlFormat.generate "blackbox-exporter.yaml" cfgb.config);
+        } // lib.optionalAttrs (options.enableConfigCheck.visible or false) {
+          settings = lib.mkIf (!options.enableConfigCheck.visible or true) cfgb.config;
         };
       };
 
