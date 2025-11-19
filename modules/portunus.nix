@@ -133,9 +133,11 @@ in
         dex-oidc = let
           buildGoModule = lib.head (lib.attrNames (lib.filterAttrs (n: _v: lib.hasPrefix "buildGo" n) prev.dex-oidc.override.__functionArgs));
         in prev.dex-oidc.override {
-          "${buildGoModule}" = args: final."${buildGoModule}" (args // (let
-              inherit (prev.dex-oidc) version;
-          in {
+          "${buildGoModule}" = args: final."${buildGoModule}" (let
+              inherit (prev.dex-oidc) version src;
+          in args {
+            inherit version src;
+          } // {
             patches = args.patches or [ ] ++ [
               # remember session
               (if (lib.versionAtLeast version "2.43") then
@@ -154,12 +156,12 @@ in
             ];
 
             vendorHash = if lib.versionAtLeast version "2.43" then
-              "sha256-CPxW5meGQUGzMhIJAR6ZZZRuHCWclfcgp+ag9egCa70="
+              "sha256-ywhxsIy1/56jfgMdB+hnd4JwEsuG+630LSJ/xx4wiDw="
             else if lib.versionAtLeast version "2.42" then
               "sha256-yBAr1pDhaJChtz8km9eDISc9aU+2JtKhetlS8CbClaE="
             else
               throw "Dex version ${version} is not supported.";
-          }));
+          });
         };
 
         portunus = prev.portunus.overrideAttrs ({ patches ? [ ], ... }: {
