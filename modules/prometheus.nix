@@ -2,7 +2,6 @@
 
 let
   cfg = config.services.prometheus;
-  cfgb = cfg.exporters.blackbox;
 
   yamlFormat = pkgs.formats.yaml { };
 in
@@ -106,7 +105,7 @@ in
 
   config = lib.mkIf cfg.enable {
     services.prometheus = {
-      exporters.blackbox = { options, ... }: {
+      exporters.blackbox = { config, options, ... }: {
         config = {
           config.modules = lib.mkMerge (
             (lib.mapAttrsToList (probeName: opts:
@@ -121,7 +120,7 @@ in
                   timeout = "5s";
                 };
               }) { } opts.domains)
-            ) cfgb.dnsProbe)
+            ) config.dnsProbe)
 
           ++ lib.mapAttrsToList (name: opts: let
             setting = {
@@ -151,16 +150,18 @@ in
                 http.preferred_ip_protocol = "ip6";
               };
             })
-          ) cfgb.httpProbe);
-          configFile = lib.mkIf (options.enableConfigCheck.visible or true) (yamlFormat.generate "blackbox-exporter.yaml" cfgb.config);
+          ) config.httpProbe);
+          configFile = lib.mkIf (options.enableConfigCheck.visible or true) (yamlFormat.generate "blackbox-exporter.yaml" config.config);
         } // lib.optionalAttrs (options.enableConfigCheck.visible or false) {
-          settings = lib.mkIf (!options.enableConfigCheck.visible or true) cfgb.config;
+          settings = lib.mkIf (!options.enableConfigCheck.visible) config.config;
         };
       };
 
       ruleFiles = map (rule: yamlFormat.generate "prometheus-rule" rule) cfg.rulesConfig;
 
       scrapeConfigs = let
+        cfgb = cfg.exporters.blackbox;
+
         commonProbeScrapeConfig = {
           metrics_path = "/probe";
           relabel_configs = [ {
