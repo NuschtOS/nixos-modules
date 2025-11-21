@@ -3,13 +3,21 @@
 let
   cfg = config.services.nextcloud;
   inherit (config.services.nextcloud.package.packages) apps;
+
+  hasImaginary = lib.versionAtLeast lib.version "25.11pre";
 in
 {
   options = {
     services.nextcloud = {
       recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
 
-      configureImaginary = libS.mkOpinionatedOption "configure and use Imaginary for preview generation";
+      # TODO: drop when removing 25.05 support
+      imaginary.enable = if (!hasImaginary) then
+        lib.mkEnableOption "Imaginary" // {
+          default = config.opinionatedDefaults;
+        }
+      else
+        lib.mkOption {  };
 
       configureMemories = lib.mkEnableOption "" // { description = "Whether to configure dependencies for Memories App."; };
 
@@ -22,8 +30,8 @@ in
 
       configurePreviewSettings = lib.mkOption {
         type = lib.types.bool;
-        default = cfg.configureImaginary;
-        defaultText = lib.literalExpression "config.services.nextcloud.configureImaginary";
+        default = cfg.imaginary.enable;
+        defaultText = lib.literalExpression "config.services.nextcloud.imaginary.enable";
         description = ''
           Whether to configure the preview settings to be more optimised for real world usage.
           By default this is enabled, when Imaginary is configured.
@@ -33,6 +41,7 @@ in
   };
 
   imports = [
+    (lib.mkRenamedOptionModule ["services" "nextcloud" "configureImaginary"] ["services" "nextcloud" "imaginary" "enable"])
     (lib.mkRemovedOptionModule ["services" "nextcloud" "configureRecognize"] ''
       configureRecognize has been removed in favor of using the recognize packages from NixOS like:
 
@@ -44,9 +53,8 @@ in
 
   config = lib.mkIf cfg.enable {
     services = {
-      imaginary = lib.mkIf cfg.configureImaginary {
+      imaginary = lib.mkIf cfg.imaginary.enable {
         enable = true;
-        address = "127.0.0.1";
         settings.return-size = true;
       };
 
@@ -59,6 +67,8 @@ in
             inherit (apps) previewgenerator;
           })
         ];
+
+        imaginary.enable = config.opinionatedDefaults;
 
         phpOptions = lib.mkIf cfg.recommendedDefaults {
           # recommended by nextcloud admin overview after some usage, default 8
@@ -76,7 +86,7 @@ in
             log_type = "file";
           })
 
-          (lib.mkIf cfg.configureImaginary {
+          (lib.mkIf cfg.imaginary.enable {
             enabledPreviewProviders = [
               # default from https://github.com/nextcloud/server/blob/master/config/config.sample.php#L1494-L1505
               ''OC\Preview\BMP''
@@ -93,7 +103,7 @@ in
               ''OC\Preview\Imaginary''
             ];
 
-            preview_imaginary_url = "http://127.0.0.1:${toString config.services.imaginary.port}/";
+            preview_imaginary_url = "http://${config.services.imaginary.address}:${toString config.services.imaginary.port}";
           })
 
           (lib.mkIf (cfg.configurePreviewSettings || cfg.configureMemories) {
