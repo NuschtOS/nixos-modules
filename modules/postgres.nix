@@ -278,7 +278,7 @@ in
             When the postgres os up and running execute those commands:
             sudo -u postgres vacuumdb --all --analyze-in-stages --missing-stats-only
             sudo -u postgres vacuumdb --all --analyze-only
-            sudo -u postgresq psql -f /var/lib/postgresql/18/update_extensions.sql
+            sudo -u postgres psql -f /var/lib/postgresql/18/update_extensions.sql
 
 
             Once you checked that everything works, you can delete the old cluster with:
