@@ -98,7 +98,7 @@ in
       };
 
       preSwitchChecks."checkForNetworkKernelModules" = lib.mkIf cfgn.checkKernelModules.enable /* bash */ ''
-        interfaces=$(ls /sys/class/net/)
+        interfaces=$(${lib.getExe' pkgs.coreutils "ls"} /sys/class/net/)
         for interface in $interfaces; do
           # skip special devices like lo or virtual devices
           readlink -f "/sys/class/net/$interface/device/driver" >/dev/null || continue
