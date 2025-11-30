@@ -7,6 +7,7 @@ let
   cfgb = config.services.postgresqlBackup;
   cfgu = config.services.postgresql.upgrade;
 
+  # TODO: clean up when dropping support for 25.05
   hasPGdumpAllOptionsAndPostgresqlSetup = lib.versionAtLeast lib.version "25.11pre";
   latestVersion = if pkgs?postgresql_18 then "18" else "17";
   currentMajorVersion = lib.versions.major cfg.package.version;
@@ -376,6 +377,7 @@ in
           "postgresql${lib.optionalString hasPGdumpAllOptionsAndPostgresqlSetup "-setup"}" = {
             postStart = lib.mkMerge [
               (lib.mkIf cfg.refreshCollation (lib.mkBefore /* bash */ ''
+                ### TODO: clean up when dropping support for 25.05
                 # copied from upstream due to the lack of extensibility
                 # TODO: improve this upstream?
                 PSQL="psql --port=${toString cfg.settings.port}"
@@ -384,11 +386,13 @@ in
                   if ! kill -0 "$MAINPID"; then exit 1; fi
                   sleep 0.1
                 done
+                ###
 
                 $PSQL -tAc 'ALTER DATABASE "template1" REFRESH COLLATION VERSION'
               ''))
 
               (lib.concatMapStrings (user: lib.optionalString (user.ensurePasswordFile != null) /* psql */ ''
+                # TODO: use psql when dropping support for 25.05
                 $PSQL -tA <<'EOF'
                   DO $$
                   DECLARE password TEXT;
@@ -409,6 +413,7 @@ in
                     "postgis" = "SELECT postgis_extensions_upgrade()";
                   }.${name} or ''ALTER EXTENSION "${ext}" UPDATE'';
                 in /* bash */ ''
+                  # TODO: use psql when dropping support for 25.05
                   $PSQL -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${ext}"'
                   $PSQL -tAd '${db}' -c '${extUpdateStatement ext}'
                 '') cfgInstalledExtensions
@@ -416,6 +421,7 @@ in
               ) cfg.databases)))
 
               (lib.mkIf cfg.refreshCollation (lib.concatStrings (map (db: /* bash */ ''
+                # TODO: use psql when dropping support for 25.05
                 $PSQL -tAc 'ALTER DATABASE "${db}" REFRESH COLLATION VERSION'
               '') cfg.databases)))
             ];

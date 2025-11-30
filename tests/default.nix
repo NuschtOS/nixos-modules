@@ -133,7 +133,10 @@ in toplevel // {
 
   nginx = mkTest {
     module = {
-      services.nginx.compileWithAWSlc = true;
+      services.nginx = {
+        enable = true;
+        tcpFastOpen = true;
+      };
     };
   };
 
