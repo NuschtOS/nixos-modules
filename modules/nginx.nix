@@ -13,8 +13,6 @@ in
       description = "Shared configuration snipped added to every virtualHosts' extraConfig.";
     };
 
-    compileWithAWSlc = libS.mkOpinionatedOption "compile nginx with aws-lc as crypto library";
-
     configureQuic = lib.mkEnableOption "quic support in nginx";
 
     default404Server = {
@@ -78,13 +76,12 @@ in
             });
           };
         };
-
-        config.kTLS = lib.mkIf cfg.compileWithAWSlc false;
       }));
     };
   };
 
   imports = [
+    (lib.mkRemovedOptionModule [ "services" "nginx" "compileWithAWSlc" ] "aws-lc support has been removed as recommendedTlsSettings on NixOS 25.11 is not compatible with it.")
     (lib.mkRemovedOptionModule [ "services" "nginx" "generateDhparams" ] "Self generating dhparams is not recommended and no longer necessary since TLS 1.2.")
     (lib.mkRenamedOptionModule [ "services" "nginx" "allCompression" ] [ "services" "nginx" "allRecommendOptions" ])
     (lib.mkRenamedOptionModule [ "services" "nginx" "quic" "bpf" ] [ "services" "nginx" "enableQuicBPF" ])
@@ -99,10 +96,6 @@ in
       {
         assertion = (lib.length (lib.attrNames hostConfig.locations)) == 0 -> hostConfig.root == null;
         message = "Use ${name}.locations./.root instead of ${name}.root to properly apply .locations.*.extraConfig set by `services.nginx.hstsHeader.enable`.";
-      }
-      {
-        assertion = cfg.compileWithAWSlc -> !hostConfig.kTLS;
-        message = "${name} uses kTLS which is incompatible with aws-lc.";
       }
     ]) cfg.virtualHosts));
 
@@ -151,44 +144,7 @@ in
         # quic bpf only allows some reloads and then prints errors on wall
         enableQuicBPF = lib.mkIf (cfg.configureQuic && !cfg.enableReload) true;
 
-        package = let
-          overrideNginx = pkg:
-            if cfg.compileWithAWSlc then
-              (pkg.override {
-                openssl = pkgs.aws-lc;
-                # some advanced regex's cause nginx to crash with:
-                # traps: nginx[xxxxxx] trap invalid opcode ip:7fa6c23ebe79 sp:7ffcceaaa9e0 error:0 in memfd:sljit[1e79,7fa6c23ea000+10000]
-                pcre2 = pkgs.pcre2.override { withJitSealloc = false; };
-              }).overrideAttrs ({ patches ? [ ], ... }: {
-                patches = patches ++ lib.optionals (lib.versionOlder pkg.version "1.29.2") [
-                  (let
-                    mjMn = lib.versions.majorMinor;
-                    # nginx 1.29 is supported since https://github.com/aws/aws-lc/commit/050d696415f2b7a07fc791ded31f5e12ec82f5fe
-                    patchVersion = if lib.any (v: mjMn pkg.version == v) ["1.29"] && lib.any (v: mjMn pkgs.aws-lc.version == v) ["1.50" "1.56"] then
-                      "1.53.1"
-                    # aws-lc 1.53+ wants nginx 1.28
-                    else if lib.any (v: mjMn pkg.version == v) ["1.27" "1.28"] && lib.any (v: mjMn pkgs.aws-lc.version == v) ["1.56"] then
-                      "1.52.0"
-                    else
-                      pkgs.aws-lc.version;
-                  in pkgs.fetchpatch {
-                    url = "https://github.com/aws/aws-lc/raw/refs/tags/v${patchVersion}/tests/ci/integration/nginx_patch/aws-lc-nginx.patch";
-                    name = "aws-lc-${patchVersion}-nginx-${pkg.version}.patch";
-                    hash =
-                      if patchVersion == "1.53.1" then
-                        "sha256-WDNJqr4jiDuU869puFyjfyEvlJO3ZiWLwhX9GWnnJgc="
-                      else if patchVersion == "1.52.0" then
-                        "sha256-b7J13m3+A92H7vvGZ2aujwB855IKz7vUEmTMuL6XzuQ="
-                      else if patchVersion == "1.50.0" then
-                        "sha256-6OPLpt0hVDPdG70eJrwehwcX3i9N5lkvaeVaAjFSByM="
-                      else
-                        throw "aws-lc version ${pkgs.aws-lc.version} in combination with nginx version ${pkg.version} is not supported.";
-                  })
-                ];
-              })
-            else
-              pkg;
-        in lib.mkIf (cfg.configureQuic || cfg.compileWithAWSlc || cfg.recommendedDefaults) (overrideNginx (
+        package = lib.mkIf (cfg.configureQuic || cfg.recommendedDefaults) (
           if cfg.configureQuic then
             pkgs.nginxQuic
           else
@@ -197,7 +153,7 @@ in
               pkgs.nginxMainline
             else
               pkgs.nginx
-        ));
+        );
 
         recommendedBrotliSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
         recommendedGzipSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
@@ -235,7 +191,7 @@ in
           in
           lib.mkIf (cfg.recommendedDefaults || cfg.default404Server.enable || cfg.configureQuic) {
             "_" = {
-              kTLS = lib.mkIf (cfg.recommendedDefaults && !cfg.compileWithAWSlc) true;
+              kTLS = lib.mkIf cfg.recommendedDefaults true;
               reuseport = lib.mkIf (cfg.recommendedDefaults || cfg.configureQuic) true;
 
               default = lib.mkIf cfg.default404Server.enable true;
