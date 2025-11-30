@@ -116,7 +116,6 @@ in
         in
         {
           nginx = prev.nginx.override { inherit configureFlags; };
-          nginxQuic = prev.nginxQuic.override { inherit configureFlags; };
           nginxStable = prev.nginxStable.override { inherit configureFlags; };
           nginxMainline = prev.nginxMainline.override { inherit configureFlags; };
         })
@@ -145,14 +144,11 @@ in
         enableQuicBPF = lib.mkIf (cfg.configureQuic && !cfg.enableReload) true;
 
         package = lib.mkIf (cfg.configureQuic || cfg.recommendedDefaults) (
-          if cfg.configureQuic then
-            pkgs.nginxQuic
+          # use the newer version
+          if lib.versionOlder pkgs.nginx.version pkgs.nginxMainline.version then
+            pkgs.nginxMainline
           else
-            # use the newer version
-            if lib.versionOlder pkgs.nginx.version pkgs.nginxMainline.version then
-              pkgs.nginxMainline
-            else
-              pkgs.nginx
+            pkgs.nginx
         );
 
         recommendedBrotliSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
