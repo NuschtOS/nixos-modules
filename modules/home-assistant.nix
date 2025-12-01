@@ -42,9 +42,7 @@ in
           pyqrcode # for TOTP qrcode
         ];
       })).overrideAttrs ({ patches ? [ ], ... }: {
-        patches = patches ++ lib.optionals cfg.recommendedDefaults [
-          ./home-assistant-no-cloud.diff
-        ] ++ lib.optionals cfg.ldap.enable [
+        patches = patches ++ lib.optionals cfg.ldap.enable [
           # expand command_line authentication provider
           (final.fetchpatch {
             url = "https://github.com/home-assistant/core/pull/107419.diff";
