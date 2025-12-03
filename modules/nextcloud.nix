@@ -3,21 +3,11 @@
 let
   cfg = config.services.nextcloud;
   inherit (config.services.nextcloud.package.packages) apps;
-
-  hasImaginary = lib.versionAtLeast lib.version "25.11pre";
 in
 {
   options = {
     services.nextcloud = {
       recommendedDefaults = libS.mkOpinionatedOption "set recommended default settings";
-
-      # TODO: drop when removing 25.05 support
-      imaginary.enable = if (!hasImaginary) then
-        lib.mkEnableOption "Imaginary" // {
-          default = config.opinionatedDefaults;
-        }
-      else
-        lib.mkOption {  };
 
       configureMemories = lib.mkEnableOption "" // { description = "Whether to configure dependencies for Memories App."; };
 
