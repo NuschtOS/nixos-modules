@@ -1,3 +1,5 @@
+# TODO: somehow safely deprecate this
+
 { config, lib, libS, ... }:
 
 let
