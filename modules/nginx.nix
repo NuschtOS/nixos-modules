@@ -7,12 +7,6 @@ in
   options.services.nginx = {
     allRecommendOptions = libS.mkOpinionatedOption "set all upstream options starting with `recommended`";
 
-    commonServerConfig = lib.mkOption {
-      type = lib.types.lines;
-      default = "";
-      description = "Shared configuration snipped added to every virtualHosts' extraConfig.";
-    };
-
     configureQuic = lib.mkEnableOption "quic support in nginx";
 
     default404Server = {
@@ -72,7 +66,7 @@ in
               options.extraConfig = lib.mkOption { };
               config.extraConfig = lib.optionalString cfg.hstsHeader.enable /* nginx */ ''
                 more_set_headers "Strict-Transport-Security: max-age=63072000; ${lib.optionalString cfg.hstsHeader.includeSubDomains "includeSubDomains; "}preload";
-              '' + cfg.commonServerConfig + cfgv.commonLocationsConfig;
+              '' + cfgv.commonLocationsConfig;
             });
           };
         };
@@ -81,6 +75,7 @@ in
   };
 
   imports = [
+    (lib.mkRemovedOptionModule [ "services" "nginx" "commonServerConfig" ] "commonServerConfig has been broken for almost 2 years and wasn't noticed. It was functional equal to commonLocationsConfig, so that option should probably be used instead.")
     (lib.mkRemovedOptionModule [ "services" "nginx" "compileWithAWSlc" ] "aws-lc support has been removed as recommendedTlsSettings on NixOS 25.11 is not compatible with it.")
     (lib.mkRemovedOptionModule [ "services" "nginx" "generateDhparams" ] "Self generating dhparams is not recommended and no longer necessary since TLS 1.2.")
     (lib.mkRenamedOptionModule [ "services" "nginx" "allCompression" ] [ "services" "nginx" "allRecommendOptions" ])
