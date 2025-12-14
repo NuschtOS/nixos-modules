@@ -331,7 +331,7 @@ in
           (lib.mkIf (nextcloud.notify_push.enable && nextcloud.notify_push.dbhost == "/run/postgresql") [ "nextcloud-notify_push" ])
           (lib.mkIf (nextcloud.enable && nextcloud.config.dbhost == "/run/postgresql") [ "phpfpm-nextcloud" ])
           (lib.mkIf (pretalx.enable && pretalx.settings.database.host == "/run/postgresql") [ "pretalx-web" "pretalx-worker" ])
-          (lib.mkIf (vaultwarden.enable && (lib.hasInfix "?host=/run/postgresql" vaultwarden.config.DATABASE_URL)) [ "vaultwarden" ])
+          (lib.mkIf (vaultwarden.enable && (lib.hasInfix "?host=/run/postgresql" (vaultwarden.config.DATABASE_URL or ""))) [ "vaultwarden" ])
         ];
       };
 
