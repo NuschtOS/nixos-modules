@@ -321,7 +321,7 @@ in
           (lib.mkIf (hydra.enable && (!lib.hasInfix ";host=" hydra.dbi)) [
             "hydra-evaluator" "hydra-notify" "hydra-send-stats" "hydra-update-gc-roots.service" "hydra-update-gc-roots.timer" "hydra-queue-runner" "hydra-server"
           ])
-          (lib.mkIf (mastodon.enable && mastodon.database.host == "/run/postgresql") [ "mastodon-sidekiq-all" "mastodon-streaming.target" "mastodon-web"])
+          (lib.mkIf (mastodon.enable && mastodon.database.host == "/run/postgresql") [ "mastodon-sidekiq-all" "mastodon-streaming.target" "mastodon-web" ])
           # assume that when host is set, which is not the default, the database is none local
           (lib.mkIf (matrix-synapse.enable && (!lib.hasAttr "host" matrix-synapse.settings.database.args)) [ "matrix-synapse" ])
           (lib.mkIf (mediagoblin.enable && lib.hasPrefix "postgresql:///" mediagoblin.settings.mediagoblin.sql_engine) [ "mediagoblin-celeryd" "mediagoblin-paster" ])
@@ -332,6 +332,7 @@ in
           (lib.mkIf (nextcloud.enable && nextcloud.config.dbhost == "/run/postgresql") [ "phpfpm-nextcloud" ])
           (lib.mkIf (pretalx.enable && pretalx.settings.database.host == "/run/postgresql") [ "pretalx-web" "pretalx-worker" ])
           (lib.mkIf (vaultwarden.enable && (lib.hasInfix "?host=/run/postgresql" (vaultwarden.config.DATABASE_URL or ""))) [ "vaultwarden" ])
+          (lib.mkIf (zammad.enable && zammad.database.createLocally) [ "zammad-web" "zammad-websocket" "zammad-worker" ])
         ];
       };
 
