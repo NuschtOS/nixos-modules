@@ -323,6 +323,7 @@ in
           (lib.mkIf (hydra.enable && (!lib.hasInfix ";host=" hydra.dbi)) [
             "hydra-evaluator" "hydra-notify" "hydra-send-stats" "hydra-update-gc-roots.service" "hydra-update-gc-roots.timer" "hydra-queue-runner" "hydra-server"
           ])
+          (lib.mkIf mailman.enable [ "mailman" "mailman-uwsgi" ])
           (lib.mkIf (mastodon.enable && mastodon.database.host == "/run/postgresql") [ "mastodon-sidekiq-all" "mastodon-streaming.target" "mastodon-web" ])
           # assume that when host is set, which is not the default, the database is none local
           (lib.mkIf (matrix-synapse.enable && (!lib.hasAttr "host" matrix-synapse.settings.database.args)) [ "matrix-synapse" ])
