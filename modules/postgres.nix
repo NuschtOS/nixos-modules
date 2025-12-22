@@ -253,7 +253,9 @@ in
         # postgresql version 18 defaults to checksums enabled
         # The Notes at https://www.postgresql.org/docs/18/app-pgchecksums.html mention that it is safe to enable them even when a failure would happen.
         + lib.optionalString (lib.versionOlder currentMajorVersion "18" && lib.versionAtLeast newMajorVersion "18") ''
-          pg_checksums --pgdata ${oldData} --enable --progress
+          if ! pg_checksums --pgdata ${oldData} --enable --check --progress; then
+            pg_checksums --pgdata ${oldData} --enable --progress
+          fi
         '' + ''
           install -d -m 0700 -o postgres -g postgres "${newData}"
           cd "${newData}"
@@ -321,6 +323,7 @@ in
           (lib.mkIf (hydra.enable && (!lib.hasInfix ";host=" hydra.dbi)) [
             "hydra-evaluator" "hydra-notify" "hydra-send-stats" "hydra-update-gc-roots.service" "hydra-update-gc-roots.timer" "hydra-queue-runner" "hydra-server"
           ])
+          (lib.mkIf mailman.enable [ "mailman" "mailman-uwsgi" ])
           (lib.mkIf (mastodon.enable && mastodon.database.host == "/run/postgresql") [ "mastodon-sidekiq-all" "mastodon-streaming.target" "mastodon-web" ])
           # assume that when host is set, which is not the default, the database is none local
           (lib.mkIf (matrix-synapse.enable && (!lib.hasAttr "host" matrix-synapse.settings.database.args)) [ "matrix-synapse" ])
