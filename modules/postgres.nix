@@ -253,7 +253,9 @@ in
         # postgresql version 18 defaults to checksums enabled
         # The Notes at https://www.postgresql.org/docs/18/app-pgchecksums.html mention that it is safe to enable them even when a failure would happen.
         + lib.optionalString (lib.versionOlder currentMajorVersion "18" && lib.versionAtLeast newMajorVersion "18") ''
-          pg_checksums --pgdata ${oldData} --enable --progress
+          if ! pg_checksums --pgdata ${oldData} --enable --check --progress; then
+            pg_checksums --pgdata ${oldData} --enable --progress
+          fi
         '' + ''
           install -d -m 0700 -o postgres -g postgres "${newData}"
           cd "${newData}"
