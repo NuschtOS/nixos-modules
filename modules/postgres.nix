@@ -450,15 +450,14 @@ in
           (lib.mkDefault opt."${name}".timerConfig.default)
           cfg."${name}".timerConfig
         ];
-        postgresqlTarget = if lib.hasAttr "postgresql" config.systemd.targets then "postgresql.target" else "postgresql.service";
       in {
         postgresql-pg-repack = lib.mkIf cfg.pgRepackTimer.enable {
-          after = [ postgresqlTarget ];
+          after = [ "postgresql.target" ];
           timerConfig = mkTimerConfig "pgRepackTimer";
           wantedBy = [ "timers.target" ];
         };
         postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
-          after = [ postgresqlTarget ];
+          after = [ "postgresql.target" ];
           timerConfig = mkTimerConfig "vacuumAnalyzeTimer";
           wantedBy = [ "timers.target" ];
         };
