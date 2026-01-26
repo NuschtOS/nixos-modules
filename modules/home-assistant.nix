@@ -120,7 +120,8 @@ in
         }+ "/bin/ldap-auth.sh";
         args = [
           # https://github.com/bob1de/ldap-auth-sh/blob/master/examples/home-assistant.cfg
-          (pkgs.writeText "config.cfg" /* shell */ ''
+          (pkgs.writeText "config.cfg" /* bash */ ''
+            PATH=$PATH:${lib.makeBinPath (with pkgs; [ coreutils gnused ])}
             ATTRS="${ldap.userField} ${ldap.roleField} isMemberOf"
             CLIENT="ldapsearch"
             DEBUG=0
@@ -134,12 +135,12 @@ in
             on_auth_success() {
               # print the meta entries for use in HA
               if [ ! -z "$NAME_ATTR" ]; then
-                name=$(echo "$output" | ${lib.getExe pkgs.gnused} -nr "s/^\s*${ldap.userField}:\s*(.+)\s*\$/\1/Ip")
+                name=$(echo "$output" | gnused -nr "s/^\s*${ldap.userField}:\s*(.+)\s*\$/\1/Ip")
                 [ -z "$name" ] || echo "$name = $name"
-                fullname=$(echo "$output" | ${lib.getExe pkgs.gnused} -nr "s/^\s*${ldap.roleField}:\s*(.+)\s*\$/\1/Ip")
+                fullname=$(echo "$output" | gnused -nr "s/^\s*${ldap.roleField}:\s*(.+)\s*\$/\1/Ip")
                 [ -z "$fullname" ] || echo "fullname = $fullname"
                 ${lib.optionalString (cfg.ldap.adminGroup != null) /* bash */ ''
-                group=$(echo "$output" | ${lib.getExe pkgs.gnused} -nr "s/^\s*isMemberOf: cn=${cfg.ldap.adminGroup}\s*(.+)\s*\$/\1/Ip")
+                group=$(echo "$output" | gnused -nr "s/^\s*isMemberOf: cn=${cfg.ldap.adminGroup}\s*(.+)\s*\$/\1/Ip")
                 [ -z "$group" ] && echo "group = system-users" || echo "group = system-admin"
                 ''}
               fi
