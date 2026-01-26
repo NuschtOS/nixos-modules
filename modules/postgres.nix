@@ -428,6 +428,7 @@ in
         };
 
         postgresql-pg-repack = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
+          after = [ "postgresql.target" ];
           description = "Repack all PostgreSQL databases";
           serviceConfig = {
             ExecStart =  "${lib.getExe cfg.package.pkgs.pg_repack} --port=${builtins.toString cfg.settings.port} --all";
