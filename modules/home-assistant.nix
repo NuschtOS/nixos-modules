@@ -139,7 +139,7 @@ in
                 [ -z "$name" ] || echo "name = $name"
                 fullname=$(echo "$output" | sed -nr "s/^\s*${ldap.roleField}:\s*(.+)\s*\$/\1/Ip")
                 if [[ "$fullname" == :* ]]; then
-                  fullname=$(echo "''${input_str#: }" | base64 -d)
+                  fullname=$(echo "''${fullname#: }" | base64 -d)
                 fi
                 [ -z "$fullname" ] || echo "fullname = $fullname"
                 ${lib.optionalString (cfg.ldap.adminGroup != null) /* bash */ ''
