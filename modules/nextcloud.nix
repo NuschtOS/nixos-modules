@@ -106,15 +106,6 @@ in
             ];
           })
 
-          (lib.mkIf cfg.configureMemories {
-            "memories.exiftool_no_local" = false;
-            "memories.exiftool" = "${apps.memories}/bin-ext/exiftool/exiftool";
-            "memories.vod.ffmpeg" = "${apps.memories}/bin-ext/ffmpeg";
-            "memories.vod.ffprobe" = "${apps.memories}/bin-ext/ffprobe";
-            "memories.vod.path" = "${apps.memories}/bin-ext/go-vod";
-            "memories.vod.vaapi" = lib.mkIf cfg.configureMemoriesVaapi true;
-          })
-
           (lib.mkIf cfg.configurePreviewSettings {
             enabledPreviewProviders = [
               # https://github.com/nextcloud/server/tree/master/lib/private/Preview
