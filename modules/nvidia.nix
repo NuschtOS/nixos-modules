@@ -10,7 +10,6 @@ in
 
   config = lib.mkIf cfg.nvidiaGPU {
     environment.sessionVariables = {
-      # source https://github.com/elFarto/nvidia-vaapi-driver#firefox
       LIBVA_DRIVER_NAME = "nvidia";
     };
 
