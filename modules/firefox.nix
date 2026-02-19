@@ -10,22 +10,21 @@ in
     };
   };
 
+  # see https://github.com/elFarto/nvidia-vaapi-driver#firefox
   config = lib.mkIf cfg.hardwareAcceleration {
     environment = {
-      # source https://github.com/elFarto/nvidia-vaapi-driver#firefox
       etc."libva.conf".text = ''
         LIBVA_MESSAGING_LEVEL=1
       '';
 
-      # source https://github.com/elFarto/nvidia-vaapi-driver#firefox
       sessionVariables.MOZ_DISABLE_RDD_SANDBOX = 1;
     };
 
     programs.firefox.preferences = {
-      # source https://github.com/elFarto/nvidia-vaapi-driver#firefox
-      "media.ffmpeg.vaapi.enabled" = true;
-      "media.rdd-ffmpeg.enabled" = true;
       "gfx.x11-egl.force-enabled" = true;
+      "media.ffmpeg.vaapi.enabled" = true;
+      "media.hardware-video-decoding.force-enabled" = true;
+      "media.rdd-ffmpeg.enabled" = true;
     };
   };
 }
