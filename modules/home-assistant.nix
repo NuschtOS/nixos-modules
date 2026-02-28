@@ -86,8 +86,9 @@ in
           };
         };
 
-        # see https://github.com/zigpy/zigpy/pull/1340
-        zha.zigpy_config.ota.z2m_remote_index = "https://raw.githubusercontent.com/Koenkk/zigbee-OTA/master/index.json";
+        # see https://github.com/zigpy/zigpy-ota#for-end-users and https://github.com/zigpy/zigpy/pull/1340
+        # TODO: drop with 26.05
+        zha.zigpy_config.ota.z2m_remote_index = lib.mkIf (lib.versionAtLeast cfg.package.version "2026.01") "https://raw.githubusercontent.com/Koenkk/zigbee-OTA/master/index.json";
       };
     })
 
