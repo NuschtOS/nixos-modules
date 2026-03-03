@@ -155,7 +155,9 @@ in
               })
             ];
 
-            vendorHash = if lib.versionAtLeast version "2.43" then
+            vendorHash = if lib.versionAtLeast version "2.45" then
+              "sha256-IlBZzlJA6IgEVIe9NmwA+a8hixFJ9Z+jdRn/iJZe8r4="
+            else if lib.versionAtLeast version "2.43" then
               "sha256-ywhxsIy1/56jfgMdB+hnd4JwEsuG+630LSJ/xx4wiDw="
             else if lib.versionAtLeast version "2.42" then
               "sha256-yBAr1pDhaJChtz8km9eDISc9aU+2JtKhetlS8CbClaE="
