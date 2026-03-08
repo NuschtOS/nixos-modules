@@ -22,7 +22,8 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  # TODO: remove workaround with 26.05
+  config = lib.mkIf (cfg.cache.enable or cfg.enable) {
     services = {
       harmonia.settings = lib.mkIf cfg.recommendedDefaults {
         bind = "[::]:${toString cfg.port}";
