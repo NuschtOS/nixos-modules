@@ -5,6 +5,7 @@ let
 in
 {
   options = {
+    # TODO: Move those under harmonia.cache with 26.05
     services.harmonia = {
       configureNginx = lib.mkEnableOption "" // { description = "Whether to configure Nginx to serve Harmonia."; };
 
