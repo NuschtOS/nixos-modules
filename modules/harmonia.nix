@@ -26,9 +26,15 @@ in
   # TODO: remove workaround with 26.05
   config = lib.mkIf (cfg.cache.enable or cfg.enable) {
     services = {
-      harmonia.settings = lib.mkIf cfg.recommendedDefaults {
-        bind = "[::]:${toString cfg.port}";
-        priority = 50; # prefer cache.nixos.org
+      harmonia = let
+        settings = lib.mkIf cfg.recommendedDefaults {
+          bind = "[::]:${toString cfg.port}";
+          priority = 50; # prefer cache.nixos.org
+        };
+      in if cfg?cache?enable then {
+        cache = { inherit settings; };
+      } else {
+        inherit settings;
       };
 
       nginx = lib.mkIf cfg.configureNginx {
