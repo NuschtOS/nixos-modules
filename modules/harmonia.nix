@@ -31,7 +31,7 @@ in
           bind = "[::]:${toString cfg.port}";
           priority = 50; # prefer cache.nixos.org
         };
-      in if cfg?cache?enable then {
+      in if cfg?cache then {
         cache = { inherit settings; };
       } else {
         inherit settings;
