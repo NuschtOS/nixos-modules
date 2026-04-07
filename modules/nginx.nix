@@ -101,6 +101,10 @@ in
         assertion = (lib.length (lib.attrNames hostConfig.locations)) == 0 -> hostConfig.root == null;
         message = "Use ${name}.locations./.root instead of ${name}.root to properly apply .locations.*.extraConfig set by `services.nginx.hstsHeader.enable`.";
       }
+      {
+        assertion = !lib.any (l: lib.hasInfix "::" l.addr && (lib.hasSuffix "::" l.addr || lib.hasPrefix "::" l.addr)) hostConfig.listen;
+        message = "${name} contains an IPv6 listen directive without square brackets `[]` which nginx does not understand!";
+      }
     ]) cfg.virtualHosts));
 
     boot.kernel.sysctl = lib.mkIf cfg.tcpFastOpen {
