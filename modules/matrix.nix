@@ -56,7 +56,9 @@ in
       synapse-admin = {
         enable = lib.mkEnableOption "" // { description = "Whether to configure Synapse Admin by etkecc to be served at the matrix servers domain under the /admin path."; };
 
-        package = lib.mkPackageOption pkgs "synapse-admin-etkecc" { };
+        package = lib.mkPackageOption pkgs "ketesa" { } // {
+          default = pkgs.ketesa or pkgs.synapse-admin-etkecc;
+        };
       };
 
       recommendedDefaults = libS.mkOpinionatedOption "set recommended and secure default settings";
