@@ -17,7 +17,7 @@ lib.mapAttrs (name: value: let
   inherit (value.config.system.build) toplevel;
 in toplevel // {
   inherit (value) config options;
-})({
+}) {
   no-config = mkTest { };
 
   # https://github.com/NuschtOS/nixos-modules/issues/2
@@ -175,4 +175,4 @@ in toplevel // {
       };
     };
   };
-})
+}
