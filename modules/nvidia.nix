@@ -17,7 +17,8 @@ in
       graphics.enable = true;
       nvidia = {
         modesetting.enable = true;
-        nvidiaSettings = true;
+        # option defaults to true and only useful on graphical systems
+        nvidiaSettings = config.services.graphical-desktop.enable;
         open = true;
       };
     };
