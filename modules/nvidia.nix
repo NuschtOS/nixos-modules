@@ -18,6 +18,7 @@ in
       nvidia = {
         modesetting.enable = true;
         nvidiaSettings = true;
+        open = true;
       };
     };
 
