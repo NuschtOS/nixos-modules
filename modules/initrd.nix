@@ -58,13 +58,24 @@ in
       ];
 
       systemd.contents."/etc/profile" = lib.mkIf (cfg.luks.devices != { }) {
-        text = ''
-          echo "If the boot process does not continue in 5 seconds, try running:"
-          echo "  systemctl start default.target"
-        ''
-        + lib.concatMapAttrsStringSep "\n"
-          (volume: disk: "systemd-cryptsetup attach ${volume} ${disk.device}")
-          cfg.luks.devices;
+        text = let
+          help = ''
+            echo
+            echo
+            echo "If the boot process does not continue in 5 seconds, try running:"
+            echo "  systemctl default"
+            echo
+            echo "If that does not continue the boot, see if any units failed and try restarting them:"
+            echo "  systemctl --failed"
+            echo
+            echo
+          '';
+        in
+          help
+          + lib.concatMapAttrsStringSep "\n"
+            (volume: disk: "systemd-cryptsetup attach ${volume} ${disk.device}")
+            cfg.luks.devices
+          + help;
       };
     };
 
