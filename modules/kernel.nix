@@ -31,7 +31,7 @@
       "befs"
       "cramfs"
       "efs"
-      "erofs"
+      # "erofs" used by microvm
       "exofs"
       "freevxfs"
       "f2fs"
