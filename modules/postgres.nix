@@ -20,6 +20,14 @@ let
 
   # withJIT installs the postgres' jit output as an extension but that is no shared object to load
   cfgInstalledExtensions = lib.filter (x: x != "postgresql") (map (e: lib.getName e) cfg.finalPackage.installedExtensions);
+
+  # TODO: upstream, this probably requires a new entry in passthru (passthru.libName ?) to pick if the object name doesn't match the plugin name or there are multiple
+  # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix#L81
+  getExtensionName = ext: {
+    pgvector = "vector";
+    postgis = "postgis-3";
+    vectorchord = "vchord";
+  }.${ext} or ext;
 in
 {
   options.services = {
@@ -45,6 +53,7 @@ in
         description = "List of extensions which are going to be installed.";
       };
 
+      # TODO: add installExtensionToDB
       installAllAvailableExtensions = libS.mkOpinionatedOption "install all extensions installed with `ALTER EXTENSION \"...\" UPDATE` or the extension equivalent custom SQL statements";
 
       ensureUsers = lib.mkOption {
@@ -301,14 +310,7 @@ in
         ];
         settings.shared_preload_libraries = lib.mkMerge [
           (lib.mkIf cfg.configurePgStatStatements [ "pg_stat_statements" ])
-          # TODO: upstream, this probably requires a new entry in passthru to pick if the object name doesn't match the plugin name or there are multiple
-          # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix#L81
-          (let
-            # NOTE: move into extensions passthru.libName when upstreaming
-            getSoOrFallback = ext:{
-              postgis = "postgis-3";
-            }.${ext} or ext;
-          in lib.mkIf cfg.preloadAllInstalledExtensions (map getSoOrFallback cfgInstalledExtensions))
+          (lib.mkIf cfg.preloadAllInstalledExtensions (map getExtensionName cfgInstalledExtensions))
         ];
         upgrade.stopServices = with config.services; lib.mkMerge [
           (lib.mkIf (atuin.enable && atuin.database.createLocally) [ "atuin" ])
@@ -410,9 +412,9 @@ in
                   # pg_repack cannot be updated but reinstalling it is safe
                   "pg_repack" = "DROP EXTENSION pg_repack CASCADE; CREATE EXTENSION pg_repack";
                   "postgis" = "SELECT postgis_extensions_upgrade()";
-                }.${name} or ''ALTER EXTENSION "${ext}" UPDATE'';
+                }.${name} or ''ALTER EXTENSION "${getExtensionName ext}" UPDATE'';
               in /* bash */ ''
-                psql -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${ext}"'
+                psql -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${getExtensionName ext}"'
                 psql -tAd '${db}' -c '${extUpdateStatement ext}'
               '') cfgInstalledExtensions
               )
