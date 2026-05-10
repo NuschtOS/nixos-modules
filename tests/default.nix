@@ -151,7 +151,6 @@ in toplevel // {
       services.postgresql = {
         enable = true;
         configurePgStatStatements = true;
-        installAllAvailableExtensions = true;
         preloadAllInstalledExtensions = true;
       };
     };

@@ -20,11 +20,19 @@ let
 
   # withJIT installs the postgres' jit output as an extension but that is no shared object to load
   cfgInstalledExtensions = lib.filter (x: x != "postgresql") (map (e: lib.getName e) cfg.finalPackage.installedExtensions);
+
+  # TODO: upstream, this probably requires a new entry in passthru (passthru.libName ?) to pick if the object name doesn't match the plugin name or there are multiple
+  # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix#L81
+  getExtensionName = ext: {
+    pgvector = "vector";
+    postgis = "postgis-3";
+    vectorchord = "vchord";
+  }.${ext} or ext;
 in
 {
   options.services = {
     postgresql = {
-      configurePgStatStatements = libS.mkOpinionatedOption "configure and enable pg_stat_statements extension";
+      configurePgStatStatements = libS.mkOpinionatedOption "configure and enable pg_stat_statements extension in all databases";
 
       databases = lib.mkOption {
         type = lib.types.listOf lib.types.str;
@@ -39,13 +47,15 @@ in
         '';
       };
 
-      extensionToInstall = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
-        defaultText = lib.literalExpression "config.services.postgresql.finalPackage.installedExtensions";
-        description = "List of extensions which are going to be installed.";
+      extensionsToInstall = lib.mkOption {
+        type = with lib.types; attrsOf (listOf str);
+        default = { };
+        example = {
+          immich = [ "cube" "earthdistance" "pg_trgm" "unaccent" "uuid-ossp" "vector" "vchord" ];
+          mobilizon = [ "pg_trgm" "postgis" "unaccent" ];
+        };
+        description = "A mapping of which database gets which extensions installed.";
       };
-
-      installAllAvailableExtensions = libS.mkOpinionatedOption "install all extensions installed with `ALTER EXTENSION \"...\" UPDATE` or the extension equivalent custom SQL statements";
 
       ensureUsers = lib.mkOption {
         type = lib.types.listOf (lib.types.submodule {
@@ -193,7 +203,9 @@ in
   };
 
   imports = [
-    (lib.mkRenamedOptionModule ["services" "postgresql" "enableAllPreloadedLibraries"] ["services" "postgresql" "installAllAvailableExtensions"])
+    (lib.mkRemovedOptionModule ["services" "postgresql" "enableAllPreloadedLibraries"] "Use services.postgresql.extensionsToInstall instead.")
+    (lib.mkRemovedOptionModule ["services" "postgresql" "installAllAvailableExtensions"] "Use services.postgresql.extensionsToInstall instead.")
+    (lib.mkRenamedOptionModule ["services" "postgresql" "extensionToInstall"] ["services" "postgresql" "extensionsToInstall"])
     (lib.mkRenamedOptionModule ["services" "postgresql" "preloadAllExtensions"] ["services" "postgresql" "preloadAllInstalledExtensions"])
   ];
 
@@ -295,20 +307,12 @@ in
         databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
         enableJIT = lib.mkIf cfg.recommendedDefaults true;
         extensions = lib.mkIf cfg.pgRepackTimer.enable (ps: with ps; [ pg_repack ]);
-        extensionToInstall = lib.mkMerge [
-          (lib.mkIf cfg.configurePgStatStatements [ "pg_stat_statements" ])
-          cfgInstalledExtensions
-        ];
+        extensionsToInstall = {
+          immich = lib.mkIf config.services.immich.enable  [ "cube" "earthdistance" "pg_trgm" "unaccent" "uuid-ossp" "vector" "vchord" ];
+        };
         settings.shared_preload_libraries = lib.mkMerge [
           (lib.mkIf cfg.configurePgStatStatements [ "pg_stat_statements" ])
-          # TODO: upstream, this probably requires a new entry in passthru to pick if the object name doesn't match the plugin name or there are multiple
-          # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix#L81
-          (let
-            # NOTE: move into extensions passthru.libName when upstreaming
-            getSoOrFallback = ext:{
-              postgis = "postgis-3";
-            }.${ext} or ext;
-          in lib.mkIf cfg.preloadAllInstalledExtensions (map getSoOrFallback cfgInstalledExtensions))
+          (lib.mkIf cfg.preloadAllInstalledExtensions (map getExtensionName cfgInstalledExtensions))
         ];
         upgrade.stopServices = with config.services; lib.mkMerge [
           (lib.mkIf (atuin.enable && atuin.database.createLocally) [ "atuin" ])
@@ -323,6 +327,7 @@ in
           (lib.mkIf (hydra.enable && (!lib.hasInfix ";host=" hydra.dbi)) [
             "hydra-evaluator" "hydra-notify" "hydra-send-stats" "hydra-update-gc-roots.service" "hydra-update-gc-roots.timer" "hydra-queue-runner" "hydra-server"
           ])
+          (lib.mkIf (immich.enable && immich.database.host == "/run/postgresql") [ "immich-machine-learning" "immich-server" ])
           (lib.mkIf mailman.enable [ "mailman" "mailman-uwsgi" ])
           (lib.mkIf (mastodon.enable && mastodon.database.host == "/run/postgresql") [ "mastodon-sidekiq-all" "mastodon-streaming.target" "mastodon-web" ])
           # assume that when host is set, which is not the default, the database is none local
@@ -404,19 +409,24 @@ in
 
             # install/update pg_stat_statements extension in all databases
             # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
-            (lib.mkIf (cfg.installAllAvailableExtensions || cfg.configurePgStatStatements) (lib.concatStrings (map (db:
-              (lib.concatMapStringsSep "\n" (ext: let
+            (lib.mkIf cfg.configurePgStatStatements (lib.concatStrings (map (db: /* bash */ ''
+              psql -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "pg_stat_statements"'
+              psql -tAd '${db}' -c 'ALTER EXTENSION "pg_stat_statements" UPDATE'
+            '') cfg.databases)))
+
+            # install/update extensions per database as configured in extensionsToInstall
+            (lib.concatStrings (lib.mapAttrsToList (db: exts:
+              lib.concatMapStrings (ext: let
                 extUpdateStatement = name: {
                   # pg_repack cannot be updated but reinstalling it is safe
                   "pg_repack" = "DROP EXTENSION pg_repack CASCADE; CREATE EXTENSION pg_repack";
                   "postgis" = "SELECT postgis_extensions_upgrade()";
-                }.${name} or ''ALTER EXTENSION "${ext}" UPDATE'';
+                }.${name} or ''ALTER EXTENSION "${getExtensionName ext}" UPDATE'';
               in /* bash */ ''
-                psql -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${ext}"'
+                psql -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${getExtensionName ext}"'
                 psql -tAd '${db}' -c '${extUpdateStatement ext}'
-              '') cfgInstalledExtensions
-              )
-            ) cfg.databases)))
+              '') exts
+            ) cfg.extensionsToInstall))
 
             (lib.mkIf cfg.refreshCollation (lib.concatStrings (map (db: /* bash */ ''
               psql -tAc 'ALTER DATABASE "${db}" REFRESH COLLATION VERSION'
