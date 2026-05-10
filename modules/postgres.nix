@@ -307,6 +307,9 @@ in
         databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
         enableJIT = lib.mkIf cfg.recommendedDefaults true;
         extensions = lib.mkIf cfg.pgRepackTimer.enable (ps: with ps; [ pg_repack ]);
+        extensionsToInstall = {
+          immich = lib.mkIf config.services.immich.enable  [ "cube" "earthdistance" "pg_trgm" "unaccent" "uuid-ossp" "vector" "vchord" ];
+        };
         settings.shared_preload_libraries = lib.mkMerge [
           (lib.mkIf cfg.configurePgStatStatements [ "pg_stat_statements" ])
           (lib.mkIf cfg.preloadAllInstalledExtensions (map getExtensionName cfgInstalledExtensions))
@@ -324,6 +327,7 @@ in
           (lib.mkIf (hydra.enable && (!lib.hasInfix ";host=" hydra.dbi)) [
             "hydra-evaluator" "hydra-notify" "hydra-send-stats" "hydra-update-gc-roots.service" "hydra-update-gc-roots.timer" "hydra-queue-runner" "hydra-server"
           ])
+          (lib.mkIf (immich.enable && immich.database.host == "/run/postgresql") [ "immich-machine-learning" "immich-server" ])
           (lib.mkIf mailman.enable [ "mailman" "mailman-uwsgi" ])
           (lib.mkIf (mastodon.enable && mastodon.database.host == "/run/postgresql") [ "mastodon-sidekiq-all" "mastodon-streaming.target" "mastodon-web" ])
           # assume that when host is set, which is not the default, the database is none local
