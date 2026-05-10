@@ -32,7 +32,7 @@ in
 {
   options.services = {
     postgresql = {
-      configurePgStatStatements = libS.mkOpinionatedOption "configure and enable pg_stat_statements extension";
+      configurePgStatStatements = libS.mkOpinionatedOption "configure and enable pg_stat_statements extension in all databases";
 
       databases = lib.mkOption {
         type = lib.types.listOf lib.types.str;
@@ -47,14 +47,15 @@ in
         '';
       };
 
-      extensionToInstall = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
-        defaultText = lib.literalExpression "config.services.postgresql.finalPackage.installedExtensions";
-        description = "List of extensions which are going to be installed.";
+      extensionsToInstall = lib.mkOption {
+        type = with lib.types; attrsOf (listOf str);
+        default = { };
+        example = {
+          immich = [ "cube" "earthdistance" "pg_trgm" "unaccent" "uuid-ossp" "vector" "vchord" ];
+          mobilizon = [ "pg_trgm" "postgis" "unaccent" ];
+        };
+        description = "A mapping of which database gets which extensions installed.";
       };
-
-      # TODO: add installExtensionToDB
-      installAllAvailableExtensions = libS.mkOpinionatedOption "install all extensions installed with `ALTER EXTENSION \"...\" UPDATE` or the extension equivalent custom SQL statements";
 
       ensureUsers = lib.mkOption {
         type = lib.types.listOf (lib.types.submodule {
@@ -202,7 +203,9 @@ in
   };
 
   imports = [
-    (lib.mkRenamedOptionModule ["services" "postgresql" "enableAllPreloadedLibraries"] ["services" "postgresql" "installAllAvailableExtensions"])
+    (lib.mkRemovedOptionModule ["services" "postgresql" "enableAllPreloadedLibraries"] "Use services.postgresql.extensionsToInstall instead.")
+    (lib.mkRemovedOptionModule ["services" "postgresql" "installAllAvailableExtensions"] "Use services.postgresql.extensionsToInstall instead.")
+    (lib.mkRenamedOptionModule ["services" "postgresql" "extensionToInstall"] ["services" "postgresql" "extensionsToInstall"])
     (lib.mkRenamedOptionModule ["services" "postgresql" "preloadAllExtensions"] ["services" "postgresql" "preloadAllInstalledExtensions"])
   ];
 
@@ -304,10 +307,6 @@ in
         databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
         enableJIT = lib.mkIf cfg.recommendedDefaults true;
         extensions = lib.mkIf cfg.pgRepackTimer.enable (ps: with ps; [ pg_repack ]);
-        extensionToInstall = lib.mkMerge [
-          (lib.mkIf cfg.configurePgStatStatements [ "pg_stat_statements" ])
-          cfgInstalledExtensions
-        ];
         settings.shared_preload_libraries = lib.mkMerge [
           (lib.mkIf cfg.configurePgStatStatements [ "pg_stat_statements" ])
           (lib.mkIf cfg.preloadAllInstalledExtensions (map getExtensionName cfgInstalledExtensions))
@@ -406,8 +405,14 @@ in
 
             # install/update pg_stat_statements extension in all databases
             # based on https://git.catgirl.cloud/999eagle/dotfiles-nix/-/blob/main/modules/system/server/postgres/default.nix#L294-302
-            (lib.mkIf (cfg.installAllAvailableExtensions || cfg.configurePgStatStatements) (lib.concatStrings (map (db:
-              (lib.concatMapStringsSep "\n" (ext: let
+            (lib.mkIf cfg.configurePgStatStatements (lib.concatStrings (map (db: /* bash */ ''
+              psql -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "pg_stat_statements"'
+              psql -tAd '${db}' -c 'ALTER EXTENSION "pg_stat_statements" UPDATE'
+            '') cfg.databases)))
+
+            # install/update extensions per database as configured in extensionsToInstall
+            (lib.concatStrings (lib.mapAttrsToList (db: exts:
+              lib.concatMapStrings (ext: let
                 extUpdateStatement = name: {
                   # pg_repack cannot be updated but reinstalling it is safe
                   "pg_repack" = "DROP EXTENSION pg_repack CASCADE; CREATE EXTENSION pg_repack";
@@ -416,9 +421,8 @@ in
               in /* bash */ ''
                 psql -tAd '${db}' -c 'CREATE EXTENSION IF NOT EXISTS "${getExtensionName ext}"'
                 psql -tAd '${db}' -c '${extUpdateStatement ext}'
-              '') cfgInstalledExtensions
-              )
-            ) cfg.databases)))
+              '') exts
+            ) cfg.extensionsToInstall))
 
             (lib.mkIf cfg.refreshCollation (lib.concatStrings (map (db: /* bash */ ''
               psql -tAc 'ALTER DATABASE "${db}" REFRESH COLLATION VERSION'
