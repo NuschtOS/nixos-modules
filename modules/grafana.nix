@@ -161,6 +161,13 @@ in
     } ];
   };
 
+  config.systemd.services = lib.mkIf cfg.configurePostgres {
+    grafana = {
+      after = [ "postgresql.target" ];
+      requires = [ "postgresql.target" ];
+    };
+  };
+
   config.users.users = lib.mkIf (cfg.enable && cfg.configureNginx) {
     grafana.extraGroups = [ "nginx" ];
   };

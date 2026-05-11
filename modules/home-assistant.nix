@@ -85,10 +85,6 @@ in
             event_types = [ "call_service" ];
           };
         };
-
-        # see https://github.com/zigpy/zigpy-ota#for-end-users and https://github.com/zigpy/zigpy/pull/1340
-        # TODO: drop with 26.05
-        zha.zigpy_config.ota.z2m_remote_index = lib.mkIf (lib.versionAtLeast cfg.package.version "2026.01") "https://raw.githubusercontent.com/Koenkk/zigbee-OTA/master/index.json";
       };
     })
 
@@ -181,9 +177,16 @@ in
     } ];
   };
 
-  config.systemd.tmpfiles.rules = lib.mkIf (cfg.enable && cfg.recommendedDefaults) [
-    "f ${cfg.configDir}/automations.yaml 0444 hass hass"
-    "f ${cfg.configDir}/scenes.yaml 0444 hass hass"
-    "f ${cfg.configDir}/scripts.yaml 0444 hass hass"
-  ];
+  config.systemd = {
+    services.home-assistant = lib.mkIf (cfg.enable && cfg.configurePostgres) {
+      after = [ "postgresql.target" ];
+      requires = [ "postgresql.target" ];
+    };
+
+    tmpfiles.rules = lib.mkIf (cfg.enable && cfg.recommendedDefaults) [
+      "f ${cfg.configDir}/automations.yaml 0444 hass hass"
+      "f ${cfg.configDir}/scenes.yaml 0444 hass hass"
+      "f ${cfg.configDir}/scripts.yaml 0444 hass hass"
+    ];
+  };
 }
