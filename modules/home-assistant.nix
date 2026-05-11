@@ -177,9 +177,16 @@ in
     } ];
   };
 
-  config.systemd.tmpfiles.rules = lib.mkIf (cfg.enable && cfg.recommendedDefaults) [
-    "f ${cfg.configDir}/automations.yaml 0444 hass hass"
-    "f ${cfg.configDir}/scenes.yaml 0444 hass hass"
-    "f ${cfg.configDir}/scripts.yaml 0444 hass hass"
-  ];
+  config.systemd = {
+    services.home-assistant = lib.mkIf (cfg.enable && cfg.configurePostgres) {
+      after = [ "postgresql.target" ];
+      requires = [ "postgresql.target" ];
+    };
+
+    tmpfiles.rules = lib.mkIf (cfg.enable && cfg.recommendedDefaults) [
+      "f ${cfg.configDir}/automations.yaml 0444 hass hass"
+      "f ${cfg.configDir}/scenes.yaml 0444 hass hass"
+      "f ${cfg.configDir}/scripts.yaml 0444 hass hass"
+    ];
+  };
 }
