@@ -73,7 +73,7 @@ in
         in
           help
           + lib.concatMapAttrsStringSep "\n"
-            (volume: disk: "systemd-cryptsetup attach ${volume} ${disk.device}")
+            (volume: disk: "systemd-cryptsetup attach ${volume} ${disk.device}\n")
             cfg.luks.devices
           + help;
       };
