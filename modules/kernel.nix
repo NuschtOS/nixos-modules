@@ -57,10 +57,12 @@
       "algif_hash"
       "algif_rng"
       "algif_skcipher"
-      # dirtyfrag
+      # dirtyfrag / Fragnesia
       "esp4"
       "esp6"
       "rxrpc"
+      # PinTheft
+      "rds"
     ];
   };
 }
