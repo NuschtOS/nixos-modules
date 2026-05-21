@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, options, ... }:
 
 let
   cfg = config.services.portunus;
@@ -180,7 +180,7 @@ in
         oauth2.skipApprovalScreen = true;
       };
 
-      oauth2-proxy = lib.mkIf cfg.oauth2-proxy.configure {
+      oauth2-proxy = lib.mkIf cfg.oauth2-proxy.configure ({
         enable = true;
         inherit (cfg.oauth2-proxy) clientID;
         # if Portunus is not enabled locally, its domain is most likely wrong
@@ -199,7 +199,11 @@ in
           # checking for groups requires next to the default scopes also the `groups` scope, otherwise all authentication tries fail
           scope = lib.mkIf (lib.any (x: x.allowed_groups != null) (lib.attrValues cfgo.nginx.virtualHosts)) "openid email profile groups";
         };
-      };
+      }
+      # TODO: remove with 26.05
+      // lib.optionalAttrs (options.services.oauth2-proxy?trustedProxyIP) {
+        trustedProxyIP = [ "127.0.0.1" "::1" ];
+      });
 
       portunus.dex = lib.mkIf (cfg.enable && cfg.oauth2-proxy.configure) {
         enable = true;
