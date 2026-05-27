@@ -216,7 +216,6 @@ in
                       feature_mjolnir = true;
                       feature_notifications = true;
                       feature_pinning = true;
-                      feature_report_to_moderators = true;
                     };
                     show_labs_settings = true;
                   })
