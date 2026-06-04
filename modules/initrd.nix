@@ -92,7 +92,7 @@ in
             echo "Generating OpenSSH initrd hostkeys..."
             mkdir -m700 -p /etc/ssh/initrd/
             # big hack but don't tell anyone
-            # only here to satisfy ss-keygen
+            # only here to satisfy ssh-keygen
             # https://github.com/openssh/openssh-portable/blob/eddd1d2daa64a6ab1a915ca88436fa41aede44d4/ssh-keygen.c#L3337
             [ -e /etc/passwd ] || echo 'root:x:${id}:${id}:${rootUser.description}:${rootUser.home}:${rootUser.shell}' > /etc/passwd
 
