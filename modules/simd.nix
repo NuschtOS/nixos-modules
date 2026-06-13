@@ -5,7 +5,7 @@ let
 in
 {
   options.simd = {
-    enable = lib.mkEnableOption "optimized builds with simd instructions. This is an experimental option meant to be used for testing, as it invlidated the entire cache";
+    enable = lib.mkEnableOption "optimized builds with simd instructions. This is an experimental option meant to be used for testing, as it invalidated the entire cache";
     arch = lib.mkOption {
       type = with lib.types; nullOr str;
       default = null;
