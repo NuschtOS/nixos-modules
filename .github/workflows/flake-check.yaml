@@ -19,7 +19,7 @@ jobs:
       matrix:
         targets:
           - repo: NixOS/nixpkgs
-            branch: nixos-25.11
+            branch: nixos-26.05
           - repo: NixOS/nixpkgs
             branch: nixos-unstable
 
@@ -27,7 +27,7 @@ jobs:
           # - repo: NuschtOS/nuschtpkgs
           #   branch: nixos-25.11
           - repo: NuschtOS/nuschtpkgs
-            branch: backports-25.11
+            branch: backports-26.05
           - repo: NuschtOS/nuschtpkgs
             branch: nixos-unstable
 

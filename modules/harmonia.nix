@@ -1,12 +1,11 @@
 { config, lib, libS, ... }:
 
 let
-  cfg = config.services.harmonia;
+  cfg = config.services.harmonia.cache;
 in
 {
   options = {
-    # TODO: Move those under harmonia.cache with 26.05
-    services.harmonia = {
+    services.harmonia.cache = {
       configureNginx = lib.mkEnableOption "" // { description = "Whether to configure Nginx to serve Harmonia."; };
 
       domain = lib.mkOption {
@@ -23,8 +22,14 @@ in
     };
   };
 
-  # TODO: remove workaround with 26.05
-  config = lib.mkIf (cfg.cache.enable or cfg.enable) {
+  imports = [
+    (lib.mkRenamedOptionModule ["services" "harmonia" "configureNginx"] ["services" "harmonia" "cache" "configureNginx"])
+    (lib.mkRenamedOptionModule ["services" "harmonia" "domain"] ["services" "harmonia" "cache" "domain"])
+    (lib.mkRenamedOptionModule ["services" "harmonia" "port"] ["services" "harmonia" "cache" "port"])
+    (lib.mkRenamedOptionModule ["services" "harmonia" "recommendedDefaults"] ["services" "harmonia" "cache" "recommendedDefaults"])
+  ];
+
+  config = lib.mkIf cfg.enable {
     services = {
       harmonia = let
         settings = lib.mkIf cfg.recommendedDefaults {
