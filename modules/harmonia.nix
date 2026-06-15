@@ -31,15 +31,9 @@ in
 
   config = lib.mkIf cfg.enable {
     services = {
-      harmonia = let
-        settings = lib.mkIf cfg.recommendedDefaults {
-          bind = "[::]:${toString cfg.port}";
-          priority = 50; # prefer cache.nixos.org
-        };
-      in if cfg?cache then {
-        cache = { inherit settings; };
-      } else {
-        inherit settings;
+      harmonia.cache.settings = lib.mkIf cfg.recommendedDefaults {
+        bind = "[::]:${toString cfg.port}";
+        priority = 50; # prefer cache.nixos.org
       };
 
       nginx = lib.mkIf cfg.configureNginx {
