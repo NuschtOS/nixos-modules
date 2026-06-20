@@ -1,33 +1,31 @@
---- a/config/locales/de.yml	1970-01-01 01:00:01.000000000 +0100
-+++ b/config/locales/de.yml	2025-03-04 23:10:30.555066004 +0100
-@@ -1804,6 +1804,9 @@
+diff --git a/config/locales/de.yml b/config/locales/de.yml
+index 6e0c1b05d8..b19d13d148 100644
+--- a/config/locales/de.yml
++++ b/config/locales/de.yml
+@@ -2176,6 +2176,7 @@ de:
+     title: Die Nutzungsbedingungen von %{domain} ändern sich
    themes:
-     contrast: Mastodon (Hoher Kontrast)
-     default: Mastodon (Dunkel)
-+    mastodon-bird-ui-contrast: Mastodon Bird UI (Hoher Kontrast)
-+    mastodon-bird-ui-dark: Mastodon Bird UI (Dunkel)
-+    mastodon-bird-ui-light: Mastodon Bird UI (Hell)
-     mastodon-light: Mastodon (Hell)
-     system: Automatisch (mit System synchronisieren)
+     default: Mastodon
++    mastodon-bird-ui-auth: Mastodon Bird UI
    time:
---- a/config/locales/en.yml	1970-01-01 01:00:01.000000000 +0100
-+++ b/config/locales/en.yml	2025-03-04 23:11:25.390474198 +0100
-@@ -1805,6 +1805,9 @@
+     formats:
+       default: "%d. %b %Y, %H:%M Uhr"
+diff --git a/config/locales/en.yml b/config/locales/en.yml
+index 6309e1a22b..c918415f21 100644
+--- a/config/locales/en.yml
++++ b/config/locales/en.yml
+@@ -2193,6 +2193,7 @@ en:
+     title: The terms of service of %{domain} are changing
    themes:
-     contrast: Mastodon (High contrast)
-     default: Mastodon (Dark)
-+    mastodon-bird-ui-contrast: Mastodon Bird UI (High contrast)
-+    mastodon-bird-ui-dark: Mastodon Bird UI (Dark)
-+    mastodon-bird-ui-light: Mastodon Bird UI (Light)
-     mastodon-light: Mastodon (Light)
-     system: Automatic (use system theme)
+     default: Mastodon
++    mastodon-bird-ui-auto: Mastodon Bird UI
    time:
---- a/config/themes.yml	1970-01-01 01:00:01.000000000 +0100
-+++ b/config/themes.yml	2025-03-04 23:12:24.998956621 +0100
-@@ -1,3 +1,6 @@
+     formats:
+       default: "%b %d, %Y, %H:%M"
+diff --git a/config/themes.yml b/config/themes.yml
+index a1049fae7d..71a8a05166 100644
+--- a/config/themes.yml
++++ b/config/themes.yml
+@@ -1 +1,2 @@
  default: styles/application.scss
- contrast: styles/contrast.scss
- mastodon-light: styles/mastodon-light.scss
-+mastodon-bird-ui-dark: styles/mastodon-bird-ui-dark.scss
-+mastodon-bird-ui-contrast: styles/mastodon-bird-ui-contrast.scss
-+mastodon-bird-ui-light: styles/mastodon-bird-ui-light.scss
++mastodon-bird-ui-auto: styles/mastodon-bird-ui-auto.scss

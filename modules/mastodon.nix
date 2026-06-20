@@ -1,4 +1,4 @@
-{ config, lib, libS, pkgs, ... }:
+{ config, lib, libS, ... }:
 
 let
   cfg = config.services.mastodon;
@@ -47,61 +47,83 @@ in
     nixpkgs.overlays = lib.mkIf cfg.enableBirdUITheme [
       (final: prev: {
         mastodon = (prev.mastodon.override {
+          # redone based on https://codeberg.org/rheinneckar.social/nixos-config/src/branch/main/patches/mastodon-bird-ui.patch
           patches = [
-            # redone based on https://codeberg.org/rheinneckar.social/nixos-config/src/branch/main/patches/mastodon-bird-ui.patch
             ./mastodon-bird-ui.patch
           ];
-        }).overrideAttrs (oldAttrs: let
-          src = pkgs.applyPatches {
-            src = final.fetchFromGitHub (let
-              args = if lib.versionOlder config.services.mastodon.package.version "4.4.0" then {
-                tag = "2.1.1";
-                hash = "sha256-WEw9wE+iBCLDDTZjFoDJ3EwKTY92+LyJyDqCIoVXhzk=";
-              } else if lib.versionOlder config.services.mastodon.package.version "4.5.0" then {
-                tag = "2.3.3";
-                hash = "sha256-ddx9P8eOtUzTDFMF0ZRKyIRujjLL6rFppUswJn40nFU=";
-              } else {
-                tag = "3.0.0";
-                hash = "sha256-xwNfkUQCAoglOSvxvH/FWkA+vNImQeOMeYRrHUGeVzQ=";
-              };
-            in {
+        }).overrideAttrs (oldAttrs: {
+          mastodonModules = oldAttrs.mastodonModules.overrideAttrs (oldAttrs: let
+            src = final.fetchFromGitHub rec {
+              name = "mastodon-bird-ui-${tag}";
               owner = "ronilaukkarinen";
               repo = "mastodon-bird-ui";
-              name = "mastodon-bird-ui-${args.tag}";
-            } // args);
-
-            # based on:
-            # https://github.com/ronilaukkarinen/mastodon-bird-ui#make-mastodon-bird-ui-as-optional-by-integrating-it-as-site-theme-in-settings-for-all-users
-            postPatch = ''
-              substituteInPlace layout-single-column.css layout-multiple-columns.css \
-                --replace-fail theme-contrast theme-mastodon-bird-ui-contrast \
-                --replace-fail theme-mastodon-light theme-mastodon-bird-ui-light
-
-              mkdir mastodon-bird-ui
-              mv layout-single-column.css mastodon-bird-ui/layout-single-column.scss
-              mv layout-multiple-columns.css mastodon-bird-ui/layout-multiple-columns.scss
-
-              echo -e "@use 'contrast/variables';
-              @use 'application';
-              @use 'contrast/diff';
-              @use 'mastodon-bird-ui/layout-single-column.scss';
-              @use 'mastodon-bird-ui/layout-multiple-columns.scss';" > mastodon-bird-ui-contrast.scss
-              echo -e "@use 'mastodon-light/variables';
-              @use 'application';
-              @use 'mastodon-light/diff';
-              @use 'mastodon-bird-ui/layout-single-column.scss';
-              @use 'mastodon-bird-ui/layout-multiple-columns.scss';" > mastodon-bird-ui-light.scss
-              echo -e "@use 'application';
-              @use 'mastodon-bird-ui/layout-single-column.scss';
-              @use 'mastodon-bird-ui/layout-multiple-columns.scss';" > mastodon-bird-ui-dark.scss
-            '';
-          };
-        in {
-          mastodonModules = oldAttrs.mastodonModules.overrideAttrs (oldAttrs: {
+              tag = "4.0.0";
+              hash = "sha256-rFPkPLspuswC4vZHpedDvpBJOeV2rUuU1wxfKYY2ixw=";
+            };
+          in {
             pname = "mastodon-birdui-theme";
 
-            postPatch = oldAttrs.postPatch or "" + ''
-              cp -r ${src}/*.scss ${src}/mastodon-bird-ui/ app/javascript/styles/
+            postPatch = oldAttrs.postPatch or "" + /* bash */ ''
+              STYLES_PATH="app/javascript/styles"
+              BIRD_UI_PATH="$STYLES_PATH/mastodon-bird-ui"
+              SRC_DIR=${src}/src
+              mkdir -p $BIRD_UI_PATH/{components,components/profile,components/profile/icons,layouts,micro-interactions,variables,variants}
+
+              # Core module files
+              cp "$SRC_DIR/_index.scss" "$BIRD_UI_PATH/_index.scss"
+
+              # Variables
+              for f in "$SRC_DIR/variables/"_*.scss; do
+                cp "$f" "$BIRD_UI_PATH/variables/$(basename "$f")"
+              done
+
+              # Components
+              for f in "$SRC_DIR/components/"_*.scss; do
+                cp "$f" "$BIRD_UI_PATH/components/$(basename "$f")"
+              done
+
+              # Profile components
+              for f in "$SRC_DIR/components/profile/"_*.scss; do
+                cp "$f" "$BIRD_UI_PATH/components/profile/$(basename "$f")"
+              done
+
+              # Profile icons
+              for f in "$SRC_DIR/components/profile/icons/"_*.scss; do
+                cp "$f" "$BIRD_UI_PATH/components/profile/icons/$(basename "$f")"
+              done
+
+              # Layouts
+              for f in "$SRC_DIR/layouts/"_*.scss; do
+                cp "$f" "$BIRD_UI_PATH/layouts/$(basename "$f")"
+              done
+
+              # Micro-interactions
+              for f in "$SRC_DIR/micro-interactions/"_*.scss; do
+                cp "$f" "$BIRD_UI_PATH/micro-interactions/$(basename "$f")"
+              done
+
+              # Variants
+              for f in "$SRC_DIR/variants/"_*.scss; do
+                cp "$f" "$BIRD_UI_PATH/variants/$(basename "$f")"
+              done
+
+              cat > "$BIRD_UI_PATH/mastodon-bird-ui.scss" << 'EOF'
+              @use "index";
+              EOF
+
+              echo "@use 'application';
+              @use 'mastodon-bird-ui';
+              @use 'mastodon-bird-ui/variables/light-mixin' as light;
+
+              [data-color-scheme=\"light\"] {
+                @include light.tokens;
+              }
+
+              @media (prefers-color-scheme: light) {
+                html:not([data-color-scheme]) {
+                  @include light.tokens;
+                }
+              }" > "$STYLES_PATH/mastodon-bird-ui-auto.scss"
             '';
           });
         });
