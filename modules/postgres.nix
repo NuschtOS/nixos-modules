@@ -316,6 +316,7 @@ in
         ];
         upgrade.stopServices = with config.services; lib.mkMerge [
           (lib.mkIf (atuin.enable && atuin.database.createLocally) [ "atuin" ])
+          (lib.mkIf (c3nav.enable && pretalx.settings.database.host == "/run/postgresql" or false) [ "c3nav-web" "c3nav-worker" ])
           (lib.mkIf (gancio.enable && gancio.settings.db.dialect == "postgres") [ "gancio" ])
           (lib.mkIf (gitea.enable && gitea.database.socket == "/run/postgresql") [ "gitea" ])
           (lib.mkIf (grafana.enable && grafana.settings.database.host == "/run/postgresql") [ "grafana" ])
