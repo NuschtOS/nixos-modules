@@ -319,6 +319,7 @@ in
           (lib.mkIf (c3nav.enable && pretalx.settings.database.host == "/run/postgresql" or false) [ "c3nav-web" "c3nav-worker" ])
           (lib.mkIf (gancio.enable && gancio.settings.db.dialect == "postgres") [ "gancio" ])
           (lib.mkIf (gitea.enable && gitea.database.socket == "/run/postgresql") [ "gitea" ])
+          (lib.mkIf (gradient.enable && gradient.configurePostgres) [ "gradient-server" ])
           (lib.mkIf (grafana.enable && grafana.settings.database.host == "/run/postgresql") [ "grafana" ])
           (lib.mkIf (healthchecks.enable && healthchecks.settings.DB_HOST == "/run/postgresql") [ "healthchecks" ])
           (lib.mkIf (hedgedoc.enable && hedgedoc.settings.db.host == "/run/postgresql") [ "hedgedoc" ])
