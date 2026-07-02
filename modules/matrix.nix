@@ -95,8 +95,8 @@ in
           (
             let
               providers = pkgs.fetchurl {
-                url = "https://oembed.com/providers.json?2024-12-13";
-                hash = "sha256-s5zsZlsM77Wf+JZa/ZXdcytl7ov8FVFUsKM9eA+WUBo=";
+                url = "https://oembed.com/providers.json?2026-07-02";
+                hash = "sha256-0RkvLBlI1R1N8ewcQ2LOO4rRZjlIHZmXiI3GJoU+EwY=";
               };
             in
             pkgs.runCommand "providers.json"
