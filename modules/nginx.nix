@@ -151,13 +151,13 @@ in
         # quic bpf only allows some reloads and then prints errors on wall
         enableQuicBPF = lib.mkIf (cfg.configureQuic && !cfg.enableReload) true;
 
-        package = lib.mkIf (cfg.configureQuic || cfg.recommendedDefaults) (
+        package = lib.mkIf cfg.recommendedDefaults (lib.mkDefault (
           # use the newer version
           if lib.versionOlder pkgs.nginx.version pkgs.nginxMainline.version then
             pkgs.nginxMainline
           else
             pkgs.nginx
-        );
+        ));
 
         recommendedBrotliSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
         recommendedGzipSettings = lib.mkIf cfg.allRecommendOptions (lib.mkDefault true);
