@@ -71,7 +71,12 @@ in
             echo
           '';
         in
-          help
+          ''
+            # The initrd does not know about many term types:
+            #   'xterm-256color': unknown terminal type.
+            unset TERM
+          ''
+          + help
           + lib.concatMapAttrsStringSep "\n"
             (volume: disk: "systemd-cryptsetup attach ${volume} ${disk.device}\n")
             cfg.luks.devices
