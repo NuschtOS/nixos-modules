@@ -106,10 +106,6 @@ in
         '';
       }
       {
-        assertion = cfg.enable -> lib.versionAtLeast cfg.package.version "2.0.0";
-        message = "Portunus 2.0.0 is required for this module!";
-      }
-      {
         assertion = cfg.enable -> cfg.domain != "";
         message = "services.portunus.domain must be set to the domain name under which you can reach the *internal* Portunus ldaps port.";
       }
@@ -180,7 +176,7 @@ in
         oauth2.skipApprovalScreen = true;
       };
 
-      oauth2-proxy = lib.mkIf cfg.oauth2-proxy.configure ({
+      oauth2-proxy = lib.mkIf cfg.oauth2-proxy.configure {
         enable = true;
         inherit (cfg.oauth2-proxy) clientID;
         # if Portunus is not enabled locally, its domain is most likely wrong
@@ -200,7 +196,7 @@ in
           # checking for groups requires next to the default scopes also the `groups` scope, otherwise all authentication tries fail
           scope = lib.mkIf (lib.any (x: x.allowed_groups != null) (lib.attrValues cfgo.nginx.virtualHosts)) "openid email profile groups";
         };
-      });
+      };
 
       portunus.dex = lib.mkIf (cfg.enable && cfg.oauth2-proxy.configure) {
         enable = true;
