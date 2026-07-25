@@ -38,6 +38,7 @@ in
           "ghcr.io"
           "gcr.io"
         ];
+      # TODO: remove with 26.11
       in if options.virtualisation.registries.settings or false then {
         settings = { inherit search; };
       } else {
