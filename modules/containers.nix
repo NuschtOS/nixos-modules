@@ -39,7 +39,7 @@ in
           "gcr.io"
         ];
       # TODO: remove with 26.11
-      in if options.virtualisation.registries.settings or false then {
+      in if options.virtualisation.containers.registries?settings then {
         settings = { inherit search; };
       } else {
         inherit search;
