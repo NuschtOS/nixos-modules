@@ -1,4 +1,4 @@
-{ config, lib, libS, ... }:
+{ config, lib, libS, options, ... }:
 
 let
   cfg = config.virtualisation;
@@ -31,12 +31,18 @@ in
         "--volumes"
       ];
     in {
-      containers.registries.search = lib.mkIf cfgp.recommendedDefaults [
-        "docker.io"
-        "quay.io"
-        "ghcr.io"
-        "gcr.io"
-      ];
+      containers.registries = let
+        search = lib.mkIf cfgp.recommendedDefaults [
+          "docker.io"
+          "quay.io"
+          "ghcr.io"
+          "gcr.io"
+        ];
+      in if options.virtualisation.registries.settings or false then {
+        settings = { inherit search; };
+      } else {
+        inherit search;
+      };
 
       docker = {
         daemon.settings = let
