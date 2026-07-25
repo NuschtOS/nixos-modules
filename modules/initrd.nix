@@ -114,6 +114,7 @@ in
       };
 
       preSwitchChecks."checkForNetworkKernelModules" = lib.mkIf cfgn.checkKernelModules.enable /* bash */ ''
+        # shellcheck disable=SC2030,SC2031
         PATH=$PATH:${lib.makeBinPath (with pkgs; [ coreutils ])}
         interfaces=$(ls /sys/class/net/)
         for interface in $interfaces; do
