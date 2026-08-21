@@ -79,7 +79,7 @@ in
     # and https://discourse.nixos.org/t/wrapper-to-restrict-builder-access-through-ssh-worth-upstreaming/25834
     users.users.${cfg.remoteBuilder.name} = lib.mkIf cfg.remoteBuilder.enable {
       group = "nogroup";
-      isNormalUser = true;
+      isSystemUser = true;
       openssh.authorizedKeys.keys = map
         (key:
           let
