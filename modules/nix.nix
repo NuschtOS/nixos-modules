@@ -80,10 +80,6 @@ in
     users.users.${cfg.remoteBuilder.name} = lib.mkIf cfg.remoteBuilder.enable {
       group = "nogroup";
       isSystemUser = true;
-      # sshd runs the forced command from authorizedKeys as `$shell -c ...`,
-      # so a nologin shell (the default for system users) breaks remote building with:
-      # "protocol mismatch, got 'This account is currently not available.'"
-      shell = pkgs.bashInteractive;
       openssh.authorizedKeys.keys = map
         (key:
           let
@@ -109,6 +105,10 @@ in
           "restrict,pty,command=\"${lib.getExe wrapper-dispatch-ssh-nix}\" ${key}"
         )
         cfg.remoteBuilder.sshPublicKeys;
+      # sshd runs the forced command from authorizedKeys as `$shell -c ...`,
+      # so a nologin shell (the default for system users) breaks remote building with:
+      # "protocol mismatch, got 'This account is currently not available.'"
+      useDefaultShell = true;
     };
 
     system = {
