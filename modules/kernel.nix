@@ -63,6 +63,8 @@
       "rxrpc"
       # PinTheft
       "rds"
+      # other high value CVEs
+      "geneve"
     ];
   };
 }
