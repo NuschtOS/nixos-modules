@@ -14,7 +14,6 @@ let
   mkTimerDefault = time: {
     OnBootSec = "10m";
     OnCalendar = time;
-    Persistent = true;
     RandomizedDelaySec = "10m";
   };
 
