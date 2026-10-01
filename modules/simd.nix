@@ -19,9 +19,22 @@ in
   config = {
     nix.settings.system-features = lib.mkIf (cfg.arch != null) (libS.nix.gcc-system-features cfg.arch);
 
-    nixpkgs.hostPlatform = lib.mkIf cfg.enable {
-      gcc.arch = cfg.arch;
-      inherit (config.nixpkgs) system;
+    nixpkgs = {
+      hostPlatform = lib.mkIf cfg.enable {
+        gcc.arch = cfg.arch;
+        inherit (config.nixpkgs) system;
+      };
+
+      overlays = [
+        (final: prev: {
+          stdenv = prev.withCFlags [
+            # https://wiki.gentoo.org/wiki/GCC_optimization#-O
+            "-O2"
+            # https://wiki.gentoo.org/wiki/GCC_optimization#-pipe
+            "-pipe"
+          ] prev.stdenv;
+        })
+      ];
     };
   };
 }
