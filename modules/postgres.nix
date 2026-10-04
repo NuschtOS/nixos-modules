@@ -325,9 +325,12 @@ in
           # @ means to connect to localhost
           (lib.mkIf (home-assistant.enable && (lib.hasPrefix "postgresql://@/" home-assistant.config.recorder.db_url or "")) [ "home-assistant" ])
           # if host= is omitted, hydra defaults to connect to localhost
-          (lib.mkIf (hydra.enable && (!lib.hasInfix ";host=" hydra.dbi)) [
+          (lib.mkIf (hydra.enable && !(options.services.hydra ? dbUrl) && (!lib.hasInfix ";host=" hydra.dbi)) [
             "hydra-evaluator" "hydra-notify" "hydra-send-stats" "hydra-update-gc-roots.service" "hydra-update-gc-roots.timer" "hydra-queue-runner" "hydra-server"
           ])
+          (lib.mkIf (hydra.enable && options.services.hydra ? dbUrl && lib.hasInfix "@%2Frun%2Fpostgresql" hydra.dbUrl) ([
+            "hydra-evaluator" "hydra-notify" "hydra-send-stats" "hydra-update-gc-roots.service" "hydra-update-gc-roots.timer" "hydra-queue-runner" "hydra-server"
+          ] ++ lib.optional hydra.ws.enable "hydra-ws"))
           (lib.mkIf (immich.enable && immich.database.host == "/run/postgresql") [ "immich-machine-learning" "immich-server" ])
           (lib.mkIf mailman.enable [ "mailman" "mailman-uwsgi" ])
           (lib.mkIf (mastodon.enable && mastodon.database.host == "/run/postgresql") [ "mastodon-sidekiq-all" "mastodon-streaming.target" "mastodon-web" ])
