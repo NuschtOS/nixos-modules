@@ -6,6 +6,8 @@ let
   cfgo = cfg.oidc;
   inherit (config.security) ldap;
 
+  domain = builtins.baseNameOf cfg.settings.server.ROOT_URL;
+
   mkOptStr = lib.mkOption {
     type = lib.types.nullOr lib.types.str;
     default = null;
@@ -176,7 +178,7 @@ in
 
       (lib.mkIf cfg.recommendedDefaults (libS.modules.mkRecursiveDefault {
         cors = {
-          ALLOW_DOMAIN = cfg.settings.server.DOMAIN;
+          ALLOW_DOMAIN = domain;
           ENABLED = true;
         };
         cron.ENABLED = true;
@@ -201,7 +203,7 @@ in
           MODE = "console";
         };
         other.SHOW_FOOTER_VERSION = false;
-        repository.ACCESS_CONTROL_ALLOW_ORIGIN = cfg.settings.server.DOMAIN;
+        repository.ACCESS_CONTROL_ALLOW_ORIGIN = domain;
         "repository.signing".DEFAULT_TRUST_MODEL = "committer";
         security.DISABLE_GIT_HOOKS = true;
         server = {
@@ -209,7 +211,6 @@ in
           # The description of this setting is wrong and it doesn't control any CDN functionality but acts just as an override to the avatar federation.
           # see https://github.com/go-gitea/gitea/issues/31112
           OFFLINE_MODE = false;
-          ROOT_URL = "https://${cfg.settings.server.DOMAIN}/";
           SSH_SERVER_CIPHERS = lib.concatStringsSep ", " config.services.openssh.settings.Ciphers;
           SSH_SERVER_KEY_EXCHANGES = lib.concatStringsSep ", " config.services.openssh.settings.KexAlgorithms;
           SSH_SERVER_MACS = lib.concatStringsSep ", " config.services.openssh.settings.Macs;
@@ -232,7 +233,7 @@ in
   config.services.portunus.dex = lib.mkIf cfg.oidc.enable {
     enable = true;
     oidcClients = [{
-      callbackURL = "https://${cfg.settings.server.DOMAIN}/user/oauth2/${cfgo.options.name}/callback";
+      callbackURL = "${cfg.settings.server.ROOT_URL}/user/oauth2/${cfgo.options.name}/callback";
       id = "gitea";
     }];
   };
