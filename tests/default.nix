@@ -27,6 +27,15 @@ in toplevel // {
     };
   };
 
+  gitea = mkTest {
+    module = {
+      services.gitea = {
+        enable = true;
+        settings.server.ROOT_URL = "https://gitea.example.com";
+      };
+    };
+  };
+
   # https://github.com/NuschtOS/nixos-modules/issues/39
   hound-repos = mkTest {
     module = {
