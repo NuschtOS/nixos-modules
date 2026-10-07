@@ -70,7 +70,7 @@ This requires manually providing `libS` as a module argument.
 The following snippet is equal to what adding all modules is doing:
 ```nix
 {
-  _module.args.libS = lib.mkOverride 1000 (self.lib { inherit lib config; });
+  _module.args.libS = lib.mkOverride 1000 (nixos-modules.lib { inherit lib config; });
 }
 ```
 
