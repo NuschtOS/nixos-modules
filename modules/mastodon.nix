@@ -57,8 +57,8 @@ in
               name = "mastodon-bird-ui-${tag}";
               owner = "ronilaukkarinen";
               repo = "mastodon-bird-ui";
-              tag = "4.0.0";
-              hash = "sha256-uOA3rLKIQnI91m71vp1BE2jl8BSXMIHfoFJNtRO5tio=";
+              tag = "4.7.3-2026-10-11";
+              hash = "sha256-sjFuaS8EkwvNh3z6BEAPQerm0MTW4N80o/pBHBJkMgM=";
             };
           in {
             pname = "mastodon-birdui-theme";
