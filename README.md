@@ -11,7 +11,6 @@ This includes features like:
 - Check if network kernel modules could be missing in initrd and deterministic luks unlock order
 - Extra options for Nginx like a common server/locations block, quic, default 404 server, aws-lc tls library, tcp fast open and more
 - Configure Nextcloud Apps Memories Apps and properly setup efficient preview generation
-- Predone Nginx config for Minio console and object storage (S3)
 - Restricted nix remote builders which can only execute remote builds
 
 and many smaller integrations like:
