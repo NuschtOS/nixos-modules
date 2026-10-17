@@ -9,7 +9,7 @@ This includes features like:
 - Higher level configuration of Blackbox exporter's dnsProbes and httpProbes for Prometheus
 - Easy integration of Matrix Synapse, Element Web, Synapse Admin by etkecc and extra Oembed providers
 - Check if network kernel modules could be missing in initrd and deterministic luks unlock order
-- Extra options for Nginx like a common server/locations block, quic, default 404 server, aws-lc tls library, tcp fast open and more
+- Extra options for Nginx like a common server/locations block, quic, default 404 server, tcp fast open and more
 - Configure Nextcloud Apps Memories Apps and properly setup efficient preview generation
 - Restricted nix remote builders which can only execute remote builds
 
@@ -23,10 +23,9 @@ and many smaller integrations like:
 - Hostname check (borrowed from srvos as module)
 - Nix diff system on activation and dry-activation
 - Vaultwarden Nginx and Postgres
-- Strace color patch
 - ... and much more!
 
-## LDPA & OAuth service support
+## LDAP & OAuth service support
 
 | Name  | LDAP | OAuth |
 |-------|------|-------|
@@ -50,11 +49,12 @@ Add or merge the following settings to your `flake.nix`:
     };
   };
 
-  outputs = { nixos-modules, ... }: {
-    nixosConfigurations.HOSTNAME = {
+  outputs = { nixpkgs, nixos-modules, ... }: {
+    nixosConfigurations.HOSTNAME = nixpkgs.lib.nixosSystem {
       modules = [
-       nixos-modules.nixosModule
-    ];
+        nixos-modules.nixosModule
+      ];
+    };
   };
 }
 ```
