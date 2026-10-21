@@ -137,10 +137,13 @@ in
 
       # NOTE: do not use mkMerge here to prevent infinite recursions
       nginx = {
-        appendConfig = lib.optionalString cfg.recommendedDefaults /* nginx */ ''
-          worker_processes auto;
-          worker_cpu_affinity auto;
-        '';
+        appendConfig = lib.optionalString cfg.recommendedDefaults (
+          lib.optionalString (lib.versionOlder lib.version "26.11") /* nginx */ ''
+            worker_processes auto;
+          '' + /* nginx */ ''
+            worker_cpu_affinity auto;
+          ''
+        );
 
         commonHttpConfig = lib.optionalString cfg.recommendedDefaults /* nginx */ ''
           error_log syslog:server=unix:/dev/log;
