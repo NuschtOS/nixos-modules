@@ -7,12 +7,15 @@ let
   optn = options.boot.initrd.network;
   initrdEd25519Key = "/etc/ssh/initrd/ssh_host_ed25519_key";
   initrdRsaKey = "/etc/ssh/initrd/ssh_host_rsa_key";
+
+  # TODO: drop when support for 26.05 is dropped
+  systemdInitrdRequired = lib.versionAtLeast lib.version "26.11";
 in
 {
   options = {
     boot.initrd = {
       luks.deterministicUnlock = libS.mkOpinionatedOption "unlock luks disks in deterministic order" // {
-        default = config.opinionatedDefaults && config.boot.initrd.systemd.enable;
+        default = config.opinionatedDefaults && (systemdInitrdRequired || cfg.systemd.enable);
       };
 
       network = {
@@ -46,7 +49,7 @@ in
   };
 
   config = lib.mkIf cfgn.enable {
-    assertions = [ {
+    assertions = lib.mkIf (!systemdInitrdRequired) [ {
       assertion = cfg.luks.deterministicUnlock -> cfg.systemd.enable;
       message = "${opt.luks.deterministicUnlock} requires ${opt.systemd.enable} to be true";
     } ];
