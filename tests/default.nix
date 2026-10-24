@@ -133,8 +133,11 @@ in toplevel // {
 
       services.nextcloud = {
         enable = true;
-        config.dbtype = "pgsql";
-        config.adminpassFile = "/password";
+        config = {
+          dbtype = "pgsql";
+        } // lib.optionalAttrs (!lib.versionAtLeast lib.version "26.11") {
+          adminpassFile = "/password";
+        };
         hostName = "example.com";
       };
     };
