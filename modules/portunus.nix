@@ -131,25 +131,27 @@ in
         in prev.dex-oidc.override {
           "${buildGoModule}" = args: final."${buildGoModule}" (let
               inherit (prev.dex-oidc) version src;
-          in args {
-            inherit version src;
-          } // {
-            patches = args.patches or [ ] ++ [
-              # remember session
-              (if (lib.versionAtLeast version "2.43") then
-                ./dex-session-cookie-password-connector-2.43.patch
-              else
-                throw "Dex version ${version} is not supported."
-              )
+              buildArgs = args { inherit version src; };
+          in buildArgs // {
+            patches = buildArgs.patches or [ ]
+              ++ lib.optionals (lib.versionOlder version "2.46") [
+                (if (lib.versionAtLeast version "2.43") then
+                  ./dex-session-cookie-password-connector-2.43.patch
+                else
+                  throw "Dex version ${version} is not supported."
+                )
+              ]
+              ++ [
+                # Complain if the env set in SecretEnv cannot be found
+                (final.fetchpatch {
+                  url = "https://github.com/dexidp/dex/commit/f25f72053c9282cfe22521cd508698a07dc5190f.patch";
+                  hash = "sha256-dyo+UPpceHxL3gcBQaGaDAHJqmysDJw051gMG1aeh5o=";
+                })
+              ];
 
-              # Complain if the env set in SecretEnv cannot be found
-              (final.fetchpatch {
-                url = "https://github.com/dexidp/dex/commit/f25f72053c9282cfe22521cd508698a07dc5190f.patch";
-                hash = "sha256-dyo+UPpceHxL3gcBQaGaDAHJqmysDJw051gMG1aeh5o=";
-              })
-            ];
-
-            vendorHash = if lib.versionAtLeast version "2.45" then
+            vendorHash = if lib.versionAtLeast version "2.46" then
+              buildArgs.vendorHash
+            else if lib.versionAtLeast version "2.45" then
               "sha256-IlBZzlJA6IgEVIe9NmwA+a8hixFJ9Z+jdRn/iJZe8r4="
             else
               throw "Dex version ${version} is not supported.";
@@ -164,8 +166,14 @@ in
     ];
 
     services = {
-      dex.settings = {
+      dex.settings = lib.mkIf cfg.enable {
         issuer = lib.mkForce "https://${cfg.webDomain}/dex";
+        sessions = lib.mkIf (lib.versionAtLeast cfgd.package.version "2.46") {
+          absoluteLifetime = "36h";
+          validIfNotUsedFor = "12h";
+          rememberMeCheckedByDefault = true;
+          ssoSharedWithDefault = "all";
+        };
         # the user has no other option to accept this and all clients are internal anyway
         oauth2.skipApprovalScreen = true;
       };
@@ -221,8 +229,9 @@ in
       userBaseDN = "ou=users";
     };
 
-    systemd.services = lib.mkIf cfg.oauth2-proxy.configure {
-      oauth2-proxy.requires = [ "network-online.target" ];
+    systemd.services = {
+      dex.environment.DEX_SESSIONS_ENABLED = lib.mkIf (cfg.enable && lib.versionAtLeast cfgd.package.version "2.46") "true";
+      oauth2-proxy.requires = lib.mkIf cfg.oauth2-proxy.configure [ "network-online.target" ];
     };
   };
 }
