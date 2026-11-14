@@ -166,16 +166,17 @@ in
     ];
 
     services = {
-      dex.settings = lib.mkIf cfg.enable {
+      dex.settings = {
+        # on purpose not conditional to allow using it on other hosts via config.services.dex.settings.issuer
         issuer = lib.mkForce "https://${cfg.webDomain}/dex";
-        sessions = lib.mkIf (lib.versionAtLeast cfgd.package.version "2.46") {
+        sessions = lib.mkIf (cfg.enable && lib.versionAtLeast cfgd.package.version "2.46") {
           absoluteLifetime = "36h";
           validIfNotUsedFor = "12h";
           rememberMeCheckedByDefault = true;
           ssoSharedWithDefault = "all";
         };
         # the user has no other option to accept this and all clients are internal anyway
-        oauth2.skipApprovalScreen = true;
+        oauth2.skipApprovalScreen = lib.mkIf cfg.enable true;
       };
 
       oauth2-proxy = lib.mkIf cfg.oauth2-proxy.configure {
@@ -189,7 +190,7 @@ in
         trustedProxyIP = [ "127.0.0.1" "::1" ];
         upstream = "http://127.0.0.1:4181";
         extraConfig = {
-          code-challenge-method = "S256"; # supported by dex and inidcated by a logged warning
+          code-challenge-method = "S256"; # supported by dex and indicated by a logged warning
           # /oauth2/auth is used in nginx auth_request and gets lots of requests
           # The two css files are static assets.
           exclude-logging-path = "/oauth2/auth,/oauth2/static/css/all.min.css,/oauth2/static/css/bulma.min.css";
