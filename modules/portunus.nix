@@ -231,7 +231,9 @@ in
     };
 
     systemd.services = {
-      dex.environment.DEX_SESSIONS_ENABLED = lib.mkIf (cfg.enable && lib.versionAtLeast cfgd.package.version "2.46") "true";
+      dex = lib.mkIf (cfg.enable && lib.versionAtLeast cfgd.package.version "2.46") {
+        environment.DEX_SESSIONS_ENABLED = "true";
+      };
       oauth2-proxy.requires = lib.mkIf cfg.oauth2-proxy.configure [ "network-online.target" ];
     };
   };
