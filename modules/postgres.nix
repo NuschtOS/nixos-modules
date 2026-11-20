@@ -7,7 +7,7 @@ let
   cfgb = config.services.postgresqlBackup;
   cfgu = config.services.postgresql.upgrade;
 
-  latestVersion = if pkgs?postgresql_18 then "18" else "17";
+  latestVersion = if pkgs?postgresql_19 then "19" else "18";
   currentMajorVersion = lib.versions.major cfg.package.version;
   newMajorVersion = lib.versions.major cfgu.newPackage.version;
 
