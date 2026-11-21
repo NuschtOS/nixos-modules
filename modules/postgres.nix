@@ -1,4 +1,4 @@
-{ config, lib, libS, options, pkgs, utils, ... }:
+{ config, lib, libS, options, pkgs, ... }:
 
 let
   opt = options.services.postgresql;
@@ -7,15 +7,9 @@ let
   cfgb = config.services.postgresqlBackup;
   cfgu = config.services.postgresql.upgrade;
 
-  latestVersion = if pkgs?postgresql_18 then "18" else "17";
+  latestVersion = if pkgs?postgresql_19 then "19" else "18";
   currentMajorVersion = lib.versions.major cfg.package.version;
   newMajorVersion = lib.versions.major cfgu.newPackage.version;
-
-  mkTimerDefault = time: {
-    OnBootSec = "10m";
-    OnCalendar = time;
-    RandomizedDelaySec = "10m";
-  };
 
   # withJIT installs the postgres' jit output as an extension but that is no shared object to load
   cfgInstalledExtensions = lib.filter (x: x != "postgresql") (map (e: lib.getName e) cfg.finalPackage.installedExtensions);
@@ -66,24 +60,6 @@ in
             };
           };
         });
-      };
-
-      pgRepackTimer = {
-        enable = libS.mkOpinionatedOption "install pg_repack and configure a systemd timer to run it periodically on all DBs";
-
-        timerConfig = lib.mkOption {
-          type = lib.types.nullOr (lib.types.attrsOf utils.systemdUtils.unitOptions.unitOption);
-          default = mkTimerDefault "02:00";
-          example = {
-            OnCalendar = "06:00";
-            Persistent = true;
-            RandomizedDelaySec = "5h";
-          };
-          description = ''
-            When to run the VACUUM ANALYZE.
-            See {manpage}`systemd.timer(5)` for details.
-          '';
-        };
       };
 
       preloadAllInstalledExtensions = libS.mkOpinionatedOption "load all installed extensions through `shared_preload_libraries`";
@@ -143,24 +119,6 @@ in
           '';
         };
       };
-
-      vacuumAnalyzeTimer = {
-        enable = libS.mkOpinionatedOption "configure a systemd timer to run `VACUUM ANALYZE` periodically on all DBs";
-
-        timerConfig = lib.mkOption {
-          type = lib.types.nullOr (lib.types.attrsOf utils.systemdUtils.unitOptions.unitOption);
-          default = mkTimerDefault "03:00";
-          example = {
-            OnCalendar = "06:00";
-            Persistent = true;
-            RandomizedDelaySec = "5h";
-          };
-          description = ''
-            When to run the VACUUM ANALYZE.
-            See {manpage}`systemd.timer(5)` for details.
-          '';
-        };
-      };
     };
 
     postgresqlBackup = {
@@ -203,9 +161,11 @@ in
 
   imports = [
     (lib.mkRemovedOptionModule ["services" "postgresql" "enableAllPreloadedLibraries"] "Use services.postgresql.extensionsToInstall instead.")
-    (lib.mkRemovedOptionModule ["services" "postgresql" "installAllAvailableExtensions"] "Use services.postgresql.extensionsToInstall instead.")
     (lib.mkRenamedOptionModule ["services" "postgresql" "extensionToInstall"] ["services" "postgresql" "extensionsToInstall"])
+    (lib.mkRemovedOptionModule ["services" "postgresql" "installAllAvailableExtensions"] "Use services.postgresql.extensionsToInstall instead.")
+    (lib.mkRemovedOptionModule ["services" "postgresql" "pgRepackTimer"] "Please run pg_repack manually instead to avoid deadlock issues, especially on start up.")
     (lib.mkRenamedOptionModule ["services" "postgresql" "preloadAllExtensions"] ["services" "postgresql" "preloadAllInstalledExtensions"])
+    (lib.mkRemovedOptionModule ["services" "postgresql" "vacuumAnalyzeTimer"] "Please tune your autovacuum config instead.")
   ];
 
   config = lib.mkIf cfg.enable {
@@ -305,7 +265,6 @@ in
         # NOTE: the defaultText of services.postgresqlBackup.databases must match this
         databases = [ "postgres" ] ++ config.services.postgresql.ensureDatabases;
         enableJIT = lib.mkIf cfg.recommendedDefaults true;
-        extensions = lib.mkIf cfg.pgRepackTimer.enable (ps: with ps; [ pg_repack ]);
         extensionsToInstall = {
           immich = lib.mkIf config.services.immich.enable  [ "cube" "earthdistance" "pg_trgm" "unaccent" "uuid-ossp" "vector" "vchord" ];
         };
@@ -439,41 +398,6 @@ in
 
           # reduce downtime for dependent services
           stopIfChanged = lib.mkIf cfg.recommendedDefaults false;
-        };
-
-        postgresql-pg-repack = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
-          after = [ "postgresql.target" ];
-          description = "Repack all PostgreSQL databases";
-          serviceConfig = {
-            ExecStart =  "${lib.getExe cfg.package.pkgs.pg_repack} --port=${builtins.toString cfg.settings.port} --all";
-            User = "postgres";
-          };
-        };
-
-        postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
-          description = "Vacuum and analyze all PostgreSQL databases";
-          serviceConfig = {
-            ExecStart = "${lib.getExe' cfg.package "psql"} --port=${builtins.toString cfg.settings.port} -tAc 'VACUUM ANALYZE'";
-            User = "postgres";
-          };
-        };
-      };
-
-      timers = let
-        mkTimerConfig = name: lib.mkMerge [
-          (lib.mkDefault opt."${name}".timerConfig.default)
-          cfg."${name}".timerConfig
-        ];
-      in {
-        postgresql-pg-repack = lib.mkIf cfg.pgRepackTimer.enable {
-          after = [ "postgresql.target" ];
-          timerConfig = mkTimerConfig "pgRepackTimer";
-          wantedBy = [ "timers.target" ];
-        };
-        postgresql-vacuum-analyze = lib.mkIf cfg.vacuumAnalyzeTimer.enable {
-          after = [ "postgresql.target" ];
-          timerConfig = mkTimerConfig "vacuumAnalyzeTimer";
-          wantedBy = [ "timers.target" ];
         };
       };
     };
