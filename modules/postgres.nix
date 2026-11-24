@@ -270,7 +270,7 @@ in
         };
         settings.shared_preload_libraries = lib.mkMerge [
           (lib.mkIf cfg.configurePgStatStatements [ "pg_stat_statements" ])
-          (lib.mkIf cfg.preloadAllInstalledExtensions (map getExtensionName cfgInstalledExtensions))
+          (lib.mkIf (cfg.preloadAllInstalledExtensions && cfgInstalledExtensions != []) (map getExtensionName cfgInstalledExtensions))
         ];
         upgrade.stopServices = with config.services; lib.mkMerge [
           (lib.mkIf (atuin.enable && atuin.database.createLocally) [ "atuin" ])
